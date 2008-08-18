@@ -1,0 +1,37 @@
+---- TODO ----
+
+20070812 [1] Doc: Where/how to save current bitmap (disk or db?)
+20070812 [1] Doc: Where/how to plug into "standard" gallery to view bitmaps?
+20070808 [4] Feature: Save current bitmap as snapshot to disk
+20070808 [3] Feature: Save/reload favorite zoom areas
+20070812 [3] Feature: Implement history depth limit
+20070812 [3] Feature: List current history stack (ListActivity)
+20070812 [4] Builder: Callback when finished to remove progress bar
+20070813 [4] Activity: List history w/ bitmap + save
+
+---- Done Version 0.3 ----
+
+20070813 [1] Fix: Using Handler.PostMessage for screen updates.
+
+---- Done Version 0.2 ----
+
+20070812 [1] Builder: Remove linear BuilderThread if not useful
+20070812 [1] Fix: Fixed getSharedPreferences, missing Editor.commit().
+20070812 [1] Update: Updated code to build 27454, Eclipse debugger not working
+20070812 [1] Update: Downloaded build 27454, installed ADT 0.1.7
+20070811 [3] Activity: Save/restore options
+20070810 [3] Options: Add option min/max iterations
+20070810 [3] Options: Add option max history depth
+20070810 [1] Activity: Create tab host for options w/ help + about
+20070809 [2] Activity: Implement onFreeze, onPause, onResume 
+20070808 [3] Activity: Add options screen, linked from options menu
+20070808 [1] Builder: Fix progress in multi-pass builder thread
+
+---- Done Version 0.1 ----
+
+20070808 Builder: Added multi-pass computation (derive BuilderThread)
+20070808 Fix: Fixed zoom position
+20070808 Refactor: Changed Area to State, store computation state
+20070806 Builder: Added Area and history stack
+
+---- End ----
