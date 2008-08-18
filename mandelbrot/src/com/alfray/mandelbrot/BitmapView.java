@@ -216,10 +216,12 @@ public class BitmapView extends View {
     @Override
     public boolean onTrackballEvent(MotionEvent event) {
     	if (event.getAction() == MotionEvent.ACTION_MOVE) {
-    		moveSelection(event.getX(), event.getY(), 1.0f, true /* redraw */, true /* relative */);
-    		return true;
-    	} else if (event.getAction() == MotionEvent.ACTION_UP) {
-            activateSelection();
+    		float y = event.getY();
+    		if (y < 0) {
+    			moveSelection(0, 0, 1.1f, true /* redraw */, true /* relative */);
+    		} else {
+    			moveSelection(0, 0, 0.9f, true /* redraw */, true /* relative */);
+    		}
     		return true;
     	}
     	return super.onTrackballEvent(event);
@@ -236,13 +238,7 @@ public class BitmapView extends View {
     		return true;
     	} else if (event.getAction() == MotionEvent.ACTION_UP) {
     		if (System.currentTimeMillis() - mStartTouch < 100) {
-	            //activateSelection();
-	    		float y = event.getY();
-	    		if (y < this.getHeight() / 2) {
-	                moveSelection(0, 0, 2.0f, true /* redraw */, true /* relative */);
-	    		} else {
-	                moveSelection(0, 0, 0.5f, true /* redraw */, true /* relative */);
-	    		}
+	            activateSelection();
     		}
     		return true;
     	}
