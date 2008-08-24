@@ -1,4 +1,4 @@
-package com.alfray.mandelbrot;
+package com.alfray.mandelbrot.old;
 
 import java.util.ArrayList;
 import java.util.HashMap;

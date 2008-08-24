@@ -1,4 +1,4 @@
-package com.alfray.mandelbrot;
+package com.alfray.mandelbrot.old;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,7 +15,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.alfray.mandelbrot.MandelbrotActivity.ViewCallback;
+import com.alfray.mandelbrot.old.MandelbrotActivity.ViewCallback;
 
 /**
  * A simple view that draws a bitmap on screen.

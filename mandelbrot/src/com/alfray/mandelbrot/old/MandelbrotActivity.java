@@ -1,4 +1,7 @@
-package com.alfray.mandelbrot;
+package com.alfray.mandelbrot.old;
+
+import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot.R.string;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;

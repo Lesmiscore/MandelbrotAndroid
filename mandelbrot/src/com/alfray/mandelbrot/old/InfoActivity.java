@@ -1,4 +1,4 @@
-package com.alfray.mandelbrot;
+package com.alfray.mandelbrot.old;
 
 import android.app.TabActivity;
 import android.os.Bundle;

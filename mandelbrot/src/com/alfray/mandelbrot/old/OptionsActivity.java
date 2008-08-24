@@ -1,4 +1,8 @@
-package com.alfray.mandelbrot;
+package com.alfray.mandelbrot.old;
+
+import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot.R.id;
+import com.alfray.mandelbrot.R.layout;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
