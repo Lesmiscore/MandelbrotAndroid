@@ -477,10 +477,10 @@ public class MandelbrotBuilder {
             int sx = getWidth();
             int sy = getHeight();
             int max_iter = mCurrentState.mMaxIter;
-            double x0 = mCurrentState.mXCenter - mCurrentState.mWidth / 2.0;
-            double sx1 = mCurrentState.mWidth / sx;
-            double sy1 = sx1;  // Assumes pixels are square
-            double y0 = mCurrentState.mYCenter - 0.5 * sy1 * sy;
+            float x0 = (float) (mCurrentState.mXCenter - mCurrentState.mWidth / 2.0);
+            float sx1 = (float) (mCurrentState.mWidth / sx);
+            float sy1 = sx1;  // Assumes pixels are square
+            float y0 = (float) (mCurrentState.mYCenter - 0.5 * sy1 * sy);
             int i1 = mCurrentState.mStartColumn;
             int j1 = mCurrentState.mStartLine;
             int pn = mCurrentState.mMaxPass;
@@ -492,11 +492,11 @@ public class MandelbrotBuilder {
                 mRect = new Rect(0, 0, n2, n2);
 
                 for (int j2 = j1 + n2; j1 < sy && mContinue; j1 += n, j2 += n) {
-                    double y1 = y0 + j1 * sy1;
-                    double y2 = y0 + j2 * sy1;
+                    float y1 = y0 + j1 * sy1;
+                    float y2 = y0 + j2 * sy1;
                     for (int i2 = i1 + n2; i1 < sx && mContinue; i1 += n, i2 += n) {
-                        double x1 = x0 + i1 * sx1;
-                        double x2 = x0 + i2 * sx1;
+                        float x1 = x0 + i1 * sx1;
+                        float x2 = x0 + i2 * sx1;
                         if (is_firt_pass) square(x1, y1, i1, j1, max_iter, n2);
                         square(x2, y1, i2, j1, max_iter, n2);
                         square(x1, y2, i1, j2, max_iter, n2);
@@ -515,7 +515,7 @@ public class MandelbrotBuilder {
             // TODO if (mContinue && mFinishListener != null) mFinishListener.run();
         }
 
-        private void square(double x, double y, int i, int j, int max_iter, int n) {
+        private void square(float x, float y, int i, int j, int max_iter, int n) {
             int c = computePoint(x, y, max_iter);
             c = colorIndex(c, max_iter);
             
@@ -531,14 +531,14 @@ public class MandelbrotBuilder {
         /**
          * Computes a given Mandelbrot point.
          */
-        private int computePoint(double x0, double y0, int max_iter) {
-            double x = x0;
-            double y = y0;
-            double x2 = x * x;
-            double y2 = y * y;
+        private int computePoint(float x0, float y0, int max_iter) {
+            float x = x0;
+            float y = y0;
+            float x2 = x * x;
+            float y2 = y * y;
             int iter = 0;
             while (x2 + y2 < 4 && iter < max_iter) {
-                double xtemp = x2 - y2 + x0;
+                float xtemp = x2 - y2 + x0;
                 y = 2 * x * y + y0;
                 x = xtemp;
                 x2 = x * x;

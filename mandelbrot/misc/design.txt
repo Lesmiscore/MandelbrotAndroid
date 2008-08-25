@@ -1,0 +1,25 @@
+Design notes
+
+----
+20080824 tiles version
+
+at the "app" level:
+- record each view as a database entry
+- provide a list view activity to see the history of tiles computed
+  (instead of a "hidden undo stack")
+- "viewer activity"
+
+Each "screen" is:
+- a list of tiles
+- typically 3x4 tiles per screen
+- "infinite" map: just create new tiles as they become visible
+- tiles are computing when they are visible
+- each tile is independant, i.e. it has it's own computation-pending state
+  and its own bitmap.
+- to save space, tiles do not memorize the mandelbrot "values", just the
+  rendered bitmap.
+- tiles are synced to disk (bitmap+attrib) in /sdcard/mandelbrot/tiles/...
+  We don't want to save them in the database => too big and both are
+  flash memory so there's little "speed" benefit.
+  Cons: doesn't work if sdcard is not available.
+

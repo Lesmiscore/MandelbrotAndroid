@@ -24,5 +24,6 @@
                 <!-- action android:name="com.google.android.mandelbrot.action.DISPLAY_INFO" / -->
             </intent-filter>
         </activity>
-    </application>
+    <activity android:name=".tiles.TileViewerActivity"></activity>
+</application>
 </manifest> 
