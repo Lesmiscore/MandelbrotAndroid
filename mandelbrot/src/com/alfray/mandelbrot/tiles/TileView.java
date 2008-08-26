@@ -4,9 +4,6 @@
  * License TBD
  */
 
-/**
- * 
- */
 package com.alfray.mandelbrot.tiles;
 
 import android.content.Context;

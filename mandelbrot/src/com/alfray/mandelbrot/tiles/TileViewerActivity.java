@@ -4,18 +4,14 @@
  * License TBD
  */
 
-/**
- * 
- */
 package com.alfray.mandelbrot.tiles;
+
+import com.alfray.mandelbrot.R;
 
 import android.app.Activity;
 import android.os.Bundle;
 
-/**
- * @author ralf
- *
- */
+
 public class TileViewerActivity extends Activity {
 
     /** Called when the activity is first created. */
@@ -23,7 +19,8 @@ public class TileViewerActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     
-        // TODO Auto-generated method stub
+        setContentView(R.layout.tiles);
+        
+        
     }
-
 }
