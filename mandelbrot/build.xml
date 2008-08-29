@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <project name="MandelbrotActivity" default="debug">
     <!-- SDK Locations -->
-    <property name="sdk-folder" value="/home/raphael/raphael-android/sdk/android-sdk_107292_linux-x86" />
-    <property name="android-tools" value="/home/raphael/raphael-android/sdk/android-sdk_107292_linux-x86/tools" />
+    <property name="sdk-folder" value="~/sdk/" />
+    <property name="android-tools" value="~/sdk/tools" />
     
     <!-- Application Package Name -->
     <property name="application-package" value="com.alfray.mandelbrot.old" />
