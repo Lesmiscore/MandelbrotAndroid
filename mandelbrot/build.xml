@@ -1,11 +1,11 @@
 <?xml version="1.0" ?>
 <project name="MandelbrotActivity" default="debug">
     <!-- SDK Locations -->
-    <property name="sdk-folder" value="C:\ralf\google\android-sdk-windows-0.9_beta" />
-    <property name="android-tools" value="C:\ralf\google\android-sdk-windows-0.9_beta\tools" />
+    <property name="sdk-folder" value="/home/raphael/raphael-android/sdk/android-sdk_107292_linux-x86" />
+    <property name="android-tools" value="/home/raphael/raphael-android/sdk/android-sdk_107292_linux-x86/tools" />
     
     <!-- Application Package Name -->
-    <property name="application-package" value="com.alfray.mandelbrot" />
+    <property name="application-package" value="com.alfray.mandelbrot.old" />
 
     <!-- The intermediates directory -->
     <!-- Eclipse uses "bin" for its own output, so we do the same. -->
