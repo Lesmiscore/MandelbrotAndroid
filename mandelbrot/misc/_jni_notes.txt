@@ -1,0 +1,1 @@
+javah -classpath /cygdrive/c/ralf/sdk/android.jar;../bin/classes; com.alfray.mandelbrot.NativeMandel
