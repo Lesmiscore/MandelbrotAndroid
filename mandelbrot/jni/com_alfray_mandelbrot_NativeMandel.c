@@ -1,5 +1,8 @@
 #include "com_alfray_mandelbrot_NativeMandel.h"
 
+#include <stdlib.h>   // for malloc
+#include <string.h>   // for memcpy
+
 /*
  * Class:     com_alfray_mandelbrot_NativeMandel
  * Method:    native_mandelbrot
@@ -56,11 +59,11 @@ JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_native_1mandelbro
   // update return array
   // c.f. http://java.sun.com/docs/books/performance/1st_edition/html/JPNativeCode.fm.html
 
-  jint* dest = (jint*)env->GetPrimitiveArrayCritical(result, 0);
+  jint* dest = (jint*) (*env)->GetPrimitiveArrayCritical(env, result, NULL /* isCopy */);
   ptr = last_ptr;
   size = *(ptr++);
   memcpy(dest, ptr, size * sizeof(jint));
-  env->ReleasePrimitiveArrayCritical(result, dest, 0);
+  (*env)->ReleasePrimitiveArrayCritical(env, result, dest, 0 /* mode */);
 
   // return temp storage ptr for reuse
   return (jint)last_ptr;
