@@ -9,11 +9,11 @@ extern "C" {
 #endif
 /*
  * Class:     com_alfray_mandelbrot_NativeMandel
- * Method:    add
- * Signature: (JJ)J
+ * Method:    native_mandelbrot
+ * Signature: (FFFII[II)I
  */
-JNIEXPORT jlong JNICALL Java_com_alfray_mandelbrot_NativeMandel_add
-  (JNIEnv *, jclass, jlong, jlong);
+JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_native_1mandelbrot
+  (JNIEnv *, jclass, jfloat, jfloat, jfloat, jint, jint, jintArray, jint);
 
 #ifdef __cplusplus
 }

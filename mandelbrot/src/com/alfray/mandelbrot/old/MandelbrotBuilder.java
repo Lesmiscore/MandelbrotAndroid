@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.alfray.mandelbrot.NativeMandel;
+
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -474,7 +476,40 @@ public class MandelbrotBuilder {
             mPaint = new Paint();
             mPaint.setStyle(Style.FILL);
 
-            int sx = getWidth();
+            // choose one of the two methods
+            computeLines();
+            //--computeJavaPasses();
+
+            // Tell the listener if we finished building without interruptions
+            // TODO if (mContinue && mFinishListener != null) mFinishListener.run();
+        }
+        
+        private void computeLines() {
+        	NativeMandel.init();
+
+			int sx = getWidth();
+            int sy = getHeight();
+            int max_iter = mCurrentState.mMaxIter;
+            float x0 = (float) (mCurrentState.mXCenter - mCurrentState.mWidth / 2.0);
+            float sx1 = (float) (mCurrentState.mWidth / sx);
+            float sy1 = sx1;  // Assumes pixels are square
+            float y0 = (float) (mCurrentState.mYCenter - 0.5 * sy1 * sy);
+            
+            int j1 = mCurrentState.mStartLine;
+            
+            int[] iters = new int[sx];
+            
+            for (; j1 < sy && mContinue; j1++) {
+                float y1 = y0 + j1 * sy1;
+            	NativeMandel.mandelbrot(x0, sx1, y1, max_iter, sx, iters);
+            	fill_line(j1, max_iter, iters);
+            }
+            
+            mCurrentState.mStartLine = j1;
+        }
+
+		private void computeJavaPasses() {
+			int sx = getWidth();
             int sy = getHeight();
             int max_iter = mCurrentState.mMaxIter;
             float x0 = (float) (mCurrentState.mXCenter - mCurrentState.mWidth / 2.0);
@@ -510,10 +545,15 @@ public class MandelbrotBuilder {
             mCurrentState.mStartColumn = i1;
             mCurrentState.mStartLine = j1;
             mCurrentState.mStartPass = pc;
+		}
 
-            // Tell the listener if we finished building without interruptions
-            // TODO if (mContinue && mFinishListener != null) mFinishListener.run();
-        }
+		private void fill_line(int j, int max_iter, int[] iters) {
+			int sx = iters.length;
+			for (int i = 0; i < sx; i++) {
+	            int c = colorIndex(iters[i], max_iter);
+                mBitmap.setPixel(i, j, c);
+			}
+		}
 
         private void square(float x, float y, int i, int j, int max_iter, int n) {
             int c = computePoint(x, y, max_iter);

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 		  package="com.alfray.mandelbrot">
-    <application android:icon="@drawable/icon">
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
         <activity android:label="@string/app_name" android:name=".old.MandelbrotActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,6 +24,11 @@
                 <!-- action android:name="com.google.android.mandelbrot.action.DISPLAY_INFO" / -->
             </intent-filter>
         </activity>
-    <activity android:name=".tiles.TileViewerActivity"></activity>
+    <activity android:name=".tiles.TileViewerActivity"><intent-filter>
+                <!-- action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" / -->
+            </intent-filter></activity>
 </application>
+
 </manifest> 

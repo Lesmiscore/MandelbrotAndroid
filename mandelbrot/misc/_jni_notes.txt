@@ -1,14 +1,19 @@
-#!/bin/bash
-
-# TODO:
 # reference:
 #   http://davanum.wordpress.com/2007/12/09/android-invoke-jni-based-methods-bridging-cc-and-java/
+
 # in bash do this:
-#   export SDK=...
-#   export TOOLCHAIN=...
+#   export SDK=... (where the 0.9_r1 sdk is)
+#   export TOOLCHAIN=... (where gcc-eabi is, see step #4 in link above)
 #   run from mandelbrot/jni
 
+# create the .h from a java API
 javah -classpath $SDK/android.jar;../bin/classes; com.alfray.mandelbrot.NativeMandel
 
+# create the .so from the .c/.h
 $TOOLCHAIN/bin/arm-eabi-gcc -I/usr/lib/jvm/java-1.5.0-sun/include -I/usr/lib/jvm/java-1.5.0-sun/include/linux -I/usr/include -fpic -c com_alfray_mandelbrot_NativeMandel.c
 $TOOLCHAIN/bin/arm-eabi-ld -T $TOOLCHAIN/arm-eabi/lib/ldscripts/armelf.xsc -shared -o ../assets/libMandelbrot.so com_alfray_mandelbrot_NativeMandel.o
+
+# push to emulator... not needed, the apk can do it itself
+# $SDK/tools/adb.exe shell mkdir /sdcard/mandelbrot
+# $SDK/tools/adb.exe push ../assets/libMandelbrot.so /sdcard/mandelbrot/libMandelbrot.so
+

@@ -13,8 +13,8 @@ import android.view.View;
 
 public class TileView extends View {
 
-    public TileView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+    public TileView(Context context, AttributeSet attrs) {
+        super(context, attrs);
     }
 
 }
