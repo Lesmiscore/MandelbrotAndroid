@@ -6,11 +6,13 @@
  * Signature: (FFFII[II)I
  */
 JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_native_1mandelbrot
-  (JNIEnv *env, jclass clazz,
+  (JNIEnv* env, jclass clazz,
    jfloat x_start, jfloat x_step, jfloat y_start,
    jint max_iter,
    jint size, jintArray result,
-   jint last_ptr) {
+   jint in_last_ptr) {
+
+  jint* last_ptr = (jint*)in_last_ptr;
 
   // see if we can reuse the temp storage (if it has the same size)
   if(last_ptr && last_ptr[0] != size) {
@@ -20,13 +22,13 @@ JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_native_1mandelbro
 
   // alloc temp storage
   if(!last_ptr && size > 0) {
-    last_ptr = (jint *)malloc(sizeof(jint) * (size + 1));
+    last_ptr = (jint*)malloc(sizeof(jint) * (size + 1));
     last_ptr[0] = size;
   }
 
   // simply pass size=0 when caller need to dealloc the temp storage
   if(size <= 0) {
-    return last_ptr;
+    return (jint)last_ptr;
   }
 
   jint* ptr = last_ptr + 1;
@@ -54,14 +56,14 @@ JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_native_1mandelbro
   // update return array
   // c.f. http://java.sun.com/docs/books/performance/1st_edition/html/JPNativeCode.fm.html
 
-  jint *dest = (jint *)env->GetPrimitiveArrayCritical(result, 0);
+  jint* dest = (jint*)env->GetPrimitiveArrayCritical(result, 0);
   ptr = last_ptr;
   size = *(ptr++);
   memcpy(dest, ptr, size * sizeof(jint));
   env->ReleasePrimitiveArrayCritical(result, dest, 0);
 
   // return temp storage ptr for reuse
-  return last_ptr;
+  return (jint)last_ptr;
 }
 
 
