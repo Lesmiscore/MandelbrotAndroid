@@ -1,10 +1,16 @@
 package com.alfray.mandelbrot;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import dalvik.system.VMStack;
 
+import android.content.res.AssetManager;
 import android.util.Log;
 
 public class NativeMandel {
@@ -13,17 +19,17 @@ public class NativeMandel {
 	private static boolean sInit = false;
 	private static int sNativePtr = 0;
 	
-	public synchronized static void init() {
+	public synchronized static void init(AssetManager assets) {
 		if (!sInit) {
 			sInit = true;
 			
-			// DEBUG -- sLoaded = load();
+			sLoaded = load(assets);
 		}
 	}
 	
 	public static void dispose() {
 		if (sLoaded && sNativePtr != 0) {
-			sNativePtr = native_mandelbrot(0, 0, 0, 0, 0, null, sNativePtr);
+			sNativePtr = doMandelbrot(0, 0, 0, 0, 0, null, sNativePtr);
 		}
 	}
 
@@ -31,7 +37,7 @@ public class NativeMandel {
     		int max_iter,
     		int size, int[] result) {
 		if (sLoaded) {
-			sNativePtr = native_mandelbrot(x_start, x_step, y_start, max_iter, size, result, sNativePtr);
+			sNativePtr = doMandelbrot(x_start, x_step, y_start, max_iter, size, result, sNativePtr);
 		} else {
 			for(int i = 0; size > 0; ++i, --size, x_start += x_step) {
 			    // the "naive" mandelbrot computation. nothing fancy.
@@ -54,12 +60,14 @@ public class NativeMandel {
 		}
 	}
 	
-    private static boolean load() {
+    private static boolean load(AssetManager assets) {
     	Runtime r = Runtime.getRuntime();
     	ClassLoader loader = VMStack.getCallingClassLoader();
     	String libpath = "/sdcard/mandelbrot/libMandelbrot.so";
-    	
+
     	try {
+        	updateSdcard(assets, libpath);
+        	
 			Class<? extends Runtime> c = r.getClass();
 			Method m = c.getDeclaredMethod("load", new Class[] { String.class, ClassLoader.class });
 			m.setAccessible(true);
@@ -76,18 +84,38 @@ public class NativeMandel {
             Log.e("JNI", "WARNING: IllegalAccessException: ", e);
 		} catch (InvocationTargetException e) {
             Log.e("JNI", "WARNING: InvocationTargetException: ", e);
-		} catch (Throwable t) {
-            Log.e("JNI", "WARNING: throwable: " + t.getMessage());
+		} catch (IOException e) {
+            Log.e("JNI", "WARNING: IOException: ", e);
 		}
 		
 		return false;
     }
 
-    /**
+    private static void updateSdcard(AssetManager assets, String dest_path) throws IOException {
+        byte[] buf = new byte[4096];
+
+        InputStream is = assets.open("libMandelbrot.so");
+        try {
+	    	FileOutputStream fos = new FileOutputStream(dest_path);
+
+	    	try {
+		    	int n;
+		    	while ((n = is.read(buf)) > 0) {
+		    		fos.write(buf, 0, n);
+		    	}
+	    	} finally {
+		    	fos.close();
+	    	}
+        } finally {
+        	is.close();
+        }
+	}
+
+	/**
      * Returns a temp buffer, which should be given back in last_ptr.
      * Fills result for size elements.
      */
-    private static native int native_mandelbrot(float x_start, float x_step, float y,
+    private static native int doMandelbrot(float x_start, float x_step, float y,
     		int max_iter,
     		int size, int[] result,
     		int last_ptr);

@@ -5,10 +5,10 @@
 
 /*
  * Class:     com_alfray_mandelbrot_NativeMandel
- * Method:    native_mandelbrot
+ * Method:    doMandelbrot
  * Signature: (FFFII[II)I
  */
-JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_native_1mandelbrot
+JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_doMandelbrot
   (JNIEnv* env, jclass clazz,
    jfloat x_start, jfloat x_step, jfloat y_start,
    jint max_iter,

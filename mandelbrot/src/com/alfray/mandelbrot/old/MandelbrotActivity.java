@@ -1,5 +1,6 @@
 package com.alfray.mandelbrot.old;
 
+import com.alfray.mandelbrot.NativeMandel;
 import com.alfray.mandelbrot.R;
 import com.alfray.mandelbrot.R.string;
 
@@ -48,6 +49,8 @@ public class MandelbrotActivity extends Activity
     {
         super.onCreate(bundle);
 
+    	NativeMandel.init(getAssets());
+        
         setTitle(R.string.app_title);
         // request a progress bar and hide it
         requestWindowFeature(Window.FEATURE_PROGRESS);

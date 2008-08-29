@@ -485,8 +485,6 @@ public class MandelbrotBuilder {
         }
         
         private void computeLines() {
-        	NativeMandel.init();
-
 			int sx = getWidth();
             int sy = getHeight();
             int max_iter = mCurrentState.mMaxIter;
