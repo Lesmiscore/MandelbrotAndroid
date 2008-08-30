@@ -59,11 +59,44 @@ public class NativeMandel {
 			}
 		}
 	}
-	
+
+	// for benchmark purposes
+	public static void mandelbrot1_native(float x_start, float x_step, float y_start,
+    		int max_iter,
+    		int size, int[] result) {
+		if (sLoaded) {
+			sNativePtr = doMandelbrot(x_start, x_step, y_start, max_iter, size, result, sNativePtr);
+		}
+	}
+
+	// for benchmark purposes
+	public static void mandelbrot1_java(float x_start, float x_step, float y_start,
+    		int max_iter,
+    		int size, int[] result) {
+		for(int i = 0; size > 0; ++i, --size, x_start += x_step) {
+		    // the "naive" mandelbrot computation. nothing fancy.
+		    float x = x_start;
+		    float y = y_start;
+		    float x2 = x * x;
+		    float y2 = y * y;
+		    int iter = 0;
+		    while (x2 + y2 < 4 && iter < max_iter) {
+		      float xtemp = x2 - y2 + x_start;
+		      y = 2 * x * y + y_start;
+		      x = xtemp;
+		      x2 = x * x;
+		      y2 = y * y;
+		      ++iter;
+		    }
+
+		    result[i] = iter;
+		}
+	}
+
     private static boolean load(AssetManager assets) {
     	Runtime r = Runtime.getRuntime();
     	ClassLoader loader = VMStack.getCallingClassLoader();
-    	String libpath = "/sdcard/mandelbrot/libMandelbrot.so";
+    	String libpath = "/data/mandelbrot/libMandelbrot.so";
 
     	try {
         	updateSdcard(assets, libpath);

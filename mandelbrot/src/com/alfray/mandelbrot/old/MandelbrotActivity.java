@@ -3,6 +3,7 @@ package com.alfray.mandelbrot.old;
 import com.alfray.mandelbrot.NativeMandel;
 import com.alfray.mandelbrot.R;
 import com.alfray.mandelbrot.R.string;
+import com.alfray.mandelbrot.tests.TestActivity;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
@@ -25,6 +26,7 @@ public class MandelbrotActivity extends Activity
     private static final int ID_BACK = Menu.FIRST + 3;
     private static final int ID_OPTIONS = Menu.FIRST + 4;
     private static final int ID_MORE = Menu.FIRST + 5;
+    private static final int ID_TEST = Menu.FIRST + 6;
 
     private static final String TAG = "MandelbrotActivity";
     
@@ -92,6 +94,9 @@ public class MandelbrotActivity extends Activity
         menu.add(0, ID_MORE, 0, R.string.more).setShortcut(
         		(char) KeyEvent.KEYCODE_4, (char) KeyEvent.KEYCODE_M);
         */
+        
+        menu.add(0, ID_TEST, 0, "Speed Tests");
+        
         return true;
     }
    
@@ -134,11 +139,13 @@ public class MandelbrotActivity extends Activity
             case ID_MORE:
                 showMore();
                 break;
+            case ID_TEST:
+            	showTests();
         }
         return super.onOptionsItemSelected(item);
     }
 
-    /**
+	/**
      * Called when the activity is frozen or evicted.
      * The state saved here will be given back in onCreate.
      * 
@@ -176,6 +183,15 @@ public class MandelbrotActivity extends Activity
 
     // ----------------------------------------------------------------------
     // Logic specific to this app
+
+    private void showTests() {
+        Intent intent = new Intent(this, TestActivity.class);
+        try {
+            startActivityForResult(intent, 0 /* requestCode */);
+        } catch(ActivityNotFoundException e) {
+            Log.e(TAG, e.getMessage() + ": " + intent.toString());
+        }                
+	}
 
     /**
      * Display the more information screen
