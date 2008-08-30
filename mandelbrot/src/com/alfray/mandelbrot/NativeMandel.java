@@ -63,6 +63,7 @@ public class NativeMandel {
 		}
 	}
 
+
 	// for benchmark purposes
 	public static void mandelbrot1_native(float x_start, float x_step, float y_start,
     		int max_iter,
@@ -95,6 +96,26 @@ public class NativeMandel {
 		    result[i] = iter;
 		}
 	}
+
+	public static void mandelbrot(
+			float x_start, float x_step,
+			float y_start, float y_step,
+			int sx, int sy,
+    		int max_iter,
+    		int size, int[] result) {
+		if (sLoaded) {
+			sNativePtr2 = doMandelbrot2(
+					x_start, x_step,
+					y_start, y_step,
+					sx, sy,
+					max_iter,
+					size, result,
+					sNativePtr2);
+		} else {
+			mandelbrot2_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
+		}
+	}
+	
 	// for benchmark purposes
 	public static void mandelbrot2_native(
 			float x_start, float x_step,

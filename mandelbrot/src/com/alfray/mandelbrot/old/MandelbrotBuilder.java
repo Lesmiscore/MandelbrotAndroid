@@ -441,6 +441,7 @@ public class MandelbrotBuilder {
         private Canvas mCanvas;
         private Paint mPaint;
         private Rect mRect;
+		private int[] mTempBlock;
 
         /**
          * Starts the thread for the given builder.
@@ -477,7 +478,8 @@ public class MandelbrotBuilder {
             mPaint.setStyle(Style.FILL);
 
             // choose one of the two methods
-            computeLines();
+            //computeLines();
+            computeBlocks();
             //--computeJavaPasses();
 
             // Tell the listener if we finished building without interruptions
@@ -501,6 +503,39 @@ public class MandelbrotBuilder {
                 float y1 = y0 + j1 * sy1;
             	NativeMandel.mandelbrot(x0, sx1, y1, max_iter, sx, iters);
             	fill_line(j1, max_iter, iters);
+            }
+            
+            mCurrentState.mStartLine = j1;
+        }
+        
+        private void computeBlocks() {
+			int sx = getWidth();
+            int sy = getHeight();
+            int max_iter = mCurrentState.mMaxIter;
+            float x0 = (float) (mCurrentState.mXCenter - mCurrentState.mWidth / 2.0);
+            float sx1 = (float) (mCurrentState.mWidth / sx);
+            float sy1 = sx1;  // Assumes pixels are square
+            float y0 = (float) (mCurrentState.mYCenter - 0.5 * sy1 * sy);
+            
+            int j1 = mCurrentState.mStartLine;
+            
+            final int wx = 320;
+            final int wy = 108;
+            if (mTempBlock == null) {
+            	mTempBlock = new int[wx * wy];
+            }
+
+            for (; j1 < sy && mContinue; j1+=wy) {
+                float y1 = y0 + j1 * sy1;
+                int my = wy;
+                if (j1+wy > sy) my = sy-j1;
+            	NativeMandel.mandelbrot(
+            			x0, sx1, 
+            			y1, sy1,
+            			wx, my,
+            			max_iter,
+            			mTempBlock.length, mTempBlock);
+            	fill_block(j1, wx, my, max_iter, mTempBlock);
             }
             
             mCurrentState.mStartLine = j1;
@@ -543,6 +578,17 @@ public class MandelbrotBuilder {
             mCurrentState.mStartColumn = i1;
             mCurrentState.mStartLine = j1;
             mCurrentState.mStartPass = pc;
+		}
+
+		private void fill_block(int j, int sx, int sy, int max_iter, int[] block) {
+			sy += j;
+			int k = j * sx;
+			for (; j < sy; j++) {
+				for (int i = 0; i < sx; i++, k++) {
+					int c = colorIndex(block[k], max_iter);
+					mBitmap.setPixel(i, j, c);
+				}
+			}
 		}
 
 		private void fill_line(int j, int max_iter, int[] iters) {
