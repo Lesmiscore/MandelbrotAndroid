@@ -103,7 +103,7 @@ public class NativeMandel {
 			int sx, int sy,
     		int max_iter,
     		int size, int[] result) {
-		if (sLoaded) {
+		if (false && sLoaded) {
 			sNativePtr2 = doMandelbrot2(
 					x_start, x_step,
 					y_start, y_step,
@@ -141,7 +141,9 @@ public class NativeMandel {
 			int sx, int sy,
     		int max_iter,
     		int size, int[] result) {
+		float x_begin = x_start;
 		for(int j = 0, k = 0; j < sy; ++j, y_start += y_step) {
+			x_start = x_begin;
 			for(int i = 0; i < sx; ++i, ++k, x_start += x_step) {
 			    // the "naive" mandelbrot computation. nothing fancy.
 			    float x = x_start;

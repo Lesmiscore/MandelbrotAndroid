@@ -442,6 +442,7 @@ public class MandelbrotBuilder {
         private Paint mPaint;
         private Rect mRect;
 		private int[] mTempBlock;
+		private int[] mColorMap;
 
         /**
          * Starts the thread for the given builder.
@@ -477,6 +478,14 @@ public class MandelbrotBuilder {
             mPaint = new Paint();
             mPaint.setStyle(Style.FILL);
 
+            int max_iter = mCurrentState.mMaxIter;
+            if (mColorMap == null || mColorMap.length != max_iter) {
+            	mColorMap = new int[max_iter + 1];
+            	for(int i = 0; i <= max_iter; i++) {
+            		mColorMap[i] = colorIndex(i, max_iter);
+            	}
+            }
+            
             // choose one of the two methods
             //computeLines();
             computeBlocks();
@@ -581,22 +590,21 @@ public class MandelbrotBuilder {
 		}
 
 		private void fill_block(int j, int sx, int sy, int max_iter, int[] block) {
-			sy += j;
-			int k = j * sx;
-			for (; j < sy; j++) {
-				for (int i = 0; i < sx; i++, k++) {
-					int c = colorIndex(block[k], max_iter);
-					mBitmap.setPixel(i, j, c);
-				}
+			int n = sx * sy;
+			for (int k = 0; k < n; ++k) {
+				block[k] = mColorMap[block[k]];
 			}
+			
+			mBitmap.setPixels(block, 0, sx, 0, j, sx, sy);
 		}
 
 		private void fill_line(int j, int max_iter, int[] iters) {
-			int sx = iters.length;
-			for (int i = 0; i < sx; i++) {
-	            int c = colorIndex(iters[i], max_iter);
-                mBitmap.setPixel(i, j, c);
+			int n = iters.length;
+			for (int k = 0; k < n; ++k) {
+				iters[k] = mColorMap[iters[k]];
 			}
+			
+			mBitmap.setPixels(iters, 0, n, 0, j, n, 1);
 		}
 
         private void square(float x, float y, int i, int j, int max_iter, int n) {
@@ -640,7 +648,7 @@ public class MandelbrotBuilder {
         // and RG=0x00 => 0xFF
         private int colorIndex(int iter, int max_iter) {
             float col_factor1 = 255.0f / max_iter;
-            float col_factor2 = 223.0f * 2/ max_iter; // 0xFF-0x20=xDF=255-32=223
+            float col_factor2 = 223.0f * 2 / max_iter; // 0xFF-0x20=xDF=255-32=223
             int rg, b;
             if (iter >= max_iter) {
                 rg = b = 0;
