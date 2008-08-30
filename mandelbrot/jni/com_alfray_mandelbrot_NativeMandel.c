@@ -8,7 +8,7 @@
  * Method:    doMandelbrot
  * Signature: (FFFII[II)I
  */
-JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_doMandelbrot
+JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_doMandelbrot1
   (JNIEnv* env, jclass clazz,
    jfloat x_start, jfloat x_step, jfloat y_start,
    jint max_iter,
