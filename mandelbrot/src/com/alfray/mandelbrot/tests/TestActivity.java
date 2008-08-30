@@ -56,13 +56,26 @@ public class TestActivity extends Activity {
 	
 	static class NativeTests extends TestThread {
 
+		private static final int sx = 320;
+		private static final int sy = 200;
+		private static final float _xcenter = -0.5f;
+		private static final float xy_width = 3.0f;
+		private static final float x_step = xy_width / sx;
+		private static final float y_step = xy_width / sy;
+		private static final float x_start = _xcenter - xy_width/2;
+		private static final float y_start = 0.0f - xy_width/2;
+		private static final float y_end = 0.0f + xy_width/2;
+		
+		
 		private int mState;
-		private int[] mResults;
+		private int[] mResults1;
+		private int[] mResults2;
 
 		public NativeTests(TextView textView) {
 			super("nativeTestsThread", textView);
 			mState = 1;
-			mResults = new int[320];
+			mResults1 = new int[sx];
+			mResults2 = new int[sx*sy];
 		}
 
 		@Override
@@ -78,10 +91,10 @@ public class TestActivity extends Activity {
 				test_native1(20);
 				break;
             case 4:
-                test_java1(100);
+                test_java2(100);
                 break;
             case 5:
-                test_native1(100);
+                test_native2(100);
                 break;
 			default:
 				mState = 0; // loop
@@ -93,11 +106,10 @@ public class TestActivity extends Activity {
 		private void test_nothing() {
 			long start = System.currentTimeMillis();
 
-			int nb = mResults.length;
-			float step = 4.0f / 200;
-			for (float y = -2.0f; y < 2.0f; y += step) {
+			int nb = mResults1.length;
+			for (float y = y_start; y < y_end; y += y_step) {
 				// calls native with size=0 => does nothing, returns asap
-				NativeMandel.mandelbrot1_native(-2.0f, step, y, 20, 0, mResults);
+				NativeMandel.mandelbrot1_native(x_start, x_step, y, 20, 0, mResults1);
 			}
 			
 			long end = System.currentTimeMillis();
@@ -109,33 +121,57 @@ public class TestActivity extends Activity {
 		private void test_native1(int max_iter) {
 			long start = System.currentTimeMillis();
 
-			int nb = mResults.length;
-			float ystep = 4.0f / 200;
-			float xstep = 4.0f / nb;
-			for (float y = -2.0f; y < 2.0f; y += ystep) {
-				NativeMandel.mandelbrot1_native(-2.0f, xstep, y, max_iter, nb, mResults);
+			for (float y = y_start; y < y_end; y += y_step) {
+				NativeMandel.mandelbrot1_native(x_start, x_step, y, 20, sx, mResults1);
 			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Native1 [320x200x%d] = %.2fs", max_iter, end/1000.0f);
+			writeResult("Native 1 [%dx%dx%d] = %.2fs", sx, sy, max_iter, end/1000.0f);
 		}
 
 		private void test_java1(int max_iter) {
 			long start = System.currentTimeMillis();
 
-			int nb = mResults.length;
-			float ystep = 4.0f / 200;
-			float xstep = 4.0f / nb;
-			for (float y = -2.0f; y < 2.0f; y += ystep) {
-				NativeMandel.mandelbrot1_java(-2.0f, xstep, y, max_iter, nb, mResults);
+			for (float y = y_start; y < y_end; y += y_step) {
+				NativeMandel.mandelbrot1_java(x_start, x_step, y, 20, sx, mResults1);
 			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Java1 [320x200x%d] = %.2fs", max_iter, end/1000.0f);
+			writeResult("Java 1 [%dx%dx%d] = %.2fs", sx, sy, max_iter, end/1000.0f);
+		}
+
+		private void test_native2(int max_iter) {
+			long start = System.currentTimeMillis();
+
+			NativeMandel.mandelbrot2_native(
+					x_start, x_step,
+					y_start, y_start,
+					sx, sy,
+					max_iter, mResults2.length, mResults2);
+			
+			long end = System.currentTimeMillis();
+			end -= start;
+			
+			writeResult("Native 2 [%dx%dx%d] = %.2fs", sx, sy, max_iter, end/1000.0f);
+		}
+
+		private void test_java2(int max_iter) {
+			long start = System.currentTimeMillis();
+
+			NativeMandel.mandelbrot2_java(
+					x_start, x_step,
+					y_start, y_start,
+					sx, sy,
+					max_iter, mResults2.length, mResults2);
+			
+			long end = System.currentTimeMillis();
+			end -= start;
+			
+			writeResult("Java 2 [%dx%dx%d] = %.2fs", sx, sy, max_iter, end/1000.0f);
 		}
 	}
 
