@@ -18,7 +18,8 @@ public class NativeMandel {
 
 	private static boolean sLoaded = false;
 	private static boolean sInit = false;
-	private static int sNativePtr = 0;
+	private static int sNativePtr1 = 0;
+	private static int sNativePtr2 = 0;
 	
 	public synchronized static void init(AssetManager assets) {
 		if (!sInit) {
@@ -29,8 +30,9 @@ public class NativeMandel {
 	}
 	
 	public static void dispose() {
-		if (sLoaded && sNativePtr != 0) {
-			sNativePtr = doMandelbrot(0, 0, 0, 0, 0, null, sNativePtr);
+		if (sLoaded ) {
+			sNativePtr1 = doMandelbrot1(0, 0, 0, 0, 0, null, sNativePtr1);
+			sNativePtr2 = doMandelbrot2(0, 0, 0, 0, 0, 0, 0, 0, null, sNativePtr2);
 		}
 	}
 
@@ -38,7 +40,7 @@ public class NativeMandel {
     		int max_iter,
     		int size, int[] result) {
 		if (sLoaded) {
-			sNativePtr = doMandelbrot(x_start, x_step, y_start, max_iter, size, result, sNativePtr);
+			sNativePtr1 = doMandelbrot1(x_start, x_step, y_start, max_iter, size, result, sNativePtr1);
 		} else {
 			for(int i = 0; size > 0; ++i, --size, x_start += x_step) {
 			    // the "naive" mandelbrot computation. nothing fancy.
@@ -66,7 +68,7 @@ public class NativeMandel {
     		int max_iter,
     		int size, int[] result) {
 		if (sLoaded) {
-			sNativePtr = doMandelbrot(x_start, x_step, y_start, max_iter, size, result, sNativePtr);
+			sNativePtr1 = doMandelbrot1(x_start, x_step, y_start, max_iter, size, result, sNativePtr1);
 		}
 	}
 
@@ -92,6 +94,52 @@ public class NativeMandel {
 
 		    result[i] = iter;
 		}
+	}
+	// for benchmark purposes
+	public static void mandelbrot2_native(
+			float x_start, float x_step,
+			float y_start, float y_step,
+			int sx, int sy,
+    		int max_iter,
+    		int size, int[] result) {
+		if (sLoaded) {
+			sNativePtr2 = doMandelbrot2(
+					x_start, x_step,
+					y_start, y_step,
+					sx, sy,
+					max_iter,
+					size, result,
+					sNativePtr2);
+		}
+	}
+
+	// for benchmark purposes
+	public static void mandelbrot2_java(
+			float x_start, float x_step,
+			float y_start, float y_step,
+			int sx, int sy,
+    		int max_iter,
+    		int size, int[] result) {
+		for(int j = 0, k = 0; j < sy; ++j, y_start += y_step) {
+			for(int i = 0; i < sx; ++i, ++k, x_start += x_step) {
+			    // the "naive" mandelbrot computation. nothing fancy.
+			    float x = x_start;
+			    float y = y_start;
+			    float x2 = x * x;
+			    float y2 = y * y;
+			    int iter = 0;
+			    while (x2 + y2 < 4 && iter < max_iter) {
+			      float xtemp = x2 - y2 + x_start;
+			      y = 2 * x * y + y_start;
+			      x = xtemp;
+			      x2 = x * x;
+			      y2 = y * y;
+			      ++iter;
+			    }
+	
+			    result[k] = iter;
+			} // i
+		} // j
 	}
 
     private static boolean load(AssetManager assets) {
@@ -161,7 +209,19 @@ public class NativeMandel {
      * Returns a temp buffer, which should be given back in last_ptr.
      * Fills result for size elements.
      */
-    private static native int doMandelbrot(float x_start, float x_step, float y,
+    private static native int doMandelbrot1(float x_start, float x_step, float y,
+    		int max_iter,
+    		int size, int[] result,
+    		int last_ptr);
+
+	/**
+     * Returns a temp buffer, which should be given back in last_ptr.
+     * Fills result for size elements.
+     */
+    private static native int doMandelbrot2(
+    		float x_start, float x_step,
+    		float y_start, float y_step,
+    		int sx, int sy,
     		int max_iter,
     		int size, int[] result,
     		int last_ptr);
