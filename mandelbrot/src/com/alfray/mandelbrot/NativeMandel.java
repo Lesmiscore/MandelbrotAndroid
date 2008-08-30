@@ -1,5 +1,6 @@
 package com.alfray.mandelbrot;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -96,7 +97,7 @@ public class NativeMandel {
     private static boolean load(AssetManager assets) {
     	Runtime r = Runtime.getRuntime();
     	ClassLoader loader = VMStack.getCallingClassLoader();
-    	String libpath = "/data/mandelbrot/libMandelbrot.so";
+    	String libpath = "/data/data/com.alfray.mandelbrot/libMandelbrot.so";
 
     	try {
         	updateSdcard(assets, libpath);
@@ -125,6 +126,18 @@ public class NativeMandel {
     }
 
     private static void updateSdcard(AssetManager assets, String dest_path) throws IOException {
+
+        File f = new File(dest_path);
+        if (!f.exists()) {
+            File d = new File(f.getParent());
+            if (!d.exists()) {
+                boolean worked = d.mkdirs();
+                if (!worked) {
+                    throw new IOException("Mkdir failed for " + f.getParent());
+                }
+            }
+        }
+        
         byte[] buf = new byte[4096];
 
         InputStream is = assets.open("libMandelbrot.so");

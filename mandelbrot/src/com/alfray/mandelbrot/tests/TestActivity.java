@@ -77,6 +77,12 @@ public class TestActivity extends Activity {
 			case 3:
 				test_native1(20);
 				break;
+            case 4:
+                test_java1(100);
+                break;
+            case 5:
+                test_native1(100);
+                break;
 			default:
 				mState = 0; // loop
 			}
