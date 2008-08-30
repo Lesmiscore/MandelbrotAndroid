@@ -105,8 +105,9 @@ JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_doMandelbrot2
   jint* ptr = last_ptr + 1;
 
   // the "naive" mandelbrot computation. nothing fancy.
-  for(int j = 0, k = 0; j < sy; ++j, y_start += y_step) {
-    for(int i = 0; i < sx; ++i, ++k, x_start += x_step) {
+  int i, j, k;
+  for(j = 0, k = 0; j < sy; ++j, y_start += y_step) {
+    for(i = 0; i < sx; ++i, ++k, x_start += x_step) {
       float x = x_start;
       float y = y_start;
       float x2 = x * x;
