@@ -529,7 +529,7 @@ public class MandelbrotBuilder {
             int j1 = mCurrentState.mStartLine;
             
             final int wx = 320;
-            final int wy = 108;
+            final int wy = sy / 10;
             if (mTempBlock == null) {
             	mTempBlock = new int[wx * wy];
             }

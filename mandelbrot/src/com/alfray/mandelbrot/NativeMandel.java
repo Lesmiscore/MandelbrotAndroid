@@ -103,7 +103,7 @@ public class NativeMandel {
 			int sx, int sy,
     		int max_iter,
     		int size, int[] result) {
-		if (false && sLoaded) {
+		if (sLoaded) {
 			sNativePtr2 = doMandelbrot2(
 					x_start, x_step,
 					y_start, y_step,
