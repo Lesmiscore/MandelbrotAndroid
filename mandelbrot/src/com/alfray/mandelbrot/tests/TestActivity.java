@@ -130,6 +130,9 @@ public class TestActivity extends Activity {
             case 5:
                 test_native2(100);
                 break;
+            case 6:
+                test_java3(100);
+                break;
 			default:
 				mState = 0; // loop
 			    writeResult("-------");
@@ -141,7 +144,8 @@ public class TestActivity extends Activity {
 		private void test_nothing() {
 			long start = System.currentTimeMillis();
 
-			for (int i = 0; i < 100000; ++i) {
+			final int N=10000;
+			for (int i = 0; i < N; ++i) {
 				// calls native with size=0 => does nothing, returns asap
 				NativeMandel.mandelbrot1_native(0, 0, 0, 20, 0, mResults1);
 			}
@@ -149,63 +153,91 @@ public class TestActivity extends Activity {
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Empty [100,000] = %.2fs", end/1000.0f);
+			writeResult("Empty [%d] = %.2f ms/call", N, (double)end/N);
 		}
 
 		private void test_native1(int max_iter) {
 			long start = System.currentTimeMillis();
 
+			int N=0;
 			for (float y = y_start; y < y_end; y += y_step) {
 				NativeMandel.mandelbrot1_native(x_start, x_step, y, 20, sx, mResults1);
+				++N;
 			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Native 1 [%dx%dx%d] = %.2fs", sx, sy, max_iter, end/1000.0f);
+			writeResult("Native 1 [%dx%dx%d] = %.2f s -- %.2fms/call", sx, sy, max_iter, end/1000.0f, (double)end/N);
 		}
 
 		private void test_java1(int max_iter) {
 			long start = System.currentTimeMillis();
 
+			int N=0;
 			for (float y = y_start; y < y_end; y += y_step) {
 				NativeMandel.mandelbrot1_java(x_start, x_step, y, 20, sx, mResults1);
+				++N;
 			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Java 1 [%dx%dx%d] = %.2fs", sx, sy, max_iter, end/1000.0f);
-		}
-
-		private void test_native2(int max_iter) {
-			long start = System.currentTimeMillis();
-
-			NativeMandel.mandelbrot2_native(
-					x_start, x_step,
-					y_start, y_start,
-					sx, sy,
-					max_iter, mResults2.length, mResults2);
-			
-			long end = System.currentTimeMillis();
-			end -= start;
-			
-			writeResult("Native 2 [%dx%dx%d] = %.2fs", sx, sy, max_iter, end/1000.0f);
+			writeResult("Java 1 [%dx%dx%d] = %.2f s -- %.2fms/call", sx, sy, max_iter, end/1000.0f, (double)end/N);
 		}
 
 		private void test_java2(int max_iter) {
 			long start = System.currentTimeMillis();
 
-			NativeMandel.mandelbrot2_java(
-					x_start, x_step,
-					y_start, y_start,
-					sx, sy,
-					max_iter, mResults2.length, mResults2);
+			final int N=10;
+			for (int k = 0; k < N; ++k) {
+				NativeMandel.mandelbrot2_java(
+						x_start, x_step,
+						y_start, y_start,
+						sx, sy,
+						max_iter, mResults2.length, mResults2);
+			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Java 2 [%dx%dx%d] = %.2fs", sx, sy, max_iter, end/1000.0f);
+			writeResult("Jave 2 [%dx%dx%d] = %.2f ms/call", sx, sy, max_iter, (double)end/N);
+		}
+
+		private void test_native2(int max_iter) {
+			long start = System.currentTimeMillis();
+
+			final int N=10;
+			for (int k = 0; k < N; ++k) {
+				NativeMandel.mandelbrot2_native(
+						x_start, x_step,
+						y_start, y_start,
+						sx, sy,
+						max_iter, mResults2.length, mResults2);
+			}
+			
+			long end = System.currentTimeMillis();
+			end -= start;
+			
+			writeResult("Native 2 [%dx%dx%d] = %.2f ms/call", sx, sy, max_iter, (double)end/N);
+		}
+
+		private void test_java3(int max_iter) {
+			long start = System.currentTimeMillis();
+
+			final int N=10;
+			for (int k = 0; k < N; ++k) {
+				NativeMandel.mandelbrot3_java(
+						x_start, x_step,
+						y_start, y_start,
+						sx, sy,
+						max_iter, mResults2.length, mResults2);
+			}
+			
+			long end = System.currentTimeMillis();
+			end -= start;
+			
+			writeResult("Jave 3 [%dx%dx%d] = %.2f ms/call", sx, sy, max_iter, (double)end/N);
 		}
 	}
 

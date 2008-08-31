@@ -4,18 +4,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import dalvik.system.VMStack;
-
 import android.content.res.AssetManager;
 import android.util.Log;
+import dalvik.system.VMStack;
 
 public class NativeMandel {
 
+	private static String TAG = "NativeMandel";
+	
 	private static boolean sLoaded = false;
 	private static boolean sInit = false;
 	private static int sNativePtr1 = 0;
@@ -165,18 +164,68 @@ public class NativeMandel {
 		} // j
 	}
 
+	// for benchmark purposes
+	public static void mandelbrot3_java(
+			float x_start, float x_step,
+			float y_start, float y_step,
+			int sx, int sy,
+    		int max_iter,
+    		int size, int[] result) {
+		final int  iexp = 24;
+		final int  Lexp = 2 * iexp;
+		final int  Fexp = 1 << iexp;
+		final long L4   = 4 << Lexp;
+		final int  i2   = 2 << iexp;
+		int ix_start = (int) (x_start * Fexp);
+		int ix_step  = (int) (x_step  * Fexp);
+		int iy_start = (int) (y_start * Fexp);
+		int iy_step  = (int) (y_step  * Fexp);
+		
+		int ix_start_old = ix_start;
+		for(int j = 0, k = 0; j < sy; ++j, iy_start += iy_step) {
+			ix_start = ix_start_old;
+			for(int i = 0; i < sx; ++i, ++k, ix_start += ix_step) {
+			    // the "naive" mandelbrot computation. nothing fancy.
+			    int ix = ix_start;
+			    int iy = iy_start;
+			    long Lx2 = ix * ix;
+			    long Ly2 = iy * iy;
+			    int iter = 0;
+			    while (Lx2 + Ly2 < L4 && iter < max_iter) {
+				    // float xtemp = x2 - y2 + x_start;
+			    	long Ltemp = Lx2 - Ly2;
+			    	int ixtemp = (int) (Ltemp >> iexp);
+			    	ixtemp += ix_start;
+
+			    	// y = 2 * x * y + y_start;
+			    	Ltemp = ix * iy;
+			    	iy = (int) (Ltemp >> iexp);
+			    	iy += iy_start;
+
+			    	ix = ixtemp;
+			    	Lx2 = ix * ix;
+			    	Ly2 = iy * iy;
+			    	++iter;
+			    }
+	
+			    result[k] = iter;
+			} // i
+		} // j
+	}
+
     private static boolean load(AssetManager assets) {
     	Runtime r = Runtime.getRuntime();
     	ClassLoader loader = VMStack.getCallingClassLoader();
     	String libpath = "/data/data/com.alfray.mandelbrot/libMandelbrot.so";
 
     	try {
-        	updateSdcard(assets, libpath);
+        	setup(assets, libpath);
         	
 			Class<? extends Runtime> c = r.getClass();
 			Method m = c.getDeclaredMethod("load", new Class[] { String.class, ClassLoader.class });
 			m.setAccessible(true);
 			m.invoke(r, new Object[] { libpath, loader });
+			Log.d(TAG, "libMandelbrot.so loaded");
 			return true;
 					
 		} catch (SecurityException e) {
@@ -193,10 +242,11 @@ public class NativeMandel {
             Log.e("JNI", "WARNING: IOException: ", e);
 		}
 		
+		Log.d(TAG, "libMandelbrot.so *NOT* loaded");
 		return false;
     }
 
-    private static void updateSdcard(AssetManager assets, String dest_path) throws IOException {
+    private static void setup(AssetManager assets, String dest_path) throws IOException {
 
         File f = new File(dest_path);
         if (!f.exists()) {
