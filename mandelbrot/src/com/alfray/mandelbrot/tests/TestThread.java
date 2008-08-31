@@ -19,18 +19,16 @@ import android.widget.TextView;
 
 public abstract class TestThread extends Thread {
 
-    private static final String TAG = "TestThread";
+    protected static final String TAG = "TestThread";
 
 	protected boolean mContinue = true;
 	protected boolean mIsPaused = false;
 	protected boolean mWaitAtPauseBarrier = false;
 	protected CyclicBarrier mPauseBarrier;
 
-	private final TextView mTextView;
 	
-	public TestThread(String name, TextView textView) {
+	public TestThread(String name) {
 		super(name);
-		mTextView = textView;
 	}
 
 	/**
@@ -180,19 +178,6 @@ public abstract class TestThread extends Thread {
 				// pass
 			}
 		}
-	}
-	
-	public void writeResult(String format, Object...params) {
-		String msg = String.format(format, params);
-		Log.d(TAG, msg);
-		
-		final String msg2 = msg.endsWith("\n") ? msg : msg + "\n";
-		
-		mTextView.post(new Runnable() {
-			public void run() {
-				mTextView.append(msg2);
-			}
-		});
 	}
 }
 

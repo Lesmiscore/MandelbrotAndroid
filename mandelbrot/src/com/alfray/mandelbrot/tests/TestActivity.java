@@ -3,13 +3,16 @@
  */
 package com.alfray.mandelbrot.tests;
 
-import com.alfray.mandelbrot.NativeMandel;
-import com.alfray.mandelbrot.R;
-import com.alfray.mandelbrot.R.id;
-
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
+
+import com.alfray.mandelbrot.NativeMandel;
+import com.alfray.mandelbrot.R;
 
 //-----------------------------------------------
 
@@ -21,6 +24,9 @@ public class TestActivity extends Activity {
 
 	private TextView mText;
 	private NativeTests mTestThread;
+    private Button mStart;
+    private Button mPause;
+    private ScrollView mScroller;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -31,15 +37,29 @@ public class TestActivity extends Activity {
 	    
 	    setContentView(R.layout.tests);
 	    
+	    mScroller = (ScrollView) findViewById(R.id.scroller);
 	    mText = (TextView) findViewById(R.id.text);
+        mStart = (Button) findViewById(R.id.start);
+        mPause = (Button) findViewById(R.id.pause);
 	    
-	    mTestThread = new NativeTests(mText);
+	    mTestThread = new NativeTests();
+	    
+	    mStart.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                mTestThread.start();
+            }
+	    });
+        
+	    mPause.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                mTestThread.pauseThread(true);
+            }
+        });
 	}
 	
 	@Override
 	protected void onResume() {
 		super.onResume();
-		mTestThread.start();
 	}
 	
 	@Override
@@ -54,10 +74,10 @@ public class TestActivity extends Activity {
 		mTestThread.waitForStop();
 	}
 	
-	static class NativeTests extends TestThread {
+	class NativeTests extends TestThread {
 
 		private static final int sx = 320;
-		private static final int sy = 200;
+		private static final int sy = 480;
 		private static final float _xcenter = -0.5f;
 		private static final float xy_width = 3.0f;
 		private static final float x_step = xy_width / sx;
@@ -71,12 +91,26 @@ public class TestActivity extends Activity {
 		private int[] mResults1;
 		private int[] mResults2;
 
-		public NativeTests(TextView textView) {
-			super("nativeTestsThread", textView);
+		public NativeTests() {
+			super("nativeTestsThread");
 			mState = 1;
 			mResults1 = new int[sx];
 			mResults2 = new int[sx*sy];
 		}
+		
+	    public void writeResult(String format, Object...params) {
+	        String msg = String.format(format, params);
+	        Log.d(TAG, msg);
+	        
+	        final String msg2 = msg.endsWith("\n") ? msg : msg + "\n";
+	        
+	        mText.post(new Runnable() {
+	            public void run() {
+	                mText.append(msg2);
+	                mScroller.scrollTo(0, mText.getHeight());
+	            }
+	        });
+	    }
 
 		@Override
 		protected void runIteration() {
@@ -98,6 +132,7 @@ public class TestActivity extends Activity {
                 break;
 			default:
 				mState = 0; // loop
+			    writeResult("-------");
 			}
 			
 			mState++;
@@ -106,16 +141,15 @@ public class TestActivity extends Activity {
 		private void test_nothing() {
 			long start = System.currentTimeMillis();
 
-			int nb = mResults1.length;
-			for (float y = y_start; y < y_end; y += y_step) {
+			for (int i = 0; i < 100000; ++i) {
 				// calls native with size=0 => does nothing, returns asap
-				NativeMandel.mandelbrot1_native(x_start, x_step, y, 20, 0, mResults1);
+				NativeMandel.mandelbrot1_native(0, 0, 0, 20, 0, mResults1);
 			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Empty [200] = %.2fs", end/1000.0f);
+			writeResult("Empty [100,000] = %.2fs", end/1000.0f);
 		}
 
 		private void test_native1(int max_iter) {

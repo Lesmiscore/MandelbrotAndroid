@@ -1,10 +1,42 @@
-<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
     android:orientation="vertical"
 >
-<TextView android:layout_width="wrap_content" 
-	android:layout_height="wrap_content" 
-	android:id="@+id/text" android:text="mandel speed tests">
-</TextView>
+
+<ScrollView 
+    android:id="@+id/scroller" 
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent" android:layout_weight="1">
+    
+    <TextView 
+        android:id="@+id/text" 
+        android:text="mandel speed tests\n" 
+        android:layout_height="fill_parent" 
+        android:layout_width="fill_parent"
+        />
+</ScrollView>
+
+<LinearLayout 
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:orientation="horizontal"
+>
+
+<Button 
+    android:id="@+id/start" 
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content"
+    android:text="Start"
+    android:layout_weight="1"/>
+
+<Button 
+    android:id="@+id/pause" 
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content"
+    android:text="Pause"
+    android:layout_weight="1"/>
+</LinearLayout>
+
+
 </LinearLayout>
