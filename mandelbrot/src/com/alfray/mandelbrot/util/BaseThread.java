@@ -4,7 +4,7 @@
  * License TBD
  */
 
-package com.alfray.mandelbrot.tests;
+package com.alfray.mandelbrot.util;
 
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -12,23 +12,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import android.util.Log;
-import android.widget.TextView;
 
 
 //-----------------------------------------------
 
-public abstract class TestThread extends Thread {
+public abstract class BaseThread extends Thread {
 
-    protected static final String TAG = "TestThread";
+    private static final String TAG = "BaseThread";
 
 	protected boolean mContinue = true;
 	protected boolean mIsPaused = false;
 	protected boolean mWaitAtPauseBarrier = false;
 	protected CyclicBarrier mPauseBarrier;
-
 	
-	public TestThread(String name) {
+	public BaseThread(String name) {
 		super(name);
+        this.setPriority(Thread.currentThread().getPriority()+1);
 	}
 
 	/**
@@ -105,6 +104,12 @@ public abstract class TestThread extends Thread {
 			wakeUp();
 		}
 	}
+
+	/**
+	 * Resets the circular buffer of actions and also clears every single
+	 * action to make sure no outside object reference is kept behind.
+	 */
+	public abstract void clear();
 	
 	// -----------------
 
@@ -120,22 +125,36 @@ public abstract class TestThread extends Thread {
 	 */
 	@Override
     public void run() {
-        while (mContinue) {
-        	if (mIsPaused) {
-        		waitAtPauseBarrier();
-        		waitForALongTime();
-        		continue;
-        	}
-
-        	runIteration();
-        }
+	    
+	    try {
+	        startRun();
+	        
+            while (mContinue) {
+            	if (mIsPaused) {
+            		waitAtPauseBarrier();
+            		waitForALongTime();
+            		continue;
+            	}
+    
+            	runIteration();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Run-Loop Exception, stopping thread", e);
+	    } finally {
+	        endRun();
+	    }
 	}
 	
-	/**
+    protected abstract void startRun();
+
+    /**
 	 * Performs one iteration of the thread run loop.
 	 * Implementations must implement this and not throw exceptions from it.
 	 */
 	protected abstract void runIteration();
+
+	protected abstract void endRun();
+
 
 	protected void wakeUp() {
 		this.interrupt();

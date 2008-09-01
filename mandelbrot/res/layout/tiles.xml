@@ -5,12 +5,12 @@ android:orientation="vertical">
 <TextView android:layout_height="wrap_content" 
 	android:id="@+id/text" android:layout_width="fill_parent" android:background="#005" android:textColor="#AA0" android:text="Mandelbrot Map"></TextView>
 	
-<com.alfray.mandelbrot.tiles.TileView
-    android:id="@+id/tile_view" 
+<com.alfray.mandelbrot.util.GLSurfaceView
+    android:id="@+id/gl_view" 
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
    android:layout_weight="1">
-</com.alfray.mandelbrot.tiles.TileView>
+</com.alfray.mandelbrot.util.GLSurfaceView>
 
 
 </LinearLayout>

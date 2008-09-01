@@ -8,6 +8,7 @@ package com.alfray.mandelbrot.tiles;
 
 import com.alfray.mandelbrot.NativeMandel;
 import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot.util.GLSurfaceView;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -24,18 +25,7 @@ public class TileViewerActivity extends Activity {
     
         setContentView(R.layout.tiles);
         
-        TextView t = (TextView)findViewById(R.id.text);
-        
-        try {
-        	boolean loaded = false; //NativeMandel.loadDirect();
-	        if (loaded) {
-	        	long a = 0; // NativeMandel.add(42, 24);
-	        
-	        	t.setText((loaded ? "" : "un") + "loaded... " + Long.toString(a));
-	        }
-        } catch (Throwable tr) {
-        	Log.d("mandeltest", "Throwable: " + tr.getMessage());
-        	t.setText("Throwable: " + tr.getMessage());
-        }
+        TextView t = (TextView) findViewById(R.id.text);
+        GLSurfaceView gl_view = (GLSurfaceView) findViewById(R.id.gl_view);
     }
 }
