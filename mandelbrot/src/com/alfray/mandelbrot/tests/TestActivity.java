@@ -76,8 +76,8 @@ public class TestActivity extends Activity {
 	
 	class NativeTests extends TestThread {
 
-		private static final int sx = 320;
-		private static final int sy = 480;
+		private static final int sx = 256;
+		private static final int sy = 256;
 		private static final float _xcenter = -0.5f;
 		private static final float xy_width = 3.0f;
 		private static final float x_step = xy_width / sx;
@@ -153,7 +153,7 @@ public class TestActivity extends Activity {
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Empty [%d] = %.2f ms/call", N, (double)end/N);
+			writeResult("Empty [%d] = %g ms/call", N, (double)end/(double)N);
 		}
 
 		private void test_native1(int max_iter) {

@@ -487,8 +487,8 @@ public class MandelbrotBuilder {
             }
             
             // choose one of the two methods
-            //computeLines();
-            computeBlocks();
+            computeLines();
+            //computeBlocks();
             //--computeJavaPasses();
 
             // Tell the listener if we finished building without interruptions
@@ -510,8 +510,17 @@ public class MandelbrotBuilder {
             
             for (; j1 < sy && mContinue; j1++) {
                 float y1 = y0 + j1 * sy1;
-            	NativeMandel.mandelbrot(x0, sx1, y1, max_iter, sx, iters);
-            	fill_line(j1, max_iter, iters);
+            	
+                // NativeMandel.mandelbrot(x0, sx1, y1, max_iter, sx, iters);
+
+                NativeMandel.mandelbrot3_java(
+                        x0, sx1, 
+                        y1, 1,
+                        sx, 1,
+                        max_iter,
+                        iters.length, iters);
+
+                fill_line(j1, max_iter, iters);
             }
             
             mCurrentState.mStartLine = j1;
@@ -538,13 +547,15 @@ public class MandelbrotBuilder {
                 float y1 = y0 + j1 * sy1;
                 int my = wy;
                 if (j1+wy > sy) my = sy-j1;
-            	NativeMandel.mandelbrot(
+
+                NativeMandel.mandelbrot3_java(
             			x0, sx1, 
             			y1, sy1,
             			wx, my,
             			max_iter,
             			mTempBlock.length, mTempBlock);
-            	fill_block(j1, wx, my, max_iter, mTempBlock);
+            	
+                fill_block(j1, wx, my, max_iter, mTempBlock);
             }
             
             mCurrentState.mStartLine = j1;

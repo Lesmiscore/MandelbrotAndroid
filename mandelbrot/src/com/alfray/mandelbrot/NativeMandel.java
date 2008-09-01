@@ -151,10 +151,9 @@ public class NativeMandel {
 			    float y2 = y * y;
 			    int iter = 0;
 			    while (x2 + y2 < 4 && iter < max_iter) {
-			      float xtemp = x2 - y2 + x_start;
+			      float xt = x2 - y2 + x_start;
 			      y = 2 * x * y + y_start;
-			      x = xtemp;
-			      x2 = x * x;
+			      x2 = xt * xt;
 			      y2 = y * y;
 			      ++iter;
 			    }
@@ -172,9 +171,10 @@ public class NativeMandel {
     		int max_iter,
     		int size, int[] result) {
 		final int  iexp = 24;
+        final int  iexp1 = iexp - 1;
 		final int  Lexp = 2 * iexp;
 		final int  Fexp = 1 << iexp;
-		final long L4   = 4 << Lexp;
+		final long L4   = 4L << Lexp;
 		final int  i2   = 2 << iexp;
 		int ix_start = (int) (x_start * Fexp);
 		int ix_step  = (int) (x_step  * Fexp);
@@ -188,24 +188,36 @@ public class NativeMandel {
 			    // the "naive" mandelbrot computation. nothing fancy.
 			    int ix = ix_start;
 			    int iy = iy_start;
-			    long Lx2 = ix * ix;
-			    long Ly2 = iy * iy;
+
+			    // float x2 = x * x;
+			    long Lx2 = (long)ix;
+			        Lx2 = Lx2 * Lx2;
+			    
+                // float y2 = y * y;
+			    long Ly2 = (long)iy;
+                    Ly2 = Ly2 * Ly2;
+
 			    int iter = 0;
 			    while (Lx2 + Ly2 < L4 && iter < max_iter) {
 				    // float xtemp = x2 - y2 + x_start;
 			    	long Ltemp = Lx2 - Ly2;
-			    	int ixtemp = (int) (Ltemp >> iexp);
-			    	ixtemp += ix_start;
+			    	int ixt = (int) (Ltemp >> iexp);
+			    	ixt += ix_start;
 
 			    	// y = 2 * x * y + y_start;
 			    	Ltemp = ix * iy;
-			    	iy = (int) (Ltemp >> iexp);
+			    	iy = (int) (Ltemp >> iexp1); // shift by iexp-1 => *=2
 			    	iy += iy_start;
 
-			    	ix = ixtemp;
-			    	Lx2 = ix * ix;
-			    	Ly2 = iy * iy;
-			    	++iter;
+	                // x2 = xt * xt;
+			    	Lx2 = (long)ixt;
+			    	    Lx2 = Lx2 * Lx2;
+
+		    	    // y2 = y * y;
+		    	    Ly2 = (long)iy;
+	                    Ly2 = Ly2 * Ly2;
+			    	
+		    	    ++iter;
 			    }
 	
 			    result[k] = iter;
