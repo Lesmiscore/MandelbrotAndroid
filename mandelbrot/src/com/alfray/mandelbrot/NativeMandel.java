@@ -173,9 +173,9 @@ public class NativeMandel {
 		final int  iexp = 24;
         final int  iexp1 = iexp - 1;
 		final int  Lexp = 2 * iexp;
-		final int  Fexp = 1 << iexp;
+		final int  Fexp = 1  << iexp;
 		final long L4   = 4L << Lexp;
-		final int  i2   = 2 << iexp;
+		final int  i2   = 2  << iexp;
 		int ix_start = (int) (x_start * Fexp);
 		int ix_step  = (int) (x_step  * Fexp);
 		int iy_start = (int) (y_start * Fexp);
@@ -198,15 +198,16 @@ public class NativeMandel {
                     Ly2 = Ly2 * Ly2;
 
 			    int iter = 0;
-			    while (Lx2 + Ly2 < L4 && iter < max_iter) {
-				    // float xtemp = x2 - y2 + x_start;
-			    	long Ltemp = Lx2 - Ly2;
+			    long Ltemp = Lx2 + Ly2; 
+			    while (Ltemp < L4 && iter < max_iter) {
+				    // float xt = x2 - y2 + x_start;
+			    	Ltemp = Lx2 - Ly2;
 			    	int ixt = (int) (Ltemp >> iexp);
 			    	ixt += ix_start;
 
 			    	// y = 2 * x * y + y_start;
-			    	Ltemp = ix * iy;
-			    	iy = (int) (Ltemp >> iexp1); // shift by iexp-1 => *=2
+			    	Ltemp = (long)ix * (long)iy;
+			    	iy = (int) (Ltemp >> iexp1); // R-shift by iexp-1 => *=2
 			    	iy += iy_start;
 
 	                // x2 = xt * xt;
@@ -217,6 +218,7 @@ public class NativeMandel {
 		    	    Ly2 = (long)iy;
 	                    Ly2 = Ly2 * Ly2;
 			    	
+                    Ltemp = Lx2 + Ly2; 
 		    	    ++iter;
 			    }
 	
