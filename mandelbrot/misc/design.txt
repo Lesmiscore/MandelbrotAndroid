@@ -37,16 +37,21 @@ Each "screen" is:
     - tile key: zoom_fp, i, j
     - native_ptr : int
     - dispose()
-    - bitmap
+    - 2d bitmap or gl buffer in 565
     - done if bitmap!=null
 
 - TileContext:
     - tile list (phase2: MRU with weak refs)
     - zoom_fp
     - scroll: ofx, ofy (in pixels)
-    - visible list
+    - visible list:
+        - number of max visible = (sx/size)+1 * (sy/size)+1 (e.g. 9)
+        - array of N visible tiles
+            - gl texture id
+            - x, y, z coords (z=0)
+    - when zooming, use 2 visible lists at different z
 
-- TileView:
+- TileView / TileGlView:
     - display visible list from context
     - forward events to context / activity
     - show hide selection (phase2)
@@ -60,3 +65,18 @@ Each "screen" is:
 - TileActivity:
     - setup / save / restore context
     - show hide zoom control
+
+Panning:
+- change ofx/ofy
+- remove tiles from visible list
+- add new tiles to visible list.
+    - create Tile + add to map as needed
+- refresh gl view
+
+Zoom*2:
+- create new visible list at z=1 
+- move z=1->0 and (z=0->-1 with alpha 255->0)
+
+Zoom/2:
+- create new visible list at z=-1
+- move z=0->1 and (z=-1->0 with alpha 0->255)
