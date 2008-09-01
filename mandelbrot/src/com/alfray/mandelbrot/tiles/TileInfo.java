@@ -12,6 +12,9 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Paint.Style;
 
+/**
+ * @deprecated
+ */
 public class TileInfo {
 
     private final int mI;

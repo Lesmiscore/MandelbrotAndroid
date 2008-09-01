@@ -487,8 +487,8 @@ public class MandelbrotBuilder {
             }
             
             // choose one of the two methods
-            computeLines();
-            //computeBlocks();
+            //computeLines();
+            computeBlocks();
             //--computeJavaPasses();
 
             // Tell the listener if we finished building without interruptions

@@ -23,3 +23,40 @@ Each "screen" is:
   flash memory so there's little "speed" benefit.
   Cons: doesn't work if sdcard is not available.
 
+----
+20080901 map version
+
+- tiles 256x256
+- tile key:
+    - zoom level: fixed point 23.8 (no need to unzoom -> always positive)
+    - tile i,j (0,0=center of mu plan)
+- width/height of a tile in mu plan is 256/zoom_fp
+- step size in mu plan is 1/zoom_fp
+
+- Tile:
+    - tile key: zoom_fp, i, j
+    - native_ptr : int
+    - dispose()
+    - bitmap
+    - done if bitmap!=null
+
+- TileContext:
+    - tile list (phase2: MRU with weak refs)
+    - zoom_fp
+    - scroll: ofx, ofy (in pixels)
+    - visible list
+
+- TileView:
+    - display visible list from context
+    - forward events to context / activity
+    - show hide selection (phase2)
+
+- TileThread:
+    - queue of pending tiles (prioritize new adds: LIFO)
+    - for all tiles in pending queue, if not done, compute them
+    - otherwise sleep
+    - wake up when queued
+
+- TileActivity:
+    - setup / save / restore context
+    - show hide zoom control
