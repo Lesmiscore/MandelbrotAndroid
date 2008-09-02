@@ -17,7 +17,7 @@ import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.opengl.GLException;
+import android.opengl.GLU;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
@@ -54,11 +54,21 @@ public abstract class GLBaseThread extends BaseThread {
 
     private boolean mSetupSceneNeeded;
 
+    private boolean mDirty;
+
     public GLBaseThread(SurfaceHolder surfaceHolder) {
         super("RenderGL");
+
         mSurfaceHolder = surfaceHolder;
-        this.setPriority(Thread.currentThread().getPriority()+1);
+        surfaceHolder.addCallback(new SurfaceViewCallback());
+        
         mPendingTask = new ArrayList<Runnable>();
+
+        this.setPriority(Thread.currentThread().getPriority()+1);
+    }
+    
+    public void invalidate() {
+        mDirty = true;
     }
     
     public String getLastError() {
@@ -112,6 +122,7 @@ public abstract class GLBaseThread extends BaseThread {
     
     @Override
     protected void runIteration() {
+        mDirty = false;
     	runPendingTasks();
             	
         long start_time = System.currentTimeMillis();
@@ -128,6 +139,10 @@ public abstract class GLBaseThread extends BaseThread {
         mTotalRenderTimeMs += render_time_ms + post_time_ms;
 	            
         processErrors(mGl);
+        
+        if (!mDirty) {
+            waitForALongTime();
+        }
     }
 
     @Override
@@ -157,28 +172,11 @@ public abstract class GLBaseThread extends BaseThread {
                 	mLastError += s;
                 }
                 return;
-        	case GL10.GL_INVALID_ENUM:
-        		s += ", GL_INVALID_ENUM";
-        		//An unacceptable value is specified for an enumerated argument. The offending command is ignored, and has no other side effect than to set the error flag. 
-        		break;
-        	case GL10.GL_INVALID_VALUE:
-        		s += ", GL_INVALID_VALUE";
-        		//A numeric argument is out of range. The offending command is ignored, and has no other side effect than to set the error flag. 
-        		break;
-        	case GL10.GL_INVALID_OPERATION: 
-        		s += ", GL_INVALID_OPERATION";
-        		//The specified operation is not allowed in the current state. The offending command is ignored, and has no other side effect than to set the error flag. 
-        		break;
-        	case GL10.GL_STACK_OVERFLOW:
-        		s += ", GL_STACK_OVERFLOW";
-        		//This command would cause a stack overflow. The offending command is ignored, and has no other side effect than to set the error flag. 
-        		break;
-        	case GL10.GL_STACK_UNDERFLOW:
-        		s += ", GL_STACK_UNDERFLOW";
-        		//This command would cause a stack underflow. The offending command is ignored, and has no other side effect than to set the error flag. 
-        		break;
-        	case GL10.GL_OUT_OF_MEMORY:
-        		s += ", GL_STACK_UNDERFLOW";
+            default:
+                String err = GLU.gluErrorString(e);
+                if (err != null) {
+                    s += ", " + err;
+                }
         		break;
         	}
         }
@@ -365,6 +363,43 @@ public abstract class GLBaseThread extends BaseThread {
     }
 
     protected abstract void drawScene(GL10 gl, int w, int h);
+
+    // -----------------------------
+
+    /**
+     * Callback for the SurfaceView.
+     * <p/>
+     * It basically starts everything when the view is created and makes sure everything
+     * is stopped before the view is going to be destroyed.
+     * <p/>
+     * Note that when the activity is created, the surface view is created and
+     * this is what starts everything.
+     */
+    private class SurfaceViewCallback implements SurfaceHolder.Callback {
+
+        /**
+         * Tell GL to resize its viewport if the view is resized.
+         */
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            onWindowResize(width, height);
+        }
+
+        /**
+         * Starts the thread once the surface view has been created.
+         * <p/>
+         * This is what makes the game start.
+         */
+        public void surfaceCreated(SurfaceHolder holder) {
+            start();
+        }
+
+        /**
+         * Stops the threads before the surface view is destroyed.
+         */
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            pauseThread(true);
+        }       
+    }
 }
 
 
