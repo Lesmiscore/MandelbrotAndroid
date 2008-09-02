@@ -191,7 +191,8 @@ public abstract class GLBaseThread extends BaseThread {
      * This lets the thread complete it's render loop and wait for it
      * to fully stop using a join.
      */
-    public void waitForStop() {
+    @Override
+	public void waitForStop() {
     	// Not synchronized. Setting one boolean is assumed to be atomic.
         mContinue = false;
 
