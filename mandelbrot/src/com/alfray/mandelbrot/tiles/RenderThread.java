@@ -6,16 +6,12 @@
 
 package com.alfray.mandelbrot.tiles;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.opengl.GLU;
 import android.view.SurfaceHolder;
 
@@ -182,6 +178,7 @@ public class RenderThread extends GLBaseThread {
                 if (texture != null) {
                     associateTexture(gl, GL10.GL_TEXTURE0);
                     loadTexture565(gl, texture, t.SIZE, t.SIZE, GL10.GL_TEXTURE0);
+                    mSquare.drawTo(gl, GL10.GL_TEXTURE0);
                 }
             }
         }

@@ -62,7 +62,7 @@ public class Tile {
     }
     
     public void compute() {
-        if (m565 != null) {
+        if (m565 == null) {
             float zoom = 256.0f / mZoomFp8;
             float x = (float)mI * zoom;
             float y = (float)mJ * zoom;
