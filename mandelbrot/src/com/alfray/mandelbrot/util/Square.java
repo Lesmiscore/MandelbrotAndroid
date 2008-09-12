@@ -40,7 +40,7 @@ public class Square extends Shape {
 
         final short indices[] = {
         		0, 1, 2,
-                0, 2, 3,
+                //0, 2, 3,
         };
         
         final float textCoord[] = {

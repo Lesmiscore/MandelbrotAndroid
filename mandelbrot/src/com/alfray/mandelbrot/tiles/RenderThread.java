@@ -56,7 +56,7 @@ public class RenderThread extends GLBaseThread {
         
         float w2 = (float)w / 2.0f;
         float h2 = (float)h / 2.0f;
-        GLU.gluOrtho2D(gl, -w2, w2, h2, -h2);
+        GLU.gluOrtho2D(gl, -w2, w2, -h2, h2);
 
         changeViewDistance(0); // compute xDistance
         
@@ -167,21 +167,21 @@ public class RenderThread extends GLBaseThread {
         // set model view
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glLoadIdentity();
-        gl.glTranslatex(0, 1 << 16, 0 - xDistance);
+        //gl.glTranslatex(0, 1 << 16, 0 - xDistance);
         //--gl.glRotatex(xAngleH, 0, 1 << 16, 0);
         //--gl.glRotatex(xAngleV, 1 << 16, 0, 0);
 
-        if (mTileContext != null) {
+        if (false && mTileContext != null) {
             Tile t = mTileContext.getVisibleTiles();
             if (t != null) {
                 short[] texture = t.getRgb565();
                 if (texture != null) {
                     associateTexture(gl, GL10.GL_TEXTURE0);
                     loadTexture565(gl, texture, t.SIZE, t.SIZE, GL10.GL_TEXTURE0);
-                    mSquare.drawTo(gl, GL10.GL_TEXTURE0);
                 }
             }
         }
+        mSquare.drawTo(gl, GL10.GL_TEXTURE0);
     }
 
 }

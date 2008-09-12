@@ -18,7 +18,7 @@ public class TileContext {
         mZoomFp8 = Tile.FP8_1;
         if (mTile1 == null) {
             mTile1 = new Tile(mZoomFp8, 0, 0, 20 /*iter*/);
-            mTile1.compute();
+            //mTile1.compute();
         }
     }
     

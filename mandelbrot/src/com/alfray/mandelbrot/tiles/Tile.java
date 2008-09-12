@@ -9,8 +9,6 @@ package com.alfray.mandelbrot.tiles;
 
 import com.alfray.mandelbrot.NativeMandel;
 
-import android.graphics.Bitmap;
-
 
 public class Tile {
     
@@ -27,6 +25,7 @@ public class Tile {
     private short[] m565;
     private int mNativePtr;
     private final int mMaxIter;
+    private boolean mDone;
 
 
     public Tile(int zoomFp8, int i, int j, int maxIter) {
@@ -35,10 +34,16 @@ public class Tile {
         mJ = j;
         mMaxIter = maxIter;
         mNativePtr = 0;
+        mDone = false;
         m565 = null;
         
         // TODO -- HACK something better
         createColorMap(maxIter);
+        
+        m565 = new short[SIZE * SIZE];
+        for (int k = ((i+j) % maxIter), n = (SIZE * SIZE) - 1; n >= 0; n--) {
+            m565[n] = sColorMap[k];
+        }
     }
     
     public void dispose() {
@@ -46,7 +51,7 @@ public class Tile {
     }
     
     public boolean isReady() {
-        return m565 != null;
+        return mDone;
     }
     
     public short[] getRgb565() {
@@ -62,7 +67,7 @@ public class Tile {
     }
     
     public void compute() {
-        if (m565 == null) {
+        if (!mDone) {
             float zoom = 256.0f / mZoomFp8;
             float x = (float)mI * zoom;
             float y = (float)mJ * zoom;
@@ -83,6 +88,7 @@ public class Tile {
             }
             
             m565 = rgb565;
+            mDone = true;
         }
     }
 
