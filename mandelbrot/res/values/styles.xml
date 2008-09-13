@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-    <!-- Base application theme is the white theme...  the
-        "android:dummy" attribute is a temporary hack to force
-        this style to be created even though it doesn't want
-        to define any values itself. -->
-    <!--  disabled for M3 RC5
-    <style name="Theme.Floating" parent="android:Theme.Dialog">
-        <item name="android:dummy">true</item>
+    <style name="ThemeNoTitleBar" parent="android:Theme.NoTitleBar">
     </style>
-     -->
-
 </resources>

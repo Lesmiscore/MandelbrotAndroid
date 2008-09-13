@@ -7,8 +7,6 @@
 package com.alfray.mandelbrot.tiles;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 
 import android.util.Log;
 
@@ -134,7 +132,7 @@ public class TileContext {
 
         // boundaries in the virtual-screen space
         int x1 = -mPanningX - sx2;
-        int y1 = -mPanningY - sx2;
+        int y1 = -mPanningY - sy2;
 
         int i = ij_for_xy(x1);
         int j = ij_for_xy(y1);
@@ -153,7 +151,7 @@ public class TileContext {
         logd("UpdateAll: (%d,%d) px(%d,%d)", i, j, xs, ys);
 
         int x2 = -mPanningX + sx2;
-        int y2 = -mPanningY + sx2;
+        int y2 = -mPanningY + sy2;
 
         int k = 0;
         for (int y = ys; y < y2; y += SZ, j++) {
