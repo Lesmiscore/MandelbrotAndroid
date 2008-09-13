@@ -7,8 +7,6 @@
 
 package com.alfray.mandelbrot.tiles;
 
-import java.util.HashSet;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -17,6 +15,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -36,20 +35,23 @@ public class TileView extends View {
 
     private static final String TAG = "TileView";
 
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
+
+    private enum GridMode {
+    	NONE,
+    	LINES,
+    	TEXT
+    }
     
     private TileContext mTileContext;
     private Rect mTempBounds = new Rect();
     private Rect mTempRect = new Rect(0, 0, Tile.SIZE, Tile.SIZE);
     private Drawable mNoTile;
     private Paint mRed;
-
+    private GridMode mGridMode = GridMode.LINES;
     private float mDownX;
-
     private float mDownY;
-
     private int mDownOffsetX;
-
     private int mDownOffsetY;
 
     public TileView(Context context, AttributeSet attrs) {
@@ -57,19 +59,19 @@ public class TileView extends View {
         
         mNoTile = context.getResources().getDrawable(R.drawable.android_maps_no_tile_128);
         
-        if (DEBUG) {
-            mRed = new Paint();
-            mRed.setColor(0xFFFF0000);
-            mRed.setStyle(Paint.Style.STROKE);
-            mRed.setTextAlign(Paint.Align.CENTER);
-        }
+        mRed = new Paint();
+        mRed.setColor(0xFFFF0000);
+        mRed.setStyle(Paint.Style.STROKE);
+        mRed.setTextAlign(Paint.Align.CENTER);
+        
+        mGridMode = DEBUG ? GridMode.LINES : GridMode.NONE;
     }
 
     public void setTileContext(TileContext tileContext) {
         mTileContext = tileContext;
         mTileContext.setView(this);
     }
-    
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -89,16 +91,18 @@ public class TileView extends View {
         super.onDraw(canvas);
         if (mTileContext == null) return;
         
+        Tile[] tiles = mTileContext.getVisibleTiles();
+        if (tiles == null || tiles.length == 0) return;
 
         Rect bounds = mTempBounds ;
         boolean useBounds = canvas.getClipBounds(bounds);
 
-        Log.d(TAG, "Bounds " + (useBounds ? bounds.toString() : "no"));
-
+        if (DEBUG) {
+        	logd("Bounds %s", (useBounds ? bounds.toString() : "no"));
+        }
+        
         final int ofx = mTileContext.getOffsetX();
         final int ofy = mTileContext.getOffsetY();
-        
-        HashSet<Tile> tiles = mTileContext.getVisibleTiles();
 
         Rect rect = mTempRect;
         for (Tile t : tiles) {
@@ -118,13 +122,14 @@ public class TileView extends View {
                 mNoTile.setBounds(rect);
                 mNoTile.draw(canvas);
             }
-            
-            if (DEBUG) {
+
+            if (mGridMode != GridMode.NONE) {
                 canvas.drawRect(rect, mRed);
+            }
+            if (mGridMode == GridMode.TEXT) {
                 String s = t.toString();
                 final int SZ2 = Tile.SIZE / 2;
                 canvas.drawText(s, x + SZ2, y + SZ2, mRed);
-                Log.d(TAG, "Draw " + s);
             }
         }
     }
@@ -138,12 +143,18 @@ public class TileView extends View {
                 mDownY = event.getY();
                 mDownOffsetX = mTileContext.getPanningX();
                 mDownOffsetY = mTileContext.getPanningY();
+                if (DEBUG) {
+                	logd("Down: down(%.2f,%.2f), of7(%d,%d)", mDownX, mDownY, mDownOffsetX, mDownOffsetY);
+                }
             }
             return (mTileContext != null);
         case MotionEvent.ACTION_MOVE:
             if (mTileContext != null) {
                 int newOfx = mDownOffsetX + (int)(event.getX() - mDownX);
                 int newOfy = mDownOffsetY + (int)(event.getY() - mDownY);
+                if (DEBUG) {
+                	logd("Move: to-of7(%d,%d)", newOfx, newOfy);
+                }
                 mTileContext.onPanTo(newOfx, newOfy);
                 return true;
             }
@@ -151,4 +162,26 @@ public class TileView extends View {
             return super.onTouchEvent(event);
         }
     }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    	if (keyCode == KeyEvent.KEYCODE_G) {
+    		if (mGridMode == GridMode.NONE) {
+				mGridMode = GridMode.LINES;
+			} else if (mGridMode == GridMode.LINES) {
+				mGridMode = GridMode.TEXT;
+			} else {
+				mGridMode = GridMode.NONE;
+			}
+    		invalidate();
+    	}
+    	return super.onKeyDown(keyCode, event);
+    }
+
+    // ----
+    
+    private void logd(String format, Object...args) {
+        Log.d(TAG, String.format(format, args));
+    }
+
 }

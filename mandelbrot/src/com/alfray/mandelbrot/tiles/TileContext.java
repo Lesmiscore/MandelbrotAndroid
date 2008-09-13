@@ -22,7 +22,7 @@ public class TileContext {
     private int mPanningX;
     private int mPanningY;
     private HashMap<String, Tile> mTileCache = new HashMap<String, Tile>();
-    private HashSet<Tile> mVisibleTiles = new HashSet<Tile>();
+    private Tile[] mVisibleTiles;
     private TileView mTileView;
     private int mMaxIter;
     private boolean mViewNeedsInvalidate;
@@ -33,6 +33,10 @@ public class TileContext {
     private int mMiddleY;
 
     private Tile[] mTempTiles;
+
+	private int mCurrentI;
+
+	private int mCurrentJ;
 
     public TileContext() {
 
@@ -51,7 +55,7 @@ public class TileContext {
     }
     
     /** Runs from the UI thread */
-    public HashSet<Tile> getVisibleTiles() {
+    public Tile[] getVisibleTiles() {
         return mVisibleTiles;
     }
     
@@ -71,10 +75,6 @@ public class TileContext {
         return mMiddleY + mPanningY;
     }
 
-    public void logd(String format, Object...args) {
-        Log.d(TAG, String.format(format, args));
-    }
-
     /** Runs from the UI thread */
     public void onSizeChanged(int viewWidth, int viewHeight) {
         logd("onSizeChanged: %dx%d", viewWidth, viewHeight);
@@ -85,7 +85,8 @@ public class TileContext {
         mMiddleX = viewWidth/2;
         mMiddleY = viewHeight/2;
         
-        updateAll();
+        updateAll(true /*force*/);
+        invalidateView();
     }
     
     /** Runs from the UI (activity) thread */
@@ -105,54 +106,66 @@ public class TileContext {
         if (x != mPanningX || y != mPanningY) {
             mPanningX = x;
             mPanningY = y;
-            updateAll();
+            updateAll(false /*force*/);
+            invalidateView();
         }
     }
 
     //----
     
+    private void logd(String format, Object...args) {
+        Log.d(TAG, String.format(format, args));
+    }
+
     /** Runs from the UI thread */
-    private void updateAll() {
+    private void updateAll(boolean force) {
         final int SZ = Tile.SIZE;
 
+        final int nx = (mViewWidth  / SZ) + 2;
+        final int ny = (mViewHeight / SZ) + 2;
+        final int nn = nx * ny;
+        if (mVisibleTiles == null || mVisibleTiles.length != nn) {
+        	mVisibleTiles = new Tile[nn];
+        	force = true;
+        }
+        
         final int sx2 = mMiddleX;
         final int sy2 = mMiddleY;
 
         // boundaries in the virtual-screen space
         int x1 = -mPanningX - sx2;
         int y1 = -mPanningY - sx2;
-        int x2 = -mPanningX + sx2;
-        int y2 = -mPanningY + sx2;
 
-        // remove tiles which are no longer visible
-        for (Iterator<Tile> it = mVisibleTiles.iterator();
-            it.hasNext();) {
-            Tile t = it.next();
-            int x = t.getVirtualX();
-            int y = t.getVirtualY();
-
-            // remove if no longer visible
-            if (x >= x2 || y >= y2 || (x+SZ) < x1 || (y+SZ) < y1) {
-                it.remove();
-            }
-        }
-        
         int i = ij_for_xy(x1);
         int j = ij_for_xy(y1);
+        
+        if (!force) {
+        	if (mCurrentI == i && mCurrentJ == j) {
+        		return;
+        	}
+        	mCurrentI = i;
+        	mCurrentJ = j;
+        }
 
         int xs = xy_for_ij(i);
         int ys = xy_for_ij(j);
         
-        for (int k = 0, y = ys; y < y2; y += SZ, j++) {
+        logd("UpdateAll: (%d,%d) px(%d,%d)", i, j, xs, ys);
+
+        int x2 = -mPanningX + sx2;
+        int y2 = -mPanningY + sx2;
+
+        int k = 0;
+        for (int y = ys; y < y2; y += SZ, j++) {
             for (int i1 = i, x = xs; x < x2; x += SZ, i1++, k++) {
                 Tile t = requestTile(i1, j);
-                if (!mVisibleTiles.contains(t)) {
-                    mVisibleTiles.add(t);
-                }
+                mVisibleTiles[k] = t;
             }
         }
         
-        invalidateView();
+        for (; k < nn; k++) {
+        	mVisibleTiles[k] = null;
+        }
     }
     
     private int xy_for_ij(int ij) {

@@ -29,6 +29,8 @@ public class TileViewerActivity extends Activity {
         t.setVisibility(View.GONE);
 
         TileView tile_view = (TileView) findViewById(R.id.tile_view);
+        tile_view.setFocusable(true);
+        tile_view.setFocusableInTouchMode(true);
         tile_view.requestFocus();
         
         mTileContext = new TileContext();
