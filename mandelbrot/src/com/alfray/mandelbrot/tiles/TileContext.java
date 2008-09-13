@@ -51,6 +51,14 @@ public class TileContext {
         return mVisibleTiles;
     }
     
+    public int getPanningX() {
+        return mPanningX;
+    }
+    
+    public int getPanningY() {
+        return mPanningY;
+    }
+    
     public int getOffsetX() {
         return mMiddleX + mPanningX;
     }
@@ -85,6 +93,17 @@ public class TileContext {
         }
     }
 
+    /** Runs from the UI thread */
+    public void onPanTo(int x, int y) {
+        if (x != mPanningX || y != mPanningY) {
+            mPanningX = x;
+            mPanningY = y;
+            invalidateView();
+        }
+    }
+
+    //----
+    
     /** Runs from the UI thread */
     private void initVisible() {
         final int w = mViewWidth;

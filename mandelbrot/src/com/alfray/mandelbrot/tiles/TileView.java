@@ -15,6 +15,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.alfray.mandelbrot.R;
@@ -40,6 +41,14 @@ public class TileView extends View {
     private Rect mTempRect = new Rect(0, 0, Tile.SIZE, Tile.SIZE);
     private Drawable mNoTile;
     private Paint mRed;
+
+    private float mDownX;
+
+    private float mDownY;
+
+    private int mDownOffsetX;
+
+    private int mDownOffsetY;
 
     public TileView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -113,6 +122,29 @@ public class TileView extends View {
                 canvas.drawText(s, x + SZ2, y + SZ2, mRed);
                 Log.d(TAG, "Draw " + s);
             }
+        }
+    }
+    
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+        case MotionEvent.ACTION_DOWN:
+            if (mTileContext != null) {
+                mDownX = event.getX();
+                mDownY = event.getY();
+                mDownOffsetX = mTileContext.getPanningX();
+                mDownOffsetY = mTileContext.getPanningY();
+            }
+            return (mTileContext != null);
+        case MotionEvent.ACTION_MOVE:
+            if (mTileContext != null) {
+                int newOfx = mDownOffsetX + (int)(event.getX() - mDownX);
+                int newOfy = mDownOffsetY + (int)(event.getY() - mDownY);
+                mTileContext.onPanTo(newOfx, newOfy);
+                return true;
+            }
+        default:
+            return super.onTouchEvent(event);
         }
     }
 }
