@@ -85,12 +85,14 @@ public class TileView extends View {
 
         Log.d(TAG, "Bounds " + (useBounds ? bounds.toString() : "no"));
 
+        final int ofx = mTileContext.getOffsetX();
+        final int ofy = mTileContext.getOffsetY();
         Rect rect = mTempRect;
         for (Tile t : tiles) {
             if (t == null) continue;
 
-            int x = t.getViewX();
-            int y = t.getViewY();
+            int x = t.getVirtualX() + ofx;
+            int y = t.getVirtualY() + ofy;
             rect.offsetTo(x, y);
             
             if (useBounds && !Rect.intersects(bounds, rect)) continue;

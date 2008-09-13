@@ -18,13 +18,20 @@ public class TileContext {
     private HashMap<String, Tile> mTileCache;
     private int mViewWidth;
     private int mViewHeight;
+    private int mPanningX;
+    private int mPanningY;
     private Tile[] mVisibleTiles;
     private TileView mTileView;
     private int mMaxIter;
     private boolean mViewNeedsInvalidate;
     private TileThread mTileThread;
 
+    private int mMiddleX;
+
+    private int mMiddleY;
+
     public TileContext() {
+
         if (mTileThread == null) {
             mTileThread = new TileThread();
             mTileThread.setCompletedCallback(new TileCompletedCallback());
@@ -35,11 +42,21 @@ public class TileContext {
     public void resetScreen() {
         mZoomFp8 = Tile.FP8_1;
         mMaxIter = 17;
+        mPanningX = 0;
+        mPanningY = 0;
     }
     
     /** Runs from the UI thread */
     public Tile[] getVisibleTiles() {
         return mVisibleTiles;
+    }
+    
+    public int getOffsetX() {
+        return mMiddleX + mPanningX;
+    }
+    
+    public int getOffsetY() {
+        return mMiddleY + mPanningY;
     }
 
     public void logd(String format, Object...args) {
@@ -74,30 +91,42 @@ public class TileContext {
         final int h = mViewHeight;
         final int SZ = Tile.SIZE;
         
-        int nx = 1;//-- (w / SZ) + 1;
-        int ny = 1;//-- (h / SZ) + 1;
+        int nx = (w / SZ) + 2;
+        int ny = (h / SZ) + 2;
         mVisibleTiles = new Tile[nx * ny];
-        
-        int px_left = (w - nx * SZ) / 2;
-        int py_top  = (h - ny * SZ) / 2;
-        int ti_left = 0 ;//-- - (w/2 - SZ/2 + SZ) / SZ;
-        int tj_top  = 0 ;//-- - (h/2 - SZ/2 + SZ) / SZ;
-        
+
+        int ofx = mMiddleX = w/2;
+        int ofy = mMiddleY = h/2;
+
+        int i = ij_for_xy(-ofx);
+        int j = ij_for_xy(-ofy);
+
         logd("Init tiles: %dx%d(%d), left/top=%dx%d (%dx%d)",
                 nx, ny, mVisibleTiles.length,
-                ti_left, tj_top, px_left, py_top);
+                i,j, -ofx,-ofy);
+
+        int xs = xy_for_ij(i);
+        int ys = xy_for_ij(j);
         
-        for (int k = 0, j = 0; j < ny; j++, tj_top++, py_top += SZ) {
-            int ti = ti_left;
-            int px = px_left;
-            for (int i = 0; i < nx; k++, i++, ti++, px += SZ) {
-                Tile t = requestTile(ti, tj_top);
-                t.setViewXY(px, py_top);
+        for (int k = 0, y = ys; y < ofy; y += SZ, j++) {
+            for (int i1 = i, x = xs; x < ofx; x += SZ, i1++, k++) {
+                Tile t = requestTile(i1, j);
                 mVisibleTiles[k] = t;
             }
         }
         
         invalidateView();
+    }
+    
+    private int xy_for_ij(int ij) {
+        return ij * Tile.SIZE;
+    }
+
+    private int ij_for_xy(int xy) {
+        boolean neg = (xy < 0);
+        if (neg) xy = -xy;
+        int ij = xy / Tile.SIZE;
+        return neg ? -ij-1 : ij;
     }
 
     /** Runs from the UI thread */
@@ -128,14 +157,14 @@ public class TileContext {
     }
 
     /** Runs from the UI thread or TileThread */
-    public void invalidateTile(Tile tile) {
+    private void invalidateTile(Tile tile) {
         if (tile == null) return;
-        logd("Invalidate " + tile.toString());
         if (mTileView != null) {
             mViewNeedsInvalidate = false;
             final int SZ = Tile.SIZE;
-            final int x = tile.getViewX();
-            final int y = tile.getViewY();
+            final int x = tile.getVirtualX() + mMiddleX + mPanningX;
+            final int y = tile.getVirtualY() + mMiddleY + mPanningY;
+            logd("Invalidate %s @ (%d,%d)", tile.toString(), x, y);
             mTileView.postInvalidate(x, y, x + SZ, y + SZ);
         } else {
             mViewNeedsInvalidate = true;

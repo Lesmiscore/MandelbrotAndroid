@@ -16,7 +16,7 @@ public class Tile {
     
     public final static int SIZE = 128;
     public final static int FP8_1 = 256;
-    public final static int FP8_E = 8;
+    public final static int FP8_E = 7;
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
     private static int[] sColorMap = null;
@@ -29,8 +29,6 @@ public class Tile {
     private Bitmap mBitmap;
     private int mNativePtr;
     private final int mMaxIter;
-    private int mViewX;
-    private int mViewY;
 
     public Tile(String key, int zoomFp8, int i, int j, int maxIter) {
         mHashKey = key;
@@ -40,8 +38,6 @@ public class Tile {
         mJ = j;
         mNativePtr = 0;
         mBitmap = null;
-        mViewX = 0;
-        mViewY = 0;
         
         // TODO -- HACK something better
         createColorMap(maxIter);
@@ -68,11 +64,11 @@ public class Tile {
     
     @Override
     public String toString() {
-        return String.format("Tile: %s {%dx%d}", mHashKey, mViewX, mViewY);
+        return mHashKey;
     }
     
     public void dispose() {
-        
+        // pass
     }
     
     public boolean isReady() {
@@ -91,25 +87,20 @@ public class Tile {
         return mJ * SIZE;
     }
     
-    public int getViewX() {
-        return mViewX;
+    public int getI() {
+        return mI;
     }
     
-    public int getViewY() {
-        return mViewY;
-    }
-    
-    public void setViewXY(int x, int y) {
-        mViewX = x;
-        mViewY = y;
+    public int getJ() {
+        return mJ;
     }
     
     public void compute() {
         if (mBitmap == null) {
-            float zoom = (float)FP8_1 / mZoomFp8;
-            float x = (float)mI * zoom;
-            float y = (float)mJ * zoom;
-            float step = 1.0f / mZoomFp8;
+            float inv_zoom = (float)FP8_1 / mZoomFp8;
+            float x = (float)mI * inv_zoom;
+            float y = (float)mJ * inv_zoom;
+            float step = inv_zoom / SIZE;
 
             final int n = sTempBlock.length; 
 
