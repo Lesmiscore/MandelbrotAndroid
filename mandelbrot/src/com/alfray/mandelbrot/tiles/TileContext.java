@@ -162,10 +162,14 @@ public class TileContext {
         if (mTileView != null) {
             mViewNeedsInvalidate = false;
             final int SZ = Tile.SIZE;
-            final int x = tile.getVirtualX() + mMiddleX + mPanningX;
-            final int y = tile.getVirtualY() + mMiddleY + mPanningY;
+            int x = tile.getVirtualX() + mMiddleX + mPanningX;
+            int y = tile.getVirtualY() + mMiddleY + mPanningY;
             logd("Invalidate %s @ (%d,%d)", tile.toString(), x, y);
-            mTileView.postInvalidate(x, y, x + SZ, y + SZ);
+            int x1 = x + SZ;
+            int y1 = y + SZ;
+            if (x < 0) x = 0;
+            if (y < 0) y = 0;
+            mTileView.postInvalidate(x, y, x1, y1);
         } else {
             mViewNeedsInvalidate = true;
         }
