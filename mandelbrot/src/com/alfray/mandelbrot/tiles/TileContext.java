@@ -8,11 +8,18 @@ package com.alfray.mandelbrot.tiles;
 
 import java.util.HashMap;
 
+import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
+import android.widget.ZoomControls;
 
 public class TileContext {
     
     private static final String TAG = "TileContext";
+
+    private static final int MIN_ZOOM_FP8 = Tile.FP8_1 / 2;
+    
+    private static final int ZOOM_HIDE_DELAY_MS = 3000;
     
     private int mZoomFp8;
     private int mViewWidth;
@@ -30,11 +37,17 @@ public class TileContext {
 
     private int mMiddleY;
 
-    private Tile[] mTempTiles;
-
 	private int mCurrentI;
 
 	private int mCurrentJ;
+
+    private ZoomControls mZoomer;
+
+    private Handler mHandler;
+
+    private long mHideZoomAfterMs;
+
+    private HideZoomRunnable mHideZoomRunnable;
 
     public TileContext() {
 
@@ -43,10 +56,13 @@ public class TileContext {
             mTileThread.setCompletedCallback(new TileCompletedCallback());
             mTileThread.start();
         }
+        
+        mHandler = new Handler();
+        mHideZoomRunnable = new HideZoomRunnable();
     }
 
     public void resetScreen() {
-        mZoomFp8 = Tile.FP8_1;
+        mZoomFp8 = MIN_ZOOM_FP8;
         mMaxIter = 17;
         mPanningX = 0;
         mPanningY = 0;
@@ -86,6 +102,12 @@ public class TileContext {
         updateAll(true /*force*/);
         invalidateView();
     }
+
+    /** Runs from the UI (activity) thread */
+    public void setZoomer(ZoomControls zoomer) {
+        mZoomer = zoomer;
+        changeZoomBy(0);
+    }
     
     /** Runs from the UI (activity) thread */
     public void setView(TileView tileView) {
@@ -106,6 +128,7 @@ public class TileContext {
             mPanningY = y;
             updateAll(false /*force*/);
             invalidateView();
+            changeZoomBy(0); // to display zoomer
         }
     }
 
@@ -227,4 +250,26 @@ public class TileContext {
             invalidateTile(tile);
         }
     }
+
+    private void changeZoomBy(int delta) {
+        if (delta != 0) {
+            
+        }
+        if (mZoomer != null) {
+            mZoomer.setIsZoomOutEnabled(mZoomFp8 > MIN_ZOOM_FP8);
+            mZoomer.show();
+            mHideZoomAfterMs = SystemClock.uptimeMillis() + ZOOM_HIDE_DELAY_MS;
+            mHandler.postAtTime(mHideZoomRunnable, mHideZoomAfterMs + 10);
+        }
+    }
+    
+    private class HideZoomRunnable implements Runnable {
+        public void run() {
+            if (mZoomer != null && SystemClock.uptimeMillis() >= mHideZoomAfterMs) {
+                mZoomer.hide();
+            }
+        }
+        
+    }
+
 }

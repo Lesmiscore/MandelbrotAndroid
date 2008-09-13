@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -91,8 +92,21 @@ public class TileView extends View {
         super.onDraw(canvas);
         if (mTileContext == null) return;
         
-        Tile[] tiles = mTileContext.getVisibleTiles();
-        if (tiles == null || tiles.length == 0) return;
+        Tile[] tiles = null;
+
+        if (mTileContext != null) tiles = mTileContext.getVisibleTiles();
+
+        if (tiles == null || tiles.length == 0 || mTileContext == null) {
+            // fake display for design-time
+            mTempRect.set(0, 0, getWidth(), getHeight());
+            if (mNoTile != null) {
+                mNoTile.setBounds(mTempRect);
+                mNoTile.draw(canvas);
+            }
+            canvas.drawRect(mTempRect, mRed);
+            canvas.drawOval(new RectF(mTempRect), mRed);
+            return;
+        }
 
         Rect bounds = mTempBounds ;
         boolean useBounds = canvas.getClipBounds(bounds);

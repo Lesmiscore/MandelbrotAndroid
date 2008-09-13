@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.ZoomControls;
 
 import com.alfray.mandelbrot.R;
 
@@ -26,15 +27,15 @@ public class TileViewerActivity extends Activity {
         setContentView(R.layout.tiles);
         
         TextView t = (TextView) findViewById(R.id.text);
-        t.setVisibility(View.GONE);
 
         TileView tile_view = (TileView) findViewById(R.id.tile_view);
-        tile_view.setFocusable(true);
-        tile_view.setFocusableInTouchMode(true);
         tile_view.requestFocus();
+        
+        ZoomControls zoomer = (ZoomControls) findViewById(R.id.zoomer);
         
         mTileContext = new TileContext();
         tile_view.setTileContext(mTileContext);
+        mTileContext.setZoomer(zoomer);
     }
     
     @Override

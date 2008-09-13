@@ -15,7 +15,7 @@ import android.graphics.Bitmap;
 public class Tile {
     
     public final static int SIZE = 128;
-    public final static int FP8_1 = 256;
+    public final static int FP8_1 = 128;
     public final static int FP8_E = 7;
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
