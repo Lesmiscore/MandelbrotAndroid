@@ -163,7 +163,7 @@ public abstract class BaseThread extends Thread {
 	protected void waitForALongTime() {
 		try {
 			synchronized(this) {
-				wait(1000 /* ms */);
+				wait(5000 /* ms */);
 			}
 		} catch (InterruptedException e) {
 			// pass

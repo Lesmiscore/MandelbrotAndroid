@@ -8,16 +8,14 @@ package com.alfray.mandelbrot.tiles;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.SurfaceHolder;
+import android.view.View;
 import android.widget.TextView;
 
 import com.alfray.mandelbrot.R;
-import com.alfray.mandelbrot.util.GLSurfaceView;
 
 
 public class TileViewerActivity extends Activity {
 
-    private RenderThread mRenderThread;
     private TileContext mTileContext;
 
     /** Called when the activity is first created. */
@@ -28,17 +26,13 @@ public class TileViewerActivity extends Activity {
         setContentView(R.layout.tiles);
         
         TextView t = (TextView) findViewById(R.id.text);
-        GLSurfaceView gl_view = (GLSurfaceView) findViewById(R.id.gl_view);
-        gl_view.requestFocus();
-        
-        SurfaceHolder holder = gl_view.getHolder();
-        holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+        t.setVisibility(View.GONE);
 
-        // Note: the GL thread start itself when the SurfaceView is created.
-        mRenderThread = new RenderThread(holder);
+        TileView tile_view = (TileView) findViewById(R.id.tile_view);
+        tile_view.requestFocus();
         
         mTileContext = new TileContext();
-        mRenderThread.setTileContext(mTileContext);
+        tile_view.setTileContext(mTileContext);
     }
     
     @Override
@@ -50,12 +44,10 @@ public class TileViewerActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        mRenderThread.pauseThread(true);
     }
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mRenderThread.waitForStop();
     }
 }

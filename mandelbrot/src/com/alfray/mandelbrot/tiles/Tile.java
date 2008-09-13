@@ -9,41 +9,66 @@ package com.alfray.mandelbrot.tiles;
 
 import com.alfray.mandelbrot.NativeMandel;
 
+import android.graphics.Bitmap;
+
 
 public class Tile {
     
-    public final static int SIZE = 256;
+    public final static int SIZE = 128;
     public final static int FP8_1 = 256;
     public final static int FP8_E = 8;
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
-    private static short[] sColorMap = null;
+    private static int[] sColorMap = null;
     
     private final int mZoomFp8;
     private final int mI;
     private final int mJ;
-    private short[] m565;
+    private final String mHashKey;
+
+    private Bitmap mBitmap;
     private int mNativePtr;
     private final int mMaxIter;
-    private boolean mDone;
+    private int mViewX;
+    private int mViewY;
 
-
-    public Tile(int zoomFp8, int i, int j, int maxIter) {
+    public Tile(String key, int zoomFp8, int i, int j, int maxIter) {
+        mHashKey = key;
         mZoomFp8 = zoomFp8;
+        mMaxIter = maxIter;
         mI = i;
         mJ = j;
-        mMaxIter = maxIter;
         mNativePtr = 0;
-        mDone = false;
-        m565 = null;
+        mBitmap = null;
+        mViewX = 0;
+        mViewY = 0;
         
         // TODO -- HACK something better
         createColorMap(maxIter);
-        
-        m565 = new short[SIZE * SIZE];
-        for (int k = ((i+j) % maxIter), n = (SIZE * SIZE) - 1; n >= 0; n--) {
-            m565[n] = sColorMap[k];
-        }
+    }
+
+    public Tile(int zoomFp8, int i, int j, int maxIter) {
+        this(computeKey(zoomFp8, i, j, maxIter), zoomFp8, i, j, maxIter);
+    }
+
+    // The key is a combination of zoom+i+j+maxiter
+    public static String computeKey(int zoomFp8, int i, int j, int maxIter) {
+        return String.format("(%d,%d)x%d-%d", i, j, zoomFp8, maxIter);
+    }
+
+    @Override
+    public int hashCode() {
+        return mHashKey.hashCode();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof Tile) && ((Tile) o).mHashKey.equals(mHashKey);
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("Tile: %s {%dx%d}", mHashKey, mViewX, mViewY);
     }
     
     public void dispose() {
@@ -51,24 +76,37 @@ public class Tile {
     }
     
     public boolean isReady() {
-        return mDone;
+        return mBitmap != null;
     }
     
-    public short[] getRgb565() {
-        return m565;
+    public Bitmap getBitmap() {
+        return mBitmap;
     }
     
-    public int getX() {
+    public int getVirtualX() {
         return mI * SIZE;
     }
     
-    public int getY() {
+    public int getVirtualY() {
         return mJ * SIZE;
     }
     
+    public int getViewX() {
+        return mViewX;
+    }
+    
+    public int getViewY() {
+        return mViewY;
+    }
+    
+    public void setViewXY(int x, int y) {
+        mViewX = x;
+        mViewY = y;
+    }
+    
     public void compute() {
-        if (!mDone) {
-            float zoom = 256.0f / mZoomFp8;
+        if (mBitmap == null) {
+            float zoom = (float)FP8_1 / mZoomFp8;
             float x = (float)mI * zoom;
             float y = (float)mJ * zoom;
             float step = 1.0f / mZoomFp8;
@@ -81,14 +119,14 @@ public class Tile {
                         SIZE, SIZE,
                         mMaxIter,
                         n, sTempBlock);
-            
-            short[] rgb565 = new short[SIZE * SIZE];
+                
             for (int k = 0; k < n; ++k) {
-                rgb565[k] = sColorMap[sTempBlock[k]];
+                sTempBlock[k] = sColorMap[sTempBlock[k]];
             }
             
-            m565 = rgb565;
-            mDone = true;
+            Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.RGB_565);
+            bmp.setPixels(sTempBlock, 0, SIZE, 0, 0, SIZE, SIZE);
+            mBitmap = bmp;
         }
     }
 
@@ -96,9 +134,9 @@ public class Tile {
 
     private void createColorMap(int max_iter) {
         if (sColorMap == null || sColorMap.length != max_iter) {
-            sColorMap = new short[max_iter + 1];
+            sColorMap = new int[max_iter + 1];
             for(int i = 0; i <= max_iter; i++) {
-                sColorMap[i] = colorIndex565(i, max_iter);
+                sColorMap[i] = colorIndex(i, max_iter);
             }
         }
     }
@@ -108,7 +146,6 @@ public class Tile {
     // color is ARGB with A=FF
     // we'll do B=0x80 => 0xFF
     // and RG=0x00 => 0xFF
-    /*
     private int colorIndex(int iter, int max_iter) {
         float col_factor1 = 255.0f / max_iter;
         float col_factor2 = 223.0f * 2 / max_iter; // 0xFF-0x20=xDF=255-32=223
@@ -120,29 +157,5 @@ public class Tile {
             b  = (int)(0x20 + iter * col_factor2);
         }
         return 0xFF000000 | (rg << 16) | (rg << 8) | (b);
-    }
-    */
-
-    // We'll hack a quick fixed palette with a gradient.
-    // TODO Make palette customizable
-    // color is R5/G6/B6 with:
-    // we'll do B=0x80 => 0x1F  (e.g. FF>>3)
-    // and R=0x00 => 0x1F       (e.g. FF>>3)
-    // and G=0x00 => 0x3F       (e.g. FF>>2)
-    private short colorIndex565(int iter, int max_iter) {
-        float col_factor1 = 255.0f / max_iter;
-        float col_factor2 = 223.0f * 2 / max_iter; // 0xFF-0x20=xDF=255-32=223
-        int rg, b;
-        if (iter >= max_iter) {
-            rg = b = 0;
-        } else  {
-            rg = (int)(iter * col_factor1);
-            b  = (int)(0x20 + iter * col_factor2);
-        }
-        int rgb = (b >> 3) | ((rg & 0x0FC) << (5-2)) | ((rg & 0x0F8) << (5+6-3));
-        short s = (short) (rgb & 0x07FFF);
-        s -= (rgb & 0x08000); // fit the unsigned number in a signed short
-        
-        return s;
     }
 }
