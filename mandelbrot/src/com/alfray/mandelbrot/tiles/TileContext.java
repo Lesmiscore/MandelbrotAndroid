@@ -7,6 +7,8 @@
 package com.alfray.mandelbrot.tiles;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import android.util.Log;
 
@@ -15,12 +17,12 @@ public class TileContext {
     private static final String TAG = "TileContext";
     
     private int mZoomFp8;
-    private HashMap<String, Tile> mTileCache;
     private int mViewWidth;
     private int mViewHeight;
     private int mPanningX;
     private int mPanningY;
-    private Tile[] mVisibleTiles;
+    private HashMap<String, Tile> mTileCache = new HashMap<String, Tile>();
+    private HashSet<Tile> mVisibleTiles = new HashSet<Tile>();
     private TileView mTileView;
     private int mMaxIter;
     private boolean mViewNeedsInvalidate;
@@ -29,6 +31,8 @@ public class TileContext {
     private int mMiddleX;
 
     private int mMiddleY;
+
+    private Tile[] mTempTiles;
 
     public TileContext() {
 
@@ -47,7 +51,7 @@ public class TileContext {
     }
     
     /** Runs from the UI thread */
-    public Tile[] getVisibleTiles() {
+    public HashSet<Tile> getVisibleTiles() {
         return mVisibleTiles;
     }
     
@@ -75,10 +79,13 @@ public class TileContext {
     public void onSizeChanged(int viewWidth, int viewHeight) {
         logd("onSizeChanged: %dx%d", viewWidth, viewHeight);
 
-        mViewWidth = viewWidth;
+        mViewWidth  = viewWidth;
         mViewHeight = viewHeight;
         
-        initVisible();
+        mMiddleX = viewWidth/2;
+        mMiddleY = viewHeight/2;
+        
+        updateAll();
     }
     
     /** Runs from the UI (activity) thread */
@@ -98,39 +105,50 @@ public class TileContext {
         if (x != mPanningX || y != mPanningY) {
             mPanningX = x;
             mPanningY = y;
-            invalidateView();
+            updateAll();
         }
     }
 
     //----
     
     /** Runs from the UI thread */
-    private void initVisible() {
-        final int w = mViewWidth;
-        final int h = mViewHeight;
+    private void updateAll() {
         final int SZ = Tile.SIZE;
+
+        final int sx2 = mMiddleX;
+        final int sy2 = mMiddleY;
+
+        // boundaries in the virtual-screen space
+        int x1 = -mPanningX - sx2;
+        int y1 = -mPanningY - sx2;
+        int x2 = -mPanningX + sx2;
+        int y2 = -mPanningY + sx2;
+
+        // remove tiles which are no longer visible
+        for (Iterator<Tile> it = mVisibleTiles.iterator();
+            it.hasNext();) {
+            Tile t = it.next();
+            int x = t.getVirtualX();
+            int y = t.getVirtualY();
+
+            // remove if no longer visible
+            if (x >= x2 || y >= y2 || (x+SZ) < x1 || (y+SZ) < y1) {
+                it.remove();
+            }
+        }
         
-        int nx = (w / SZ) + 2;
-        int ny = (h / SZ) + 2;
-        mVisibleTiles = new Tile[nx * ny];
-
-        int ofx = mMiddleX = w/2;
-        int ofy = mMiddleY = h/2;
-
-        int i = ij_for_xy(-ofx);
-        int j = ij_for_xy(-ofy);
-
-        logd("Init tiles: %dx%d(%d), left/top=%dx%d (%dx%d)",
-                nx, ny, mVisibleTiles.length,
-                i,j, -ofx,-ofy);
+        int i = ij_for_xy(x1);
+        int j = ij_for_xy(y1);
 
         int xs = xy_for_ij(i);
         int ys = xy_for_ij(j);
         
-        for (int k = 0, y = ys; y < ofy; y += SZ, j++) {
-            for (int i1 = i, x = xs; x < ofx; x += SZ, i1++, k++) {
+        for (int k = 0, y = ys; y < y2; y += SZ, j++) {
+            for (int i1 = i, x = xs; x < x2; x += SZ, i1++, k++) {
                 Tile t = requestTile(i1, j);
-                mVisibleTiles[k] = t;
+                if (!mVisibleTiles.contains(t)) {
+                    mVisibleTiles.add(t);
+                }
             }
         }
         
@@ -150,8 +168,6 @@ public class TileContext {
 
     /** Runs from the UI thread */
     private Tile requestTile(int i, int j) {
-        if (mTileCache == null) mTileCache = new HashMap<String, Tile>();
-
         String key = Tile.computeKey(mZoomFp8, i, j, mMaxIter);
         Tile t = mTileCache.get(key);
         

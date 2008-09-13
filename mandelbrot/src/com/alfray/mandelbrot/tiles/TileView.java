@@ -7,6 +7,8 @@
 
 package com.alfray.mandelbrot.tiles;
 
+import java.util.HashSet;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -87,7 +89,6 @@ public class TileView extends View {
         super.onDraw(canvas);
         if (mTileContext == null) return;
         
-        Tile[] tiles = mTileContext.getVisibleTiles();
 
         Rect bounds = mTempBounds ;
         boolean useBounds = canvas.getClipBounds(bounds);
@@ -96,6 +97,9 @@ public class TileView extends View {
 
         final int ofx = mTileContext.getOffsetX();
         final int ofy = mTileContext.getOffsetY();
+        
+        HashSet<Tile> tiles = mTileContext.getVisibleTiles();
+
         Rect rect = mTempRect;
         for (Tile t : tiles) {
             if (t == null) continue;
