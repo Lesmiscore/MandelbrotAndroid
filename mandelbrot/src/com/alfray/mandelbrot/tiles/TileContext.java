@@ -23,7 +23,8 @@ public class TileContext {
     private static final int ZOOM_HIDE_DELAY_MS = 3000;
 
     private static final float sInterestingPlaces[] = {
-    	-1.77f, 0
+    	-1.77f, 0,
+    	-1.25565f, 0.38156f
     };
     
     private static class TileCache extends SparseArray<Tile> {
@@ -54,6 +55,8 @@ public class TileContext {
 	private int mCurrentI;
 	private int mCurrentJ;
 
+	private int mInterestingPlaceIndex;
+	
     private long mHideZoomAfterMs;
     private HideZoomRunnable mHideZoomRunnable;
 	private TextView mTextView;
@@ -453,16 +456,17 @@ public class TileContext {
     }
 
     private void panToInterestingPlace() {
-		// TODO use x=places[mCurrentInterestingPlaceIndex++] ,y=[index++]
-    	// and wrap at places.length
-
+    	int index = mInterestingPlaceIndex;
+    	
     	float zoom = (float)Tile.getZoomFp8(mZoomLevel);
-    	float x = sInterestingPlaces[0] * zoom;
-		float y = sInterestingPlaces[1] * zoom;
+    	float x = sInterestingPlaces[index++] * zoom;
+		float y = sInterestingPlaces[index++] * zoom;
 		mPanningX = 0 - (int)x;
 		mPanningY = 0 - (int)y;
 		updateCaption();
 		updateAll(true /*force*/);
 		invalidateView();
+		
+		mInterestingPlaceIndex = index == sInterestingPlaces.length ? 0 : index;
 	}
 }
