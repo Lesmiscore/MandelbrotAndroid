@@ -53,7 +53,7 @@ public class MandelbrotActivity extends Activity
 
     	NativeMandel.init(getAssets());
         
-        setTitle(R.string.app_title);
+        //--OBSOLETE-- setTitle(R.string.app_title);
         // request a progress bar and hide it
         requestWindowFeature(Window.FEATURE_PROGRESS);
         getWindow().setFeatureInt(Window.FEATURE_PROGRESS, 10000);
@@ -82,12 +82,12 @@ public class MandelbrotActivity extends Activity
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         
-        menu.add(0, ID_SELECT, 0, R.string.selection);
-        menu.add(0, ID_BACK, 0, R.string.back);
-        menu.add(0, ID_PAUSE, 0, R.string.pause).setShortcut(
-                (char) KeyEvent.KEYCODE_1, (char) KeyEvent.KEYCODE_P);
-        menu.add(0, ID_CONTINUE, 0, R.string._continue).setShortcut(
-        		(char) KeyEvent.KEYCODE_2, (char) KeyEvent.KEYCODE_C);
+      //--OBSOLETE-- menu.add(0, ID_SELECT, 0, R.string.selection);
+      //--OBSOLETE-- menu.add(0, ID_BACK, 0, R.string.back);
+      //--OBSOLETE-- menu.add(0, ID_PAUSE, 0, R.string.pause).setShortcut(
+      //--OBSOLETE-- (char) KeyEvent.KEYCODE_1, (char) KeyEvent.KEYCODE_P);
+      //--OBSOLETE-- menu.add(0, ID_CONTINUE, 0, R.string._continue).setShortcut(
+      //--OBSOLETE-- (char) KeyEvent.KEYCODE_2, (char) KeyEvent.KEYCODE_C);
         /* TC2-RC6 re-enable when ready
         menu.add(0, ID_OPTIONS, 0, R.string.options).setShortcut(
         		(char) KeyEvent.KEYCODE_3, (char) KeyEvent.KEYCODE_O);

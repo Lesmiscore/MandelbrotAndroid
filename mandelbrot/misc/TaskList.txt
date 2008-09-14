@@ -1,6 +1,5 @@
 ---- TODO ----
 
-20080914 [1] Feature: Fix zoom
 20080914 [1] Feature: Activity save/restore
 20080914 [1] Feature: Capture image
 20080914 [1] Feature: Save as wallpaper

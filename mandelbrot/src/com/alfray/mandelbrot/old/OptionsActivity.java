@@ -37,11 +37,10 @@ public class OptionsActivity extends Activity {
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        setContentView(R.layout.options);
-        
-        mMinIterEdit = (EditText)findViewById(R.id.min_iter);
-        mMaxIterEdit = (EditText)findViewById(R.id.step_iter);
-        mHistoryDepthEdit = (EditText)findViewById(R.id.hist_depth);
+      //--OBSOLETE-- setContentView(R.layout.options);
+      //--OBSOLETE-- mMinIterEdit = (EditText)findViewById(R.id.min_iter);
+      //--OBSOLETE-- mMaxIterEdit = (EditText)findViewById(R.id.step_iter);
+      //--OBSOLETE-- mHistoryDepthEdit = (EditText)findViewById(R.id.hist_depth);
     }
     
     /**
