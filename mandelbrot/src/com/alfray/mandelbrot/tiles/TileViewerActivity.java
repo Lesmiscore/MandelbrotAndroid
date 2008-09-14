@@ -26,17 +26,18 @@ public class TileViewerActivity extends Activity {
     
         setContentView(R.layout.tiles);
         
-        TextView t = (TextView) findViewById(R.id.text);
+        TextView textView = (TextView) findViewById(R.id.text);
 
-        TileView tile_view = (TileView) findViewById(R.id.tile_view);
-        tile_view.requestFocus();
+        TileView tileView = (TileView) findViewById(R.id.tile_view);
+        tileView.requestFocus();
         
         ZoomControls zoomer = (ZoomControls) findViewById(R.id.zoomer);
         
         mTileContext = new TileContext();
-        mTileContext.setView(tile_view);
+        mTileContext.setView(tileView);
         mTileContext.setZoomer(zoomer);
-        tile_view.setTileContext(mTileContext);
+        mTileContext.setText(textView);
+        tileView.setTileContext(mTileContext);
     }
     
     @Override

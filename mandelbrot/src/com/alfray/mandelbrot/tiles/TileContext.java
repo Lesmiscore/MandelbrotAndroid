@@ -13,6 +13,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.TextView;
 import android.widget.ZoomControls;
 
 public class TileContext {
@@ -51,6 +52,12 @@ public class TileContext {
 
     private HideZoomRunnable mHideZoomRunnable;
 
+	private TextView mTextView;
+
+	private boolean mNeedUpdateCaption;
+
+	private UpdateCaptionRunnable mUpdateCaptionRunnable;
+
     public TileContext() {
 
         if (mTileThread == null) {
@@ -61,6 +68,7 @@ public class TileContext {
         
         mHandler = new Handler();
         mHideZoomRunnable = new HideZoomRunnable();
+        mUpdateCaptionRunnable = new UpdateCaptionRunnable();
     }
 
     public void resetScreen() {
@@ -68,6 +76,7 @@ public class TileContext {
         updateMaxIter();
         mPanningX = 0;
         mPanningY = 0;
+        updateCaption();
     }
     
     /** Runs from the UI thread */
@@ -106,6 +115,11 @@ public class TileContext {
     }
 
     /** Runs from the UI (activity) thread */
+	public void setText(TextView textView) {
+		mTextView = textView;
+	}
+
+    /** Runs from the UI (activity) thread */
     public void setZoomer(ZoomControls zoomer) {
         mZoomer = zoomer;
         if (zoomer != null) {
@@ -140,6 +154,7 @@ public class TileContext {
             logd("Pause TileThread: %s", shouldPause ? "yes" : "no");
             mTileThread.pauseThread(shouldPause);
         }
+        runUpdateCaption(false);
 	}
 
     /** Runs from the UI thread */
@@ -149,12 +164,19 @@ public class TileContext {
             mPanningY = y;
             updateAll(false /*force*/);
             invalidateView();
+            updateCaption();
         }
     }
 
     /** Runs from the UI thread */
-	public void onTouchDown() {
+	public void onPanStarted() {
         showZoomer(false /*force*/);
+        runUpdateCaption(true);
+	}
+
+    /** Runs from the UI thread */
+	public void onPanFinished() {
+        runUpdateCaption(false);
 	}
 
     //----
@@ -185,13 +207,11 @@ public class TileContext {
         int i = ij_for_xy(x1);
         int j = ij_for_xy(y1);
         
-        if (!force) {
-        	if (mCurrentI == i && mCurrentJ == j) {
-        		return;
-        	}
-        	mCurrentI = i;
-        	mCurrentJ = j;
+        if (!force && mCurrentI == i && mCurrentJ == j) {
+    		return;
         }
+    	mCurrentI = i;
+    	mCurrentJ = j;
 
         int xs = xy_for_ij(i);
         int ys = xy_for_ij(j);
@@ -289,6 +309,7 @@ public class TileContext {
 	        	mPanningX /= 2;
 	        	mPanningY /= 2;
 	        	updateMaxIter();
+	            updateCaption();
 	        	updateAll(true /*force*/);
 	        } else if (delta > 0) {
 	        	// zoom in by 1 (i.e. x2)
@@ -296,6 +317,7 @@ public class TileContext {
 	        	mPanningX *= 2;
 	        	mPanningY *= 2;
 	        	updateMaxIter();
+	            updateCaption();
 	        	updateAll(true /*force*/);
 	        }
     	}
@@ -313,7 +335,7 @@ public class TileContext {
         // int max_iter = Math.max(mPrefMinIter, (int)(mPrefStepIter * Math.log10(1.0 / w)));
 
 		int zoomLevel = mZoomFp8 / Tile.FP8_1;
-		mMaxIter = 15 + zoomLevel;
+		mMaxIter = 15 + (int)(10*Math.log1p(zoomLevel));
 	}
 
 	private void showZoomer(boolean force) {
@@ -331,5 +353,41 @@ public class TileContext {
             }
         }
         
+    }
+
+    /** This MUST be used from the UI thread */
+    private void setTextCaption(String format, Object...args) {
+    	if (mTextView != null) {
+    		String s = String.format(format, args);
+    		mTextView.setText(s);
+    	}
+    }
+    
+    /** This MUST be used from the UI thread */
+    private void updateCaption() {
+    	if (!mNeedUpdateCaption) {
+    		mUpdateCaptionRunnable.run();
+    	}
+    }
+    
+    private void runUpdateCaption(boolean run) {
+    	boolean start = run && !mNeedUpdateCaption;
+		mNeedUpdateCaption = run;
+		if (start) mHandler.post(mUpdateCaptionRunnable);
+    }
+    
+    private class UpdateCaptionRunnable implements Runnable {
+		public void run() {
+	    	float zoom = (float)mZoomFp8;
+	    	setTextCaption("Mandelbrot, X:%.2f, Y:%.2f, x%.1f, Iter:%d",
+	    			-mPanningX / zoom,
+	    			-mPanningY / zoom,
+	    			zoom / Tile.FP8_1,
+	    			mMaxIter
+				);
+	    	if (mNeedUpdateCaption && mHandler != null) {
+	    		mHandler.post(mUpdateCaptionRunnable);
+	    	}
+		}
     }
 }

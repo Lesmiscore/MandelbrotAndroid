@@ -157,7 +157,7 @@ public class TileView extends View {
                 if (DEBUG) {
                 	logd("Down: down(%.2f,%.2f), of7(%d,%d)", mDownX, mDownY, mDownOffsetX, mDownOffsetY);
                 }
-                mTileContext.onTouchDown();
+                mTileContext.onPanStarted();
             }
             return (mTileContext != null);
         case MotionEvent.ACTION_MOVE:
@@ -170,6 +170,11 @@ public class TileView extends View {
                 mTileContext.onPanTo(newOfx, newOfy);
                 return true;
             }
+        case MotionEvent.ACTION_UP:
+        case MotionEvent.ACTION_CANCEL:
+        	if (mTileContext != null) {
+        		mTileContext.onPanFinished();
+        	}
         default:
             return super.onTouchEvent(event);
         }
