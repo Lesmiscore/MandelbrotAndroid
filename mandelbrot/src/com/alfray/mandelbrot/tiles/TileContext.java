@@ -206,6 +206,29 @@ public class TileContext {
 		return true;
 	}
 
+    public void panToInterestingPlace() {
+        int index = mInterestingPlaceIndex;
+        
+        float zoom = (float)Tile.getZoomFp8(mZoomLevel);
+        float x = sInterestingPlaces[index++] * zoom;
+        float y = sInterestingPlaces[index++] * zoom;
+        mPanningX = 0 - (int)x;
+        mPanningY = 0 - (int)y;
+        updateCaption();
+        updateAll(true /*force*/);
+        invalidateView();
+        
+        mInterestingPlaceIndex = index == sInterestingPlaces.length ? 0 : index;
+    }
+    
+    public void zoom(boolean zoom_in) {
+        if (zoom_in) {
+            changeZoomBy(1);
+        } else {
+            changeZoomBy(-1);
+        }
+    }
+
     //----
     
 	private void logd(String format, Object...args) {
@@ -454,19 +477,4 @@ public class TileContext {
 	    	}
 		}
     }
-
-    private void panToInterestingPlace() {
-    	int index = mInterestingPlaceIndex;
-    	
-    	float zoom = (float)Tile.getZoomFp8(mZoomLevel);
-    	float x = sInterestingPlaces[index++] * zoom;
-		float y = sInterestingPlaces[index++] * zoom;
-		mPanningX = 0 - (int)x;
-		mPanningY = 0 - (int)y;
-		updateCaption();
-		updateAll(true /*force*/);
-		invalidateView();
-		
-		mInterestingPlaceIndex = index == sInterestingPlaces.length ? 0 : index;
-	}
 }

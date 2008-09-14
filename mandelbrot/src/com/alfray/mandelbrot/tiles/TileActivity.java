@@ -8,6 +8,8 @@ package com.alfray.mandelbrot.tiles;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.ZoomControls;
 
@@ -53,5 +55,33 @@ public class TileActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, R.string.reset,         0, R.string.reset);
+        menu.add(0, R.string.interesting,   0, R.string.interesting);
+        menu.add(0, R.string.zoom_in,       0, R.string.zoom_in);
+        menu.add(0, R.string.zoom_out,      0, R.string.zoom_out);
+        return super.onCreateOptionsMenu(menu);
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+        case R.string.reset:
+            mTileContext.resetScreen();
+            break;
+        case R.string.interesting:
+            mTileContext.panToInterestingPlace();
+            break;
+        case R.string.zoom_in:
+            mTileContext.zoom(true);
+            break;
+        case R.string.zoom_out:
+            mTileContext.zoom(false);
+            break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
