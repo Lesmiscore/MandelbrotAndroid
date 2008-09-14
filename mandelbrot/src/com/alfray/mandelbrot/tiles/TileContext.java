@@ -11,6 +11,7 @@ import java.util.HashMap;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.View;
 import android.widget.ZoomControls;
 
 public class TileContext {
@@ -107,6 +108,7 @@ public class TileContext {
     public void setZoomer(ZoomControls zoomer) {
         mZoomer = zoomer;
         changeZoomBy(0);
+        showZoomer(true /*force*/);
     }
     
     /** Runs from the UI (activity) thread */
@@ -128,9 +130,13 @@ public class TileContext {
             mPanningY = y;
             updateAll(false /*force*/);
             invalidateView();
-            changeZoomBy(0); // to display zoomer
         }
     }
+
+    /** Runs from the UI thread */
+	public void onTouchDown() {
+        showZoomer(false /*force*/);
+	}
 
     //----
     
@@ -257,11 +263,16 @@ public class TileContext {
         }
         if (mZoomer != null) {
             mZoomer.setIsZoomOutEnabled(mZoomFp8 > MIN_ZOOM_FP8);
-            mZoomer.show();
-            mHideZoomAfterMs = SystemClock.uptimeMillis() + ZOOM_HIDE_DELAY_MS;
-            mHandler.postAtTime(mHideZoomRunnable, mHideZoomAfterMs + 10);
         }
     }
+
+	private void showZoomer(boolean force) {
+		if (force || mZoomer.getVisibility() != View.VISIBLE) {
+			mZoomer.show();
+			mHideZoomAfterMs = SystemClock.uptimeMillis() + ZOOM_HIDE_DELAY_MS;
+			mHandler.postAtTime(mHideZoomRunnable, mHideZoomAfterMs + 10);
+		}
+	}
     
     private class HideZoomRunnable implements Runnable {
         public void run() {
@@ -271,5 +282,4 @@ public class TileContext {
         }
         
     }
-
 }

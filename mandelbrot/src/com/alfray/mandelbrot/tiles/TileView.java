@@ -160,6 +160,7 @@ public class TileView extends View {
                 if (DEBUG) {
                 	logd("Down: down(%.2f,%.2f), of7(%d,%d)", mDownX, mDownY, mDownOffsetX, mDownOffsetY);
                 }
+                mTileContext.onTouchDown();
             }
             return (mTileContext != null);
         case MotionEvent.ACTION_MOVE:

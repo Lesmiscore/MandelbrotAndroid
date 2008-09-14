@@ -1,4 +1,9 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent"
+    >
+
+<RelativeLayout
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent"
     >
@@ -9,16 +14,35 @@
 	android:layout_width="fill_parent" 
 	android:background="#005" 
 	android:textColor="#AA0" 
-	android:text="Mandelbrot Map"
-    android:layout_alignParentTop="true" android:layout_alignParentRight="true" android:layout_alignParentLeft="true" android:lines="1" android:focusable="false" android:focusableInTouchMode="false"/>
+	android:layout_alignParentTop="true" 
+    android:layout_alignParentRight="true" 
+    android:layout_alignParentLeft="true" 
+    android:lines="1" 
+    android:focusable="false" 
+    android:focusableInTouchMode="false" 
+    android:text="Mandelbrot Map"/>
 	
 <com.alfray.mandelbrot.tiles.TileView
     android:id="@+id/tile_view" 
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent"
-   android:focusable="true" android:focusableInTouchMode="true" android:layout_below="@+id/text" android:layout_alignParentRight="true" android:layout_alignParentLeft="true" android:layout_alignParentBottom="true">
+   android:focusable="true" 
+   android:focusableInTouchMode="true" 
+   android:layout_below="@+id/text" 
+   android:layout_alignParentRight="true" 
+   android:layout_alignParentLeft="true" 
+   android:layout_alignParentBottom="true">
 </com.alfray.mandelbrot.tiles.TileView>
 
-
-<ZoomControls android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/zoomer" android:layout_alignBottom="@id/tile_view" android:layout_centerHorizontal="true" android:focusable="true" android:focusableInTouchMode="true"></ZoomControls>
 </RelativeLayout>
+
+
+<ZoomControls 
+	android:layout_width="wrap_content" 
+	android:layout_height="wrap_content" 
+	android:id="@+id/zoomer" 
+	android:focusable="true" 
+	android:focusableInTouchMode="true" 
+	android:layout_gravity="bottom|center"
+/>
+</FrameLayout>
