@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ZoomControls;
 
 public class TileContext {
@@ -64,7 +65,7 @@ public class TileContext {
 
     public void resetScreen() {
         mZoomFp8 = MIN_ZOOM_FP8;
-        mMaxIter = 17;
+        updateMaxIter();
         mPanningX = 0;
         mPanningY = 0;
     }
@@ -107,8 +108,22 @@ public class TileContext {
     /** Runs from the UI (activity) thread */
     public void setZoomer(ZoomControls zoomer) {
         mZoomer = zoomer;
-        changeZoomBy(0);
-        showZoomer(true /*force*/);
+        if (zoomer != null) {
+            changeZoomBy(0);
+            showZoomer(true /*force*/);
+
+            zoomer.setOnZoomInClickListener(new OnClickListener() {
+				public void onClick(View v) {
+					changeZoomBy(1);
+				}
+            });
+
+            zoomer.setOnZoomOutClickListener(new OnClickListener() {
+				public void onClick(View v) {
+					changeZoomBy(-1);
+				}
+            });
+        }
     }
     
     /** Runs from the UI (activity) thread */
@@ -258,13 +273,37 @@ public class TileContext {
     }
 
     private void changeZoomBy(int delta) {
-        if (delta != 0) {
-            
+        if (delta < 0) {
+        	// zoom out by 1 (i.e. x0.5)
+        	mZoomFp8 /= 2;
+        	mPanningX /= 2;
+        	mPanningY /= 2;
+        	updateMaxIter();
+        	updateAll(true /*force*/);
+        } else if (delta > 0) {
+        	// zoom in by 1 (i.e. x2)
+        	mZoomFp8 *= 2;
+        	mPanningX *= 2;
+        	mPanningY *= 2;
+        	updateMaxIter();
+        	updateAll(true /*force*/);
         }
+
         if (mZoomer != null) {
             mZoomer.setIsZoomOutEnabled(mZoomFp8 > MIN_ZOOM_FP8);
         }
     }
+
+	private void updateMaxIter() {
+        // Dynamically adapt the number of iterations to the width:
+        // width 3..1 => 20 iter
+        // width 0.1 => 60 iter
+        // width 0.01 => 120
+        // int max_iter = Math.max(mPrefMinIter, (int)(mPrefStepIter * Math.log10(1.0 / w)));
+
+		int zoomLevel = mZoomFp8 / Tile.FP8_1;
+		mMaxIter = 15 + zoomLevel;
+	}
 
 	private void showZoomer(boolean force) {
 		if (force || mZoomer.getVisibility() != View.VISIBLE) {
