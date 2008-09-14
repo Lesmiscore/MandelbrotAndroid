@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Mandelbrot Map</string>
-    <string name="about">About</string>
+    <string name="about">About...</string>
 <string name="reset">Reset</string>
 <string name="zoom_in">Zoom In</string>
 <string name="zoom_out">Zoom Out</string>
-<string name="interesting">Next interesting place</string>
+<string name="interesting">Next P.O.I.</string>
+<string name="about_title">About Mandelbrot Map</string>
 </resources>

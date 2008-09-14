@@ -7,6 +7,7 @@
 package com.alfray.mandelbrot.tiles;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import android.widget.ZoomControls;
 
 import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot.util.AboutActivity;
 
 
 public class TileActivity extends Activity {
@@ -59,15 +61,17 @@ public class TileActivity extends Activity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, R.string.reset,         0, R.string.reset);
-        menu.add(0, R.string.interesting,   0, R.string.interesting);
         menu.add(0, R.string.zoom_in,       0, R.string.zoom_in);
         menu.add(0, R.string.zoom_out,      0, R.string.zoom_out);
+        menu.add(0, R.string.reset,         0, R.string.reset);
+        menu.add(0, R.string.interesting,   0, R.string.interesting);
+        menu.add(0, R.string.about,         0, R.string.about);
         return super.onCreateOptionsMenu(menu);
     }
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
         switch(item.getItemId()) {
         case R.string.reset:
             mTileContext.resetScreen();
@@ -80,6 +84,10 @@ public class TileActivity extends Activity {
             break;
         case R.string.zoom_out:
             mTileContext.zoom(false);
+            break;
+        case R.string.about:
+            intent = new Intent(this, AboutActivity.class);
+            startActivity(intent);
             break;
         }
         return super.onOptionsItemSelected(item);
