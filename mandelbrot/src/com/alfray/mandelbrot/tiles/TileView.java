@@ -70,7 +70,6 @@ public class TileView extends View {
 
     public void setTileContext(TileContext tileContext) {
         mTileContext = tileContext;
-        mTileContext.setView(this);
     }
 
     @Override
@@ -82,9 +81,7 @@ public class TileView extends View {
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
         super.onWindowVisibilityChanged(visibility);
-        if (mTileContext != null) {
-            mTileContext.setView(visibility == VISIBLE ? this : null);
-        }
+        if (mTileContext != null) mTileContext.pause(visibility != VISIBLE);
     }
     
     @Override

@@ -34,8 +34,9 @@ public class TileViewerActivity extends Activity {
         ZoomControls zoomer = (ZoomControls) findViewById(R.id.zoomer);
         
         mTileContext = new TileContext();
-        tile_view.setTileContext(mTileContext);
+        mTileContext.setView(tile_view);
         mTileContext.setZoomer(zoomer);
+        tile_view.setTileContext(mTileContext);
     }
     
     @Override

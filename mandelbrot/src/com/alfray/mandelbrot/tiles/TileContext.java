@@ -28,7 +28,7 @@ public class TileContext {
     private int mViewHeight;
     private int mPanningX;
     private int mPanningY;
-    private HashMap<String, Tile> mTileCache = new HashMap<String, Tile>();
+    private HashMap<Integer, Tile> mTileCache = new HashMap<Integer, Tile>();
     private Tile[] mVisibleTiles;
     private TileView mTileView;
     private int mMaxIter;
@@ -132,11 +132,15 @@ public class TileContext {
         if (tileView != null && mViewNeedsInvalidate) {
             invalidateView();
         }
-        if (mTileThread != null) {
-            logd("Pause TileThread");
-            mTileThread.pauseThread(tileView == null);
-        }
     }
+
+    /** Runs from the UI (activity) thread */
+	public void pause(boolean shouldPause) {
+        if (mTileThread != null) {
+            logd("Pause TileThread: %s", shouldPause ? "yes" : "no");
+            mTileThread.pauseThread(shouldPause);
+        }
+	}
 
     /** Runs from the UI thread */
     public void onPanTo(int x, int y) {
@@ -223,12 +227,13 @@ public class TileContext {
 
     /** Runs from the UI thread */
     private Tile requestTile(int i, int j) {
-        String key = Tile.computeKey(mZoomFp8, i, j, mMaxIter);
-        Tile t = mTileCache.get(key);
+    	int key = Tile.computeKey(mZoomFp8, i, j, mMaxIter);
+    	Integer object_key = Integer.valueOf(key);
+        Tile t = mTileCache.get(object_key);
         
         if (t == null) {
             t = new Tile(key, mZoomFp8, i, j, mMaxIter);
-            mTileCache.put(key, t);
+            mTileCache.put(object_key, t);
 
             mTileThread.schedule(t);
         }

@@ -25,13 +25,13 @@ public class Tile {
     private final int mZoomFp8;
     private final int mI;
     private final int mJ;
-    private final String mHashKey;
+    private final int mHashKey;
 
     private Bitmap mBitmap;
     private int mNativePtr;
     private final int mMaxIter;
 
-    public Tile(String key, int zoomFp8, int i, int j, int maxIter) {
+    public Tile(int key, int zoomFp8, int i, int j, int maxIter) {
         mHashKey = key;
         mZoomFp8 = zoomFp8;
         mMaxIter = maxIter;
@@ -46,23 +46,38 @@ public class Tile {
     }
 
     // The key is a combination of zoom+i+j+maxiter
+    /*
     public static String computeKey(int zoomFp8, int i, int j, int maxIter) {
         return String.format("(%d,%d)x%d-%d", i, j, zoomFp8, maxIter);
+    }
+    */
+    /**
+     * Computes hash key with this assumptions:
+     * - i..j meaningful 8 bits
+     * - maxIter meaningful 8 bits
+     * - zoomFp8>>(FP8_E-1) meaningful 8 bits (that is initial zoom is 0.5)
+     */
+    public static int computeKey(int zoomFp8, int i, int j, int maxIter) {
+    	int h = (i & 0x0FF);
+    	h |= ((j & 0x0FF) << 8);
+    	h |= ((maxIter & 0x0FF) << 16);
+    	h |= (((zoomFp8 >> FP8_E-1) & 0x0FF) << 24);
+    	return h;
     }
 
     @Override
     public int hashCode() {
-        return mHashKey.hashCode();
+        return mHashKey;
     }
     
     @Override
     public boolean equals(Object o) {
-        return (o instanceof Tile) && ((Tile) o).mHashKey.equals(mHashKey);
+        return (o instanceof Tile) && ((Tile) o).mHashKey == mHashKey;
     }
     
     @Override
     public String toString() {
-        return mHashKey;
+        return String.format("%08x", mHashKey);
     }
     
     public void dispose() {
