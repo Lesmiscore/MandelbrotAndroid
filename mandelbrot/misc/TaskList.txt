@@ -1,5 +1,21 @@
 ---- TODO ----
 
+20080914 [1] Feature: Fix zoom
+20080914 [1] Feature: Activity save/restore
+20080914 [1] Feature: Capture image
+20080914 [1] Feature: Save as wallpaper
+
+---- Done Version 0.5 ----
+
+20080914 [1] Feature: Fix zoom
+20080913 [1] Feature: Fix workflow, optimize a bit
+20080913 [1] Feature: Display  caption
+20080913 [1] Feature: ZoomControls, callbacks
+20080913 [1] Feature: Panning, fix panning, optimize a bit
+20080912 [1] Feature: TileView, TileContext (basic tile mechanism)
+
+---- Done Version 0.4 ----
+
 20070812 [1] Doc: Where/how to save current bitmap (disk or db?)
 20070812 [1] Doc: Where/how to plug into "standard" gallery to view bitmaps?
 20070808 [4] Feature: Save current bitmap as snapshot to disk

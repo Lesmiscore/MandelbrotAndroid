@@ -6,12 +6,12 @@
 
 package com.alfray.mandelbrot.tiles;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -24,7 +24,8 @@ public class TileContext {
     private static final int ZOOM_HIDE_DELAY_MS = 3000;
     
     private static class TileCache {
-    	public HashMap<Integer, Tile> mMap;
+    	//public HashMap<Integer, Tile> mMap;
+    	public SparseArray<Tile> mMap;
     }
     
     private int mZoomLevel;
@@ -252,30 +253,31 @@ public class TileContext {
 
     /** Runs from the UI thread */
     private Tile requestTile(int i, int j) {
-    	if (mZoomLevel >= mTileCache.length) {
-    		growTileCache(mZoomLevel);
-    	}
+    	if (mZoomLevel >= mTileCache.length) growTileCache(mZoomLevel);
     	TileCache cache = mTileCache[mZoomLevel];
     	if (cache == null) mTileCache[mZoomLevel] = cache = new TileCache();
-    	HashMap<Integer, Tile> map = cache.mMap;
-    	if (map == null) cache.mMap = map = new HashMap<Integer, Tile>();
+    	SparseArray<Tile> map = cache.mMap;
+    	if (map == null) cache.mMap = map = new SparseArray<Tile>();
 
     	int key = Tile.computeKey(i, j);
-    	Integer object_key = Integer.valueOf(key);
-        Tile t = map.get(object_key);
-        
+        Tile t = map.get(key);
+
         if (t == null) {
             t = new Tile(key, mZoomLevel, i, j, mMaxIter);
-            map.put(object_key, t);
+            map.put(key, t);
 
             mTileThread.schedule(t);
         }
-        
+
         return t;
     }
 
     private void growTileCache(int zoomLevel) {
-    	TileCache[] new_array = new TileCache[zoomLevel + 1];
+    	int size = mTileCache.length;
+    	while (size <= zoomLevel) {
+    		size *= 2;
+    	}
+    	TileCache[] new_array = new TileCache[size];
     	System.arraycopy(mTileCache, 0,
     			new_array, 0,
     			mTileCache.length);
@@ -318,25 +320,32 @@ public class TileContext {
         }
     }
 
+    /**
+     * Change zoom.
+     *
+     * @param delta 1 for zoom in, -1 for zoom out, 0 for no zooming
+     */
     private void changeZoomBy(int delta) {
     	if (delta != 0) {
-        	// clear the tile thread pending queue when changing levels
-    		if (mTileThread != null) {
-    			mTileThread.clear();
-    		}
-	        if (delta < 0 && mZoomLevel > 0) {
+    		boolean changed = false;
+	        if (delta > 0) {
 	        	// zoom out by 1 (i.e. x0.5)
-	        	mZoomLevel--;
-	        	mPanningX /= 2;
-	        	mPanningY /= 2;
-	        	updateMaxIter();
-	            updateCaption();
-	        	updateAll(true /*force*/);
-	        } else if (delta > 0) {
-	        	// zoom in by 1 (i.e. x2)
 	        	mZoomLevel++;
 	        	mPanningX *= 2;
 	        	mPanningY *= 2;
+	        	changed = true;
+	        } else if (delta < 0 && mZoomLevel > 0) {
+	        	// zoom in by 1 (i.e. x2)
+	        	mZoomLevel--;
+	        	mPanningX /= 2;
+	        	mPanningY /= 2;
+	        	changed = true;
+	        }
+	        if (changed) {
+	        	// clear the tile thread pending queue when changing levels
+	    		if (mTileThread != null) {
+	    			mTileThread.clear();
+	    		}
 	        	updateMaxIter();
 	            updateCaption();
 	        	updateAll(true /*force*/);
