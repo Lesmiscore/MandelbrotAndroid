@@ -6,6 +6,7 @@
 
 package com.alfray.mandelbrot.tiles;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import android.os.Handler;
@@ -20,16 +21,18 @@ public class TileContext {
     
     private static final String TAG = "TileContext";
 
-    private static final int MIN_ZOOM_FP8 = Tile.FP8_1 / 2;
-    
     private static final int ZOOM_HIDE_DELAY_MS = 3000;
     
-    private int mZoomFp8;
+    private static class TileCache {
+    	public HashMap<Integer, Tile> mMap;
+    }
+    
+    private int mZoomLevel;
     private int mViewWidth;
     private int mViewHeight;
     private int mPanningX;
     private int mPanningY;
-    private HashMap<Integer, Tile> mTileCache = new HashMap<Integer, Tile>();
+    private TileCache[] mTileCache;
     private Tile[] mVisibleTiles;
     private TileView mTileView;
     private int mMaxIter;
@@ -60,6 +63,8 @@ public class TileContext {
 
     public TileContext() {
 
+    	mTileCache = new TileCache[256];
+    	
         if (mTileThread == null) {
             mTileThread = new TileThread();
             mTileThread.setCompletedCallback(new TileCompletedCallback());
@@ -72,7 +77,7 @@ public class TileContext {
     }
 
     public void resetScreen() {
-        mZoomFp8 = MIN_ZOOM_FP8;
+        mZoomLevel = 0;
         updateMaxIter();
         mPanningX = 0;
         mPanningY = 0;
@@ -247,13 +252,21 @@ public class TileContext {
 
     /** Runs from the UI thread */
     private Tile requestTile(int i, int j) {
-    	int key = Tile.computeKey(mZoomFp8, i, j, mMaxIter);
+    	if (mZoomLevel >= mTileCache.length) {
+    		growTileCache(mZoomLevel);
+    	}
+    	TileCache cache = mTileCache[mZoomLevel];
+    	if (cache == null) mTileCache[mZoomLevel] = cache = new TileCache();
+    	HashMap<Integer, Tile> map = cache.mMap;
+    	if (map == null) cache.mMap = map = new HashMap<Integer, Tile>();
+
+    	int key = Tile.computeKey(i, j);
     	Integer object_key = Integer.valueOf(key);
-        Tile t = mTileCache.get(object_key);
+        Tile t = map.get(object_key);
         
         if (t == null) {
-            t = new Tile(key, mZoomFp8, i, j, mMaxIter);
-            mTileCache.put(object_key, t);
+            t = new Tile(key, mZoomLevel, i, j, mMaxIter);
+            map.put(object_key, t);
 
             mTileThread.schedule(t);
         }
@@ -261,7 +274,15 @@ public class TileContext {
         return t;
     }
 
-    /** Runs from the UI thread */
+    private void growTileCache(int zoomLevel) {
+    	TileCache[] new_array = new TileCache[zoomLevel + 1];
+    	System.arraycopy(mTileCache, 0,
+    			new_array, 0,
+    			mTileCache.length);
+    	mTileCache = new_array;
+	}
+
+	/** Runs from the UI thread */
     private void invalidateView() {
         if (mTileView != null) {
             mViewNeedsInvalidate = false;
@@ -303,9 +324,9 @@ public class TileContext {
     		if (mTileThread != null) {
     			mTileThread.clear();
     		}
-	        if (delta < 0) {
+	        if (delta < 0 && mZoomLevel > 0) {
 	        	// zoom out by 1 (i.e. x0.5)
-	        	mZoomFp8 /= 2;
+	        	mZoomLevel--;
 	        	mPanningX /= 2;
 	        	mPanningY /= 2;
 	        	updateMaxIter();
@@ -313,7 +334,7 @@ public class TileContext {
 	        	updateAll(true /*force*/);
 	        } else if (delta > 0) {
 	        	// zoom in by 1 (i.e. x2)
-	        	mZoomFp8 *= 2;
+	        	mZoomLevel++;
 	        	mPanningX *= 2;
 	        	mPanningY *= 2;
 	        	updateMaxIter();
@@ -323,7 +344,7 @@ public class TileContext {
     	}
 
         if (mZoomer != null) {
-            mZoomer.setIsZoomOutEnabled(mZoomFp8 > MIN_ZOOM_FP8);
+            mZoomer.setIsZoomOutEnabled(mZoomLevel > 0);
         }
     }
 
@@ -334,8 +355,7 @@ public class TileContext {
         // width 0.01 => 120
         // int max_iter = Math.max(mPrefMinIter, (int)(mPrefStepIter * Math.log10(1.0 / w)));
 
-		int zoomLevel = mZoomFp8 / Tile.FP8_1;
-		mMaxIter = 15 + (int)(10*Math.log1p(zoomLevel));
+		mMaxIter = 15 + (int)(10*Math.log1p(mZoomLevel));
 	}
 
 	private void showZoomer(boolean force) {
@@ -378,11 +398,11 @@ public class TileContext {
     
     private class UpdateCaptionRunnable implements Runnable {
 		public void run() {
-	    	float zoom = (float)mZoomFp8;
-	    	setTextCaption("Mandelbrot, X:%.2f, Y:%.2f, x%.1f, Iter:%d",
+	    	float zoom = (float)Tile.getZoomFp8(mZoomLevel);
+	    	setTextCaption("Mandelbrot, X:%.2f, Y:%.2f, x%d, Iter:%d",
 	    			-mPanningX / zoom,
 	    			-mPanningY / zoom,
-	    			zoom / Tile.FP8_1,
+	    			mZoomLevel,
 	    			mMaxIter
 				);
 	    	if (mNeedUpdateCaption && mHandler != null) {

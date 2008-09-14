@@ -15,25 +15,24 @@ import android.graphics.Bitmap;
 public class Tile {
     
     public final static int SIZE = 128;
-    public final static int FP8_1 = 128;
-    public final static int FP8_E = 7;
+    private final static int FP8_1 = 128;
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
     private static int[] sTempColor = new int[SIZE * SIZE];
     private static int[] sColorMap = null;
     
-    private final int mZoomFp8;
+    private final int mZoomLevel;
     private final int mI;
     private final int mJ;
     private final int mHashKey;
 
     private Bitmap mBitmap;
-    private int mNativePtr;
+    @SuppressWarnings("unused") private int mNativePtr;
     private final int mMaxIter;
 
-    public Tile(int key, int zoomFp8, int i, int j, int maxIter) {
+    public Tile(int key, int zoomLevel, int i, int j, int maxIter) {
         mHashKey = key;
-        mZoomFp8 = zoomFp8;
+        mZoomLevel = zoomLevel;
         mMaxIter = maxIter;
         mI = i;
         mJ = j;
@@ -41,8 +40,8 @@ public class Tile {
         mBitmap = null;
     }
 
-    public Tile(int zoomFp8, int i, int j, int maxIter) {
-        this(computeKey(zoomFp8, i, j, maxIter), zoomFp8, i, j, maxIter);
+    public Tile(int zoomLevel, int i, int j, int maxIter) {
+        this(computeKey(i, j), zoomLevel, i, j, maxIter);
     }
 
     // The key is a combination of zoom+i+j+maxiter
@@ -57,11 +56,8 @@ public class Tile {
      * - maxIter meaningful 8 bits
      * - zoomFp8>>(FP8_E-1) meaningful 8 bits (that is initial zoom is 0.5)
      */
-    public static int computeKey(int zoomFp8, int i, int j, int maxIter) {
-    	int h = (i & 0x0FF);
-    	h |= ((j & 0x0FF) << 8);
-    	h |= ((maxIter & 0x0FF) << 16);
-    	h |= (((zoomFp8 >> FP8_E-1) & 0x0FF) << 24);
+    public static int computeKey(int i, int j) {
+    	int h = (i & 0x0FFFF) | ((j & 0x7FFF) << 16);
     	return h;
     }
 
@@ -107,11 +103,20 @@ public class Tile {
     public int getJ() {
         return mJ;
     }
+    
+    public static int getZoomFp8(int zoomLevel) {
+    	if (zoomLevel == 0) {
+    		return FP8_1 / 2;
+    	} else {
+    		return FP8_1 * zoomLevel;
+    	}
+    }
 
     /** Runs from the TileThread */
     public void compute() {
         if (mBitmap == null) {
-            float inv_zoom = (float)FP8_1 / mZoomFp8;
+        	int zoomFp8 = getZoomFp8(mZoomLevel);
+            float inv_zoom = (float)FP8_1 / zoomFp8;
             float x = (float)mI * inv_zoom;
             float y = (float)mJ * inv_zoom;
             float step = inv_zoom / SIZE;
