@@ -6,6 +6,8 @@
 
 ---- Done Version 0.5 ----
 
+20080914 [1] Feature: About activity
+20080914 [1] Feature: Options menu
 20080914 [1] Feature: Fix zoom
 20080913 [1] Feature: Fix workflow, optimize a bit
 20080913 [1] Feature: Display  caption
