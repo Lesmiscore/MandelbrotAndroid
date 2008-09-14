@@ -3,11 +3,11 @@
 		  package="com.alfray.mandelbrot">
     <application android:icon="@drawable/icon" android:label="@string/app_name">
         <activity android:label="@string/app_name" android:name=".old.MandelbrotActivity">
-            <intent-filter>
+            <!--  intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
+            </intent-filter -->
         </activity>
         <activity android:label="@string/options"
             android:name=".old.OptionsActivity">
