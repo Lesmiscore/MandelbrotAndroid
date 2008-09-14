@@ -278,21 +278,27 @@ public class TileContext {
     }
 
     private void changeZoomBy(int delta) {
-        if (delta < 0) {
-        	// zoom out by 1 (i.e. x0.5)
-        	mZoomFp8 /= 2;
-        	mPanningX /= 2;
-        	mPanningY /= 2;
-        	updateMaxIter();
-        	updateAll(true /*force*/);
-        } else if (delta > 0) {
-        	// zoom in by 1 (i.e. x2)
-        	mZoomFp8 *= 2;
-        	mPanningX *= 2;
-        	mPanningY *= 2;
-        	updateMaxIter();
-        	updateAll(true /*force*/);
-        }
+    	if (delta != 0) {
+        	// clear the tile thread pending queue when changing levels
+    		if (mTileThread != null) {
+    			mTileThread.clear();
+    		}
+	        if (delta < 0) {
+	        	// zoom out by 1 (i.e. x0.5)
+	        	mZoomFp8 /= 2;
+	        	mPanningX /= 2;
+	        	mPanningY /= 2;
+	        	updateMaxIter();
+	        	updateAll(true /*force*/);
+	        } else if (delta > 0) {
+	        	// zoom in by 1 (i.e. x2)
+	        	mZoomFp8 *= 2;
+	        	mPanningX *= 2;
+	        	mPanningY *= 2;
+	        	updateMaxIter();
+	        	updateAll(true /*force*/);
+	        }
+    	}
 
         if (mZoomer != null) {
             mZoomer.setIsZoomOutEnabled(mZoomFp8 > MIN_ZOOM_FP8);

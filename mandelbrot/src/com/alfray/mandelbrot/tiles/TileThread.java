@@ -6,7 +6,7 @@
 
 package com.alfray.mandelbrot.tiles;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.LinkedList;
 
 import android.util.Log;
 
@@ -16,31 +16,34 @@ public class TileThread extends BaseThread {
 
     private static final String TAG = "TileContext";
 
-    private ConcurrentLinkedQueue<Tile> mQueue;
+    private LinkedList<Tile> mLifoList;
     private ITileCompleted mTileCompleted;
 
     public TileThread() {
         super("TileThread");
         
-        mQueue = new ConcurrentLinkedQueue<Tile>();
+        mLifoList = new LinkedList<Tile>();
     }
     
     public void setCompletedCallback(ITileCompleted callback) {
         mTileCompleted = callback;
-        
     }
 
     public void schedule(Tile t) {
         if (t != null) {
             Log.d(TAG, "schedule: " + t.toString());
-            mQueue.add(t);
+            synchronized(mLifoList) {
+            	mLifoList.addFirst(t);
+            }
             wakeUp();
         }
     }
 
     @Override
     public void clear() {
-        mQueue.clear();
+        synchronized(mLifoList) {
+        	mLifoList.clear();
+        }
     }
 
     @Override
@@ -55,7 +58,10 @@ public class TileThread extends BaseThread {
 
     @Override
     protected void runIteration() {
-        Tile t = mQueue.poll();
+    	Tile t = null;
+        synchronized(mLifoList) {
+        	t = mLifoList.poll();
+        }
         if (t != null) {
             Log.d(TAG, "Compute " + t.toString());
             t.compute();
