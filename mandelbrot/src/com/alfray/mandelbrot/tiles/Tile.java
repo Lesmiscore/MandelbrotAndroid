@@ -19,6 +19,7 @@ public class Tile {
     public final static int FP8_E = 7;
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
+    private static int[] sTempColor = new int[SIZE * SIZE];
     private static int[] sColorMap = null;
     
     private final int mZoomFp8;
@@ -38,9 +39,6 @@ public class Tile {
         mJ = j;
         mNativePtr = 0;
         mBitmap = null;
-        
-        // TODO -- HACK something better
-        createColorMap(maxIter);
     }
 
     public Tile(int zoomFp8, int i, int j, int maxIter) {
@@ -94,13 +92,21 @@ public class Tile {
     public int getJ() {
         return mJ;
     }
-    
+
+    /** Runs from the TileThread */
     public void compute() {
         if (mBitmap == null) {
             float inv_zoom = (float)FP8_1 / mZoomFp8;
             float x = (float)mI * inv_zoom;
             float y = (float)mJ * inv_zoom;
             float step = inv_zoom / SIZE;
+
+
+            // Note: currently runs only the single TileThread
+            // so it's ok to use static arrays. But it's still
+            // very ugly.
+
+            createColorMap(mMaxIter); // ugly...
 
             final int n = sTempBlock.length; 
 
@@ -112,11 +118,11 @@ public class Tile {
                         n, sTempBlock);
                 
             for (int k = 0; k < n; ++k) {
-                sTempBlock[k] = sColorMap[sTempBlock[k]];
+                sTempColor[k] = sColorMap[sTempBlock[k]];
             }
             
             Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.RGB_565);
-            bmp.setPixels(sTempBlock, 0, SIZE, 0, 0, SIZE, SIZE);
+            bmp.setPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
             mBitmap = bmp;
         }
     }
@@ -124,7 +130,7 @@ public class Tile {
     //-------
 
     private void createColorMap(int max_iter) {
-        if (sColorMap == null || sColorMap.length != max_iter) {
+        if (sColorMap == null || sColorMap.length != max_iter + 1) {
             sColorMap = new int[max_iter + 1];
             for(int i = 0; i <= max_iter; i++) {
                 sColorMap[i] = colorIndex(i, max_iter);
