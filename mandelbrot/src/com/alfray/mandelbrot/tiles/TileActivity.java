@@ -14,7 +14,7 @@ import android.widget.ZoomControls;
 import com.alfray.mandelbrot.R;
 
 
-public class TileViewerActivity extends Activity {
+public class TileActivity extends Activity {
 
     private TileContext mTileContext;
 
