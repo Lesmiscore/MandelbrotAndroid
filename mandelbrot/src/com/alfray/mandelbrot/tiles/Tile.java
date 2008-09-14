@@ -19,6 +19,7 @@ public class Tile {
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
     private static int[] sTempColor = new int[SIZE * SIZE];
+    private static int[] sTempLine = new int[SIZE];
     private static int[] sColorMap = null;
     
     private final int mZoomLevel;
@@ -43,22 +44,40 @@ public class Tile {
     public Tile(int zoomLevel, int i, int j, int maxIter) {
         this(computeKey(i, j), zoomLevel, i, j, maxIter);
     }
+    
+    public int getZoomLevel() {
+		return mZoomLevel;
+	}
 
-    // The key is a combination of zoom+i+j+maxiter
-    /*
-    public static String computeKey(int zoomFp8, int i, int j, int maxIter) {
-        return String.format("(%d,%d)x%d-%d", i, j, zoomFp8, maxIter);
-    }
-    */
     /**
      * Computes hash key with this assumptions:
-     * - i..j meaningful 8 bits
-     * - maxIter meaningful 8 bits
-     * - zoomFp8>>(FP8_E-1) meaningful 8 bits (that is initial zoom is 0.5)
+     * - i..j meaningful 15 bits + sign bit
+     * - neither maxIter nor zoom level are considered in the hash.
+     * 
+     * TileContext keeps a different cache for each zoom level, and maxIter is
+     * linked to the zoom level, so neither need to be hashed here.
+     * 
+     * The sign bit for i is in bit 15. The sign bit for j is in bit 31 (MSB).
+     * If j is negative, we count it from "-0" to "-N" (instead of -1..-N).
+     * This way, to get the "mirror key" in j we just need to xor bit 31.
      */
     public static int computeKey(int i, int j) {
-    	int h = (i & 0x0FFFF) | ((j & 0x7FFF) << 16);
+    	int h = 0;
+    	if (j < 0) { 
+    		h |= 0x80000000;
+    		j = -j-1; 
+		}
+    	if (i < 0) {
+    		h |= 0x00008000;
+    		i = -i;
+    	}
+    	h |= (i & 0x07FFF) | ((j & 0x7FFF) << 16);
     	return h;
+    }
+
+    /** Key for mirror in j */
+    public int computeMirrorKey() {
+    	return mHashKey ^ 0x80000000;
     }
 
     @Override
@@ -79,11 +98,13 @@ public class Tile {
     public void dispose() {
         // pass
     }
-    
+
+    /** Has the bitmap been computed yet? */
     public boolean isReady() {
         return mBitmap != null;
     }
-    
+
+    /** Returns bitmap. Null if isReady()==false */
     public Bitmap getBitmap() {
         return mBitmap;
     }
@@ -146,6 +167,25 @@ public class Tile {
             mBitmap = bmp;
         }
     }
+
+    /** Runs from the TileThread */
+	public void fromMirror(Tile tile) {
+		if (mBitmap == null && tile.mBitmap != null) {
+            Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.RGB_565);
+
+            tile.mBitmap.getPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
+
+            // reverse in Y
+            for (int y1 = 0, y2 = SIZE * (SIZE-1); y1 < y2; y1 += SIZE, y2 -= SIZE) {
+            	System.arraycopy(sTempColor, y1, sTempLine,   0, SIZE); // y1->temp
+            	System.arraycopy(sTempColor, y2, sTempColor, y1, SIZE); // y2->y1
+            	System.arraycopy(sTempLine,   0, sTempColor, y2, SIZE); // temp->y2
+            }
+            
+            bmp.setPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
+            mBitmap = bmp;
+		}
+	}
 
     //-------
 

@@ -191,7 +191,9 @@ public class TileView extends View {
 				mGridMode = GridMode.NONE;
 			}
     		invalidate();
-    	}
+    	} else if (mTileContext != null && mTileContext.onKeyDown(event)) {
+			return true;
+		}
     	return super.onKeyDown(keyCode, event);
     }
 
