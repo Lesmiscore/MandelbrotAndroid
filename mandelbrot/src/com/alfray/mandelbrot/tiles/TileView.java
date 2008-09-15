@@ -1,7 +1,7 @@
 /*
  * (c) ralfoide gmail com, 2008
  * Project: Mandelbrot
- * License TBD
+ * License: GPLv2
  */
 
 

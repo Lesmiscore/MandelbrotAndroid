@@ -1,7 +1,7 @@
 /*
  * (c) ralfoide gmail com, 2008
  * Project: asqare
- * License TBD
+ * License: GPLv2
  */
 
 package com.alfray.mandelbrot.tests;

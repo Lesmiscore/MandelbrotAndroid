@@ -1,7 +1,7 @@
 /*
  * (c) ralfoide, http://gamez.googlecode.com/, 2008
  * Project: gamez
- * License TBD
+ * License: GPLv2
  */
 
 package com.alfray.mandelbrot.util;
