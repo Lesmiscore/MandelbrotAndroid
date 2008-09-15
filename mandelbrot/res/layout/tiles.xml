@@ -12,15 +12,13 @@
     android:layout_height="wrap_content" 
 	android:id="@+id/text" 
 	android:layout_width="fill_parent" 
-	android:background="#005" 
-	android:textColor="#AA0" 
 	android:layout_alignParentTop="true" 
     android:layout_alignParentRight="true" 
     android:layout_alignParentLeft="true" 
     android:lines="1" 
     android:focusable="false" 
     android:focusableInTouchMode="false" 
-    android:text="Mandelbrot Map"/>
+    android:text="Mandelbrot Map" android:textAppearance="@style/TextCaption" android:gravity="center" android:background="@color/dark_blue"/>
 	
 <com.alfray.mandelbrot.tiles.TileView
     android:id="@+id/tile_view" 
