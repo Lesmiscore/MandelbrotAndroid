@@ -108,6 +108,8 @@ public class TileContext {
         }
         updateMaxIter();
         updateCaption();
+        updateAll(false /*force*/);
+        invalidateView();
     }
 
 
@@ -354,9 +356,8 @@ public class TileContext {
         if (t == null) {
             t = new Tile(key, mZoomLevel, i, j, mMaxIter);
             cache.put(key, t);
-
-            mTileThread.schedule(t);
         }
+        if (!t.isReady()) mTileThread.schedule(t);
 
         return t;
     }
