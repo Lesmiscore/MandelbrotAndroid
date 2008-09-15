@@ -2,6 +2,7 @@
 
 20080914 [1] Feature: Capture image
 20080914 [1] Feature: Save as wallpaper
+20080914 [1] Feature: Trackball support
 
 ---- Done Version 0.5 ----
 

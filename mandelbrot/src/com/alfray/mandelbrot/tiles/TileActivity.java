@@ -67,11 +67,13 @@ public class TileActivity extends Activity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, R.string.about,         0, R.string.about);
+        menu.add(0, R.string.interesting,   0, R.string.interesting);
+        menu.add(0, R.string.reset,         0, R.string.reset);
         menu.add(0, R.string.zoom_in,       0, R.string.zoom_in);
         menu.add(0, R.string.zoom_out,      0, R.string.zoom_out);
-        menu.add(0, R.string.reset,         0, R.string.reset);
-        menu.add(0, R.string.interesting,   0, R.string.interesting);
-        menu.add(0, R.string.about,         0, R.string.about);
+        menu.add(0, R.string.capture,       0, R.string.capture).setEnabled(false);
+        menu.add(0, R.string.wallpaper,     0, R.string.wallpaper).setEnabled(false);
         return super.onCreateOptionsMenu(menu);
     }
     
@@ -94,6 +96,10 @@ public class TileActivity extends Activity {
         case R.string.about:
             intent = new Intent(this, AboutActivity.class);
             startActivity(intent);
+            break;
+        case R.string.capture:
+            break;
+        case R.string.wallpaper:
             break;
         }
         return super.onOptionsItemSelected(item);
