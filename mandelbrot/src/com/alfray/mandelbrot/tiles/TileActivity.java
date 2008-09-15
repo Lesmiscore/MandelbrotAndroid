@@ -67,13 +67,20 @@ public class TileActivity extends Activity {
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, R.string.about,         0, R.string.about);
-        menu.add(0, R.string.interesting,   0, R.string.interesting);
-        menu.add(0, R.string.reset,         0, R.string.reset);
-        menu.add(0, R.string.zoom_in,       0, R.string.zoom_in);
-        menu.add(0, R.string.zoom_out,      0, R.string.zoom_out);
-        menu.add(0, R.string.capture,       0, R.string.capture).setEnabled(false);
-        menu.add(0, R.string.wallpaper,     0, R.string.wallpaper).setEnabled(false);
+        menu.add(0, R.string.about,         0, R.string.about)
+            .setIcon(R.drawable.ic_menu_info_details);
+        menu.add(0, R.string.interesting,   0, R.string.interesting)
+            .setIcon(R.drawable.ic_menu_myplaces);
+        menu.add(0, R.string.reset,         0, R.string.reset)
+            .setIcon(R.drawable.ic_menu_mapmode);
+        menu.add(0, R.string.zoom_in,       0, R.string.zoom_in)
+            .setIcon(R.drawable.btn_flicker_plus);
+        menu.add(0, R.string.zoom_out,      0, R.string.zoom_out)
+            .setIcon(R.drawable.btn_flicker_minus);
+        menu.add(0, R.string.capture,       0, R.string.capture).setEnabled(false)
+            .setIcon(R.drawable.ic_menu_save);
+        menu.add(0, R.string.wallpaper,     0, R.string.wallpaper).setEnabled(false)
+            .setIcon(R.drawable.ic_menu_save);
         return super.onCreateOptionsMenu(menu);
     }
     
