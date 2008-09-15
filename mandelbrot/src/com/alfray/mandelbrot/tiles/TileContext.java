@@ -6,6 +6,7 @@
 
 package com.alfray.mandelbrot.tiles;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
@@ -78,14 +79,61 @@ public class TileContext {
         mUpdateCaptionRunnable = new UpdateCaptionRunnable();
     }
 
-    public void resetScreen() {
-        mZoomLevel = 0;
+    /** Runs from the UI thread */
+    public void resetState(Bundle inState) {
+        if (inState == null) {
+            mZoomLevel = 0;
+            mPanningX  = 0;
+            mPanningY  = 0;
+        } else {
+            mZoomLevel = inState.getInt("mandelbrot.zoom");
+            mPanningX  = inState.getInt("mandelbrot.panX");
+            mPanningY  = inState.getInt("mandelbrot.panY");
+
+            int nn = inState.getInt("mandelbrot.nbtiles");
+            if (nn > 0) {
+                if (mVisibleTiles == null || mVisibleTiles.length != nn) {
+                    mVisibleTiles = new Tile[nn];
+                }
+                for (int k = 0; k < nn; k++) {
+                    int[] a = inState.getIntArray(String.format("mandelbrot.tile_%02d", k));
+                    if (a != null) {
+                        Tile t = new Tile(a);
+                        mVisibleTiles[k] = t;
+                        cacheTile(t);
+                    }
+                }
+            }
+            
+        }
         updateMaxIter();
-        mPanningX = 0;
-        mPanningY = 0;
         updateCaption();
     }
-    
+
+
+    /** Runs from the UI thread */
+    public void saveState(Bundle outState) {
+        outState.putInt("mandelbrot.zoom", mZoomLevel);
+        outState.putInt("mandelbrot.panX", mPanningX);
+        outState.putInt("mandelbrot.panY", mPanningY);
+        
+        // we're note going to save all tiles since this is just for the
+        // transient state save (i.e. the activity is momentarily paused
+        // because another one has precedence.) However in this case to
+        // restore the activity quickly it would be nice to have all the
+        // *current* visible tiles saved.
+        
+        int nn = mVisibleTiles.length;
+        outState.putInt("mandelbrot.nbtiles", nn);
+        for (int k = 0; k < nn; k++) {
+            Tile t = mVisibleTiles[k];
+            if (t != null) {
+                outState.putIntArray(String.format("mandelbrot.tile_%02d", k),
+                        t.serialize());
+            }
+        }
+    }
+
     /** Runs from the UI thread */
     public Tile[] getVisibleTiles() {
         return mVisibleTiles;
@@ -311,6 +359,12 @@ public class TileContext {
         }
 
         return t;
+    }
+
+    private void cacheTile(Tile t) {
+        TileCache cache = mLevelTileCaches.get(mZoomLevel);
+        if (cache == null) mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
+        cache.put(t.hashCode(), t);
     }
 
 	/** Runs from the UI thread */

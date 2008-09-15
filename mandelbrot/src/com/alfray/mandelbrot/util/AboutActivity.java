@@ -14,7 +14,7 @@ import com.alfray.mandelbrot.R;
 
 public class AboutActivity extends Activity {
 
-	private static final String TAG = "AboutActivity";
+	//--private static final String TAG = "AboutActivity";
 
 	/** Called when the activity is first created. */
 	@Override

@@ -24,8 +24,8 @@ public class TileActivity extends Activity {
 
     /** Called when the activity is first created. */
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate(Bundle inState) {
+        super.onCreate(inState);
     
         setContentView(R.layout.tiles);
         
@@ -41,12 +41,18 @@ public class TileActivity extends Activity {
         mTileContext.setZoomer(zoomer);
         mTileContext.setText(textView);
         tileView.setTileContext(mTileContext);
+        mTileContext.resetState(inState);
     }
     
     @Override
     protected void onResume() {
         super.onResume();
-        mTileContext.resetScreen(); // HACK
+    }
+    
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        mTileContext.saveState(outState);
+        super.onSaveInstanceState(outState);
     }
     
     @Override
@@ -74,7 +80,7 @@ public class TileActivity extends Activity {
         Intent intent;
         switch(item.getItemId()) {
         case R.string.reset:
-            mTileContext.resetScreen();
+            mTileContext.resetState(null /*bundle*/);
             break;
         case R.string.interesting:
             mTileContext.panToInterestingPlace();

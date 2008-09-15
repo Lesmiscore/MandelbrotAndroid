@@ -15,7 +15,9 @@ import android.graphics.Bitmap;
 public class Tile {
     
     public final static int SIZE = 128;
+
     private final static int FP8_1 = 128;
+    private final static int SERIAL_VERSION = 1;
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
     private static int[] sTempColor = new int[SIZE * SIZE];
@@ -43,6 +45,38 @@ public class Tile {
 
     public Tile(int zoomLevel, int i, int j, int maxIter) {
         this(computeKey(i, j), zoomLevel, i, j, maxIter);
+    }
+    
+    public Tile(int[] serialized) {
+        assert serialized.length >= 7;
+        assert serialized[0] == SERIAL_VERSION;
+        assert serialized[1] == SIZE;
+        
+        mHashKey = serialized[2];
+        mZoomLevel = serialized[3];
+        mMaxIter = serialized[4];
+        mI = serialized[5];
+        mJ = serialized[6];
+        
+        if (serialized.length > 7) {
+            mBitmap = Bitmap.createBitmap(serialized, 7, SIZE, SIZE, SIZE, Bitmap.Config.RGB_565);
+        }
+    }
+
+    /** Serialize to int array */
+    public int[] serialize() {
+        Bitmap bmp = mBitmap;
+        int nn = SIZE * SIZE;
+        int[] result = new int[7 + (bmp == null ? 0 : nn)];
+        result[0] = SERIAL_VERSION;
+        result[1] = SIZE;
+        result[2] = mHashKey;
+        result[3] = mZoomLevel;
+        result[4] = mMaxIter;
+        result[5] = mI;
+        result[6] = mJ;
+        if (bmp != null) bmp.getPixels(result, 7, SIZE, 0, 0, SIZE, SIZE);
+        return result;
     }
     
     public int getZoomLevel() {
