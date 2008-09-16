@@ -146,10 +146,40 @@ public class TileView extends View {
     }
     
     @Override
+    public boolean onTrackballEvent(MotionEvent event) {
+        switch (event.getAction()) {
+        case MotionEvent.ACTION_DOWN:
+        	// trackball selected... ignore
+        	break;
+        case MotionEvent.ACTION_UP:
+        case MotionEvent.ACTION_CANCEL:
+        	// trackball selected... ignore
+        case MotionEvent.ACTION_MOVE:
+            if (mTileContext != null) {
+            	float x = event.getX() * event.getXPrecision();
+            	float y = event.getY() * event.getYPrecision();
+            	logd("Trackback MOVE: getX/Y: %f, %f => %f, %f", event.getX(), event.getY(), x ,y);
+            	// trackball events are delta motion
+                mDownOffsetX = mTileContext.getPanningX();
+                mDownOffsetY = mTileContext.getPanningY();
+            	int newOfx = mDownOffsetX + (int)x;
+            	int newOfy = mDownOffsetY + (int)y;
+                if (DEBUG) {
+                	logd("Move: to-of7(%d,%d)", newOfx, newOfy);
+                }
+                mTileContext.onPanTo(newOfx, newOfy);
+                return true;
+            }
+        }
+        return super.onTrackballEvent(event);
+    }
+    
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
         case MotionEvent.ACTION_DOWN:
             if (mTileContext != null) {
+            	// touch events are absolute positions
                 mDownX = event.getX();
                 mDownY = event.getY();
                 mDownOffsetX = mTileContext.getPanningX();
@@ -162,6 +192,7 @@ public class TileView extends View {
             return (mTileContext != null);
         case MotionEvent.ACTION_MOVE:
             if (mTileContext != null) {
+            	// touch events are absolute positions, make relative to start position
                 int newOfx = mDownOffsetX + (int)(event.getX() - mDownX);
                 int newOfy = mDownOffsetY + (int)(event.getY() - mDownY);
                 if (DEBUG) {
@@ -174,10 +205,10 @@ public class TileView extends View {
         case MotionEvent.ACTION_CANCEL:
         	if (mTileContext != null) {
         		mTileContext.onPanFinished();
+        		return true;
         	}
-        default:
-            return super.onTouchEvent(event);
         }
+        return super.onTouchEvent(event);
     }
     
     @Override
