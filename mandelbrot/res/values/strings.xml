@@ -7,6 +7,6 @@
 <string name="zoom_out">Zoom Out</string>
 <string name="interesting">Next P.O.I.</string>
 <string name="about_title">About Mandelbrot Map</string>
-<string name="capture">Capture Image</string>
+<string name="save_image">Save Image</string>
 <string name="wallpaper">Save as Wallpaper</string>
 </resources>

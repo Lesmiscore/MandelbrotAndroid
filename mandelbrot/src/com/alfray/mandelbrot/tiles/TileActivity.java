@@ -6,12 +6,15 @@
 
 package com.alfray.mandelbrot.tiles;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ZoomControls;
 
 import com.alfray.mandelbrot.R;
@@ -77,7 +80,7 @@ public class TileActivity extends Activity {
             .setIcon(R.drawable.btn_flicker_plus);
         menu.add(0, R.string.zoom_out,      0, R.string.zoom_out)
             .setIcon(R.drawable.btn_flicker_minus);
-        menu.add(0, R.string.capture,       0, R.string.capture).setEnabled(false)
+        menu.add(0, R.string.save_image,    0, R.string.save_image).setEnabled(false)
             .setIcon(R.drawable.ic_menu_save);
         menu.add(0, R.string.wallpaper,     0, R.string.wallpaper).setEnabled(false)
             .setIcon(R.drawable.ic_menu_save);
@@ -104,11 +107,28 @@ public class TileActivity extends Activity {
             intent = new Intent(this, AboutActivity.class);
             startActivity(intent);
             break;
-        case R.string.capture:
+        case R.string.save_image:
+            saveImage();
             break;
         case R.string.wallpaper:
+            saveWallpaper();
             break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void saveImage() {
+        // create dir on sdcard and complain if it can't be found or created
+        File d = new File("/sdcard/mandelbrot");
+        if (!d.isDirectory() && !d.mkdir()) {
+            Toast t = Toast.makeText(this,
+                    "Cannot save image.\nIs the SD Card available?",
+                    Toast.LENGTH_SHORT);
+            t.show();
+            return;
+        }
+    }
+
+    private void saveWallpaper() {
     }
 }
