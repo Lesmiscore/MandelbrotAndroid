@@ -6,6 +6,11 @@
 
 package com.alfray.mandelbrot.tiles;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -279,13 +284,167 @@ public class TileContext {
         }
     }
 
+	/**
+	 * Constructs a new ImageGenThread that can generated a new image.
+	 *
+	 * @param width  The width in pixels of the image to generate. Use 0 for the view size.
+	 * @param height The height in pixels of the image to generate. Use 0 for the view size.
+	 * @param runOnCompletion If non-null, this runnable will run once the generation is
+	 *        complete, whether the actual image generation succeeded or not.
+	 */
+    public ImageGenerator newImageGenerator(int sx, int sy, Runnable runOnCompletion) {
+    	return new ImageGenerator(sx, sy, runOnCompletion);
+    }
+    
+    /**
+     * A thread that knows how to generate an image of the current view.
+     */
+	public class ImageGenerator extends Thread {
+		
+		private final int mWidth;
+		private final int mHeight;
+		private Bitmap mBitmap;
+		private boolean mContinue;
+		private final Runnable mRunOnCompletion;
+
+		/**
+		 * Constructs a new ImageGenThread that can generated a new image.
+		 *
+		 * @param width  The width in pixels of the image to generate. Use 0 for the view size.
+		 * @param height The height in pixels of the image to generate. Use 0 for the view size.
+		 * @param runOnCompletion If non-null, this runnable will run once the generation is
+		 *        complete, whether the actual image generation succeeded or not.
+		 */
+		public ImageGenerator(int width, int height, Runnable runOnCompletion) {
+			mWidth  = width;
+			mHeight = height;
+			mRunOnCompletion = runOnCompletion;
+			mContinue = true;
+		}
+
+		/**
+		 * Tells the thread to exit as soon as possible. It may have to wait for the
+		 * current tile to be completed or something like that. This does not wait for the
+		 * thread to actually stop -- use join() if you need to.
+		 */
+		public void cancel() {
+			mContinue = false;
+		}
+
+		/**
+		 * Returns the computed bitmap.
+		 * Null as long as the image as not been successfully completed.
+		 */
+		public Bitmap getBitmap() {
+			return mBitmap;
+		}
+
+		/**
+		 * This is similar to updateAll except that it is run from
+		 * a different thread. That means we must prevent stuff like
+		 * panning or zooming.
+		 */
+		@Override
+		public void run() {
+			
+			int sx = mWidth <= 0 ? mViewWidth : mWidth;
+			int sy = mHeight <= 0 ? mViewHeight : mHeight;
+
+			logd("Generating image %d,%d", sx, sy);
+			
+			Bitmap destBmp = Bitmap.createBitmap(sx, sy, Tile.BMP_CONFIG);
+			
+			int sx2 = sx / 2;
+			int sy2 = sy / 2;
+
+			final int SZ = Tile.SIZE;
+
+			int x1, y1, x2, y2;
+			LinkedList<Tile> tiles = new LinkedList<Tile>();
+			synchronized(mZoomLock) {
+		        // boundaries in the virtual-screen space
+		        x1 = -mPanningX - sx2;
+		        y1 = -mPanningY - sy2;
+		        
+		        x2 = -mPanningX + sx2;
+		        y2 = -mPanningY + sy2;
+	
+		        int i = ij_for_xy(x1);
+		        int j = ij_for_xy(y1);
+	
+		        int xs = xy_for_ij(i);
+		        int ys = xy_for_ij(j);
+	
+		        // get the list of tiles we need
+		        for (int y = ys; y < y2; y += SZ, j++) {
+		            for (int i1 = i, x = xs; x < x2; x += SZ, i1++) {
+		                Tile t = requestTile(i1, j);
+		                tiles.add(t);
+		            }
+		        }
+			}
+
+			// Transfer all completed tiles to the destination bitmap.
+			// Loop whilst tiles are not completed (they are built
+			// asynchronously.)
+			//Rect destRect = new Rect(0, 0, sx, sy);
+			//Rect tileRect = new Rect();
+			Canvas canvas = new Canvas(destBmp);
+			while (mContinue && tiles.size() > 0) {
+				for (Iterator<Tile> it = tiles.iterator();
+						it.hasNext();
+						) {
+					Tile t = it.next();
+					if (!t.isReady()) continue;
+
+					// if a tile is ready, remove it from the list and blit it
+					// into the dest bitmap
+					it.remove();
+
+					Bitmap bmp = t.getBitmap();
+					if (bmp == null) continue; // should not happen
+					
+					int x = t.getVirtualX() - x1;
+					int y = t.getVirtualY() - y1;
+					canvas.drawBitmap(bmp, x, y, null /*paint*/);
+					
+					logd("ImageGen: apply tile %d,%d", x, y);
+				}
+				
+				if (tiles.size() == 0) {
+					// job completed! set the final bitmap
+					mBitmap = destBmp;
+					logd("ImageGen: completed.");
+					break;
+				} else {
+					// Wait a bit for the remaing tiles to complete.
+					// The 10 milliseconds per tile should be optimistic.
+					logd("ImageGen: Waiting for %d tiles", tiles.size());
+					try {
+						wait(tiles.size() * 10 /*ms*/);
+					} catch (InterruptedException e) {
+						// pass
+					}
+				}
+			}
+			
+			if (mRunOnCompletion != null) {
+				logd("ImageGen: run completion.");
+				mRunOnCompletion.run();
+			}
+		}
+	}
+
     //----
     
 	private void logd(String format, Object...args) {
         Log.d(TAG, String.format(format, args));
     }
 
-    /** Runs from the UI thread */
+    /**
+     * Runs from the UI thread.
+     * This means stuff like panning or zoom cannot change while this executes.  
+     */
     private void updateAll(boolean force) {
         final int SZ = Tile.SIZE;
 
@@ -304,6 +463,9 @@ public class TileContext {
         int x1 = -mPanningX - sx2;
         int y1 = -mPanningY - sy2;
 
+        int x2 = -mPanningX + sx2;
+        int y2 = -mPanningY + sy2;
+
         int i = ij_for_xy(x1);
         int j = ij_for_xy(y1);
         
@@ -317,9 +479,6 @@ public class TileContext {
         int ys = xy_for_ij(j);
         
         logd("UpdateAll: (%d,%d) px(%d,%d)", i, j, xs, ys);
-
-        int x2 = -mPanningX + sx2;
-        int y2 = -mPanningY + sy2;
 
         int k = 0;
         for (int y = ys; y < y2; y += SZ, j++) {
@@ -347,8 +506,13 @@ public class TileContext {
 
     /** Runs from the UI thread */
     private Tile requestTile(int i, int j) {
-    	TileCache cache = mLevelTileCaches.get(mZoomLevel);
-    	if (cache == null) mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
+    	TileCache cache;
+		synchronized (mLevelTileCaches) {
+			cache = mLevelTileCaches.get(mZoomLevel);
+			if (cache == null) {
+    			mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
+    		}
+    	}
 
     	int key = Tile.computeKey(i, j);
         Tile t = cache.get(key);
@@ -362,9 +526,15 @@ public class TileContext {
         return t;
     }
 
+    /** Runs from the UI thread. Called when restoring state. */
     private void cacheTile(Tile t) {
-        TileCache cache = mLevelTileCaches.get(mZoomLevel);
-        if (cache == null) mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
+    	TileCache cache;
+		synchronized (mLevelTileCaches) {
+			cache = mLevelTileCaches.get(mZoomLevel);
+			if (cache == null) {
+				mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
+			}
+		}
         cache.put(t.hashCode(), t);
     }
 

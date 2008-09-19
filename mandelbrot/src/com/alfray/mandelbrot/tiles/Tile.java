@@ -10,11 +10,14 @@ package com.alfray.mandelbrot.tiles;
 import com.alfray.mandelbrot.NativeMandel;
 
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 
 
 public class Tile {
     
     public final static int SIZE = 128;
+    
+    public final static Config BMP_CONFIG = Bitmap.Config.RGB_565;
 
     private final static int FP8_1 = 128;
     private final static int SERIAL_VERSION = 1;
@@ -59,7 +62,7 @@ public class Tile {
         mJ = serialized[6];
         
         if (serialized.length > 7) {
-            mBitmap = Bitmap.createBitmap(serialized, 7, SIZE, SIZE, SIZE, Bitmap.Config.RGB_565);
+            mBitmap = Bitmap.createBitmap(serialized, 7, SIZE, SIZE, SIZE, BMP_CONFIG);
         }
     }
 
@@ -196,7 +199,7 @@ public class Tile {
                 sTempColor[k] = sColorMap[sTempBlock[k]];
             }
             
-            Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.RGB_565);
+            Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, BMP_CONFIG);
             bmp.setPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
             mBitmap = bmp;
         }
@@ -205,7 +208,7 @@ public class Tile {
     /** Runs from the TileThread */
 	public void fromMirror(Tile tile) {
 		if (mBitmap == null && tile.mBitmap != null) {
-            Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.RGB_565);
+            Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, BMP_CONFIG);
 
             tile.mBitmap.getPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
 

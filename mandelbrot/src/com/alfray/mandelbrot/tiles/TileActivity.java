@@ -9,6 +9,9 @@ package com.alfray.mandelbrot.tiles;
 import java.io.File;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -18,12 +21,19 @@ import android.widget.Toast;
 import android.widget.ZoomControls;
 
 import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot.tiles.TileContext.ImageGenerator;
 import com.alfray.mandelbrot.util.AboutActivity;
 
 
 public class TileActivity extends Activity {
 
+    private static final int DLG_SAVE_IMG = 0;
+    private static final int DLG_WALLPAPER = 1;
+    
+	private static final int MENU_GRP_IMG = 1;
+
     private TileContext mTileContext;
+	private ImageGenerator mImageGenerator;
 
     /** Called when the activity is first created. */
     @Override
@@ -80,11 +90,17 @@ public class TileActivity extends Activity {
             .setIcon(R.drawable.btn_flicker_plus);
         menu.add(0, R.string.zoom_out,      0, R.string.zoom_out)
             .setIcon(R.drawable.btn_flicker_minus);
-        menu.add(0, R.string.save_image,    0, R.string.save_image).setEnabled(false)
+        menu.add(MENU_GRP_IMG, R.string.save_image,    0, R.string.save_image)
             .setIcon(R.drawable.ic_menu_save);
-        menu.add(0, R.string.wallpaper,     0, R.string.wallpaper).setEnabled(false)
+        menu.add(MENU_GRP_IMG, R.string.wallpaper,     0, R.string.wallpaper)
             .setIcon(R.drawable.ic_menu_save);
         return super.onCreateOptionsMenu(menu);
+    }
+    
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+    	menu.setGroupEnabled(MENU_GRP_IMG, mImageGenerator == null);
+    	return super.onPrepareOptionsMenu(menu);
     }
     
     @Override
@@ -127,8 +143,49 @@ public class TileActivity extends Activity {
             t.show();
             return;
         }
+        
+        showDialog(DLG_SAVE_IMG);
     }
 
     private void saveWallpaper() {
+        showDialog(DLG_WALLPAPER);
+    }
+    
+    @Override
+    protected Dialog onCreateDialog(final int id) {
+        ProgressDialog dialog = new ProgressDialog(this);
+        dialog.setMessage("Please wait while the image gets generated...");
+        dialog.setIndeterminate(true);
+        dialog.setCancelable(true);
+
+    	int sx = 0;
+    	int sy = 0;
+        if (id == DLG_WALLPAPER) {
+    		sx = getWallpaperDesiredMinimumWidth();
+    		sy = getWallpaperDesiredMinimumHeight();
+            dialog.setTitle("Generating Wallpaper");
+        } else {
+            dialog.setTitle("Generating Image");
+        }
+
+        mImageGenerator = mTileContext.newImageGenerator(sx, sy,
+        		new Runnable() {
+					public void run() {
+						mImageGenerator = null;
+						removeDialog(id);
+					}
+        });
+
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+			public void onCancel(DialogInterface dialog) {
+				ImageGenerator t = mImageGenerator;
+				mImageGenerator = null;
+				if (t != null) t.cancel();
+				removeDialog(id);
+			}
+        });
+
+        mImageGenerator.start();
+        return dialog;
     }
 }
