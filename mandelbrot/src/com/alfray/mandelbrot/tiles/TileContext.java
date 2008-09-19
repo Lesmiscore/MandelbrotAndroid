@@ -107,9 +107,13 @@ public class TileContext {
                 for (int k = 0; k < nn; k++) {
                     int[] a = inState.getIntArray(String.format("mandelbrot.tile_%02d", k));
                     if (a != null) {
-                        Tile t = new Tile(a);
-                        mVisibleTiles[k] = t;
-                        cacheTile(t);
+                    	try {
+	                        Tile t = new Tile(a);
+	                        mVisibleTiles[k] = t;
+	                        cacheTile(t);
+                    	} catch (Exception e) {
+                    		// ignore
+                    	}
                     }
                 }
             }

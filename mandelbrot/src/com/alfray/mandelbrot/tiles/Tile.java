@@ -20,7 +20,7 @@ public class Tile {
     public final static Config BMP_CONFIG = Bitmap.Config.RGB_565;
 
     private final static int FP8_1 = 128;
-    private final static int SERIAL_VERSION = 1;
+    private final static int SERIAL_VERSION = 2;
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
     private static int[] sTempColor = new int[SIZE * SIZE];
@@ -53,7 +53,7 @@ public class Tile {
     }
     
     public Tile(int[] serialized) {
-        assert serialized.length >= 7;
+        assert serialized.length >= 8;
         assert serialized[0] == SERIAL_VERSION;
         assert serialized[1] == SIZE;
         
@@ -62,9 +62,10 @@ public class Tile {
         mMaxIter = serialized[4];
         mI = serialized[5];
         mJ = serialized[6];
+        mCompleted = (serialized[7] == 1);
         
-        if (serialized.length > 7) {
-            mBitmap = Bitmap.createBitmap(serialized, 7, SIZE, SIZE, SIZE, BMP_CONFIG);
+        if (serialized.length > 8) {
+            mBitmap = Bitmap.createBitmap(serialized, 8, SIZE, SIZE, SIZE, BMP_CONFIG);
         }
     }
 
@@ -72,7 +73,7 @@ public class Tile {
     public int[] serialize() {
         Bitmap bmp = mBitmap;
         int nn = SIZE * SIZE;
-        int[] result = new int[7 + (bmp == null ? 0 : nn)];
+        int[] result = new int[8 + (bmp == null ? 0 : nn)];
         result[0] = SERIAL_VERSION;
         result[1] = SIZE;
         result[2] = mHashKey;
@@ -80,7 +81,8 @@ public class Tile {
         result[4] = mMaxIter;
         result[5] = mI;
         result[6] = mJ;
-        if (bmp != null) bmp.getPixels(result, 7, SIZE, 0, 0, SIZE, SIZE);
+        result[7] = mCompleted ? 1 : 0;
+        if (bmp != null) bmp.getPixels(result, 8, SIZE, 0, 0, SIZE, SIZE);
         return result;
     }
     
