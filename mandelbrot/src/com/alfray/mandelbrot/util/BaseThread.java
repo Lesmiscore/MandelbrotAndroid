@@ -155,6 +155,9 @@ public abstract class BaseThread extends Thread {
 
 	protected abstract void endRun();
 
+	protected void setCompleted() {
+		mContinue = false;
+	}
 
 	protected void wakeUp() {
 		this.interrupt();

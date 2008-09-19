@@ -4,9 +4,10 @@
  * License: GPL version 3 or any later version
  */
 
-
 package com.alfray.mandelbrot.tiles;
 
-public interface ITileCompleted {
-    public void onTileCompleted(Tile tile);
+public interface ICompleted {
+	public void completed();
 }
+
+

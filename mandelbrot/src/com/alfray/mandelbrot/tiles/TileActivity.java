@@ -158,6 +158,7 @@ public class TileActivity extends Activity {
     
     @Override
     protected Dialog onCreateDialog(final int id) {
+    	final Activity context = this;
         final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage("Please wait while the image gets generated...");
         dialog.setIndeterminate(true);
@@ -174,28 +175,35 @@ public class TileActivity extends Activity {
         }
 
         mImageGenerator = mTileContext.newImageGenerator(sx, sy,
-        		new Runnable() {
-					public void run() {
-						Bitmap bmp = mImageGenerator.getBitmap();
-						if (id == DLG_WALLPAPER) {
-							dialog.setMessage("Setting wallpaper...");
-							try {
-								setWallpaper(bmp);
-							} catch (IOException e) {
-								Log.e(TAG, "Set wallpaper failed", e);
+    		new ICompleted() {
+				public void completed() {
+					runOnUiThread(new Runnable() {
+						public void run() {
+							Bitmap bmp = mImageGenerator.getBitmap();
+							if (id == DLG_WALLPAPER) {
+								dialog.setMessage("Setting wallpaper...");
+								try {
+									setWallpaper(bmp);
+									Toast.makeText(context, "Wallpaper set", Toast.LENGTH_SHORT);
+								} catch (IOException e) {
+									Toast.makeText(context, "Set wallpaper failed", Toast.LENGTH_SHORT);
+									Log.e(TAG, "Set wallpaper failed", e);
+								}
 							}
-						}
 
-						mImageGenerator = null;
-						removeDialog(id);
-					}
+							mImageGenerator = null;
+							removeDialog(id);
+						}
+					});
+				}
         });
 
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-			public void onCancel(DialogInterface dialog) {
+			public void onCancel(DialogInterface dialog_interface) {
+				dialog.setMessage("Aborting...");
 				ImageGenerator t = mImageGenerator;
 				mImageGenerator = null;
-				if (t != null) t.cancel();
+				if (t != null) t.waitForStop();
 				removeDialog(id);
 			}
         });

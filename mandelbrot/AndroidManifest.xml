@@ -19,4 +19,6 @@
 <activity android:name=".util.AboutActivity"></activity>
 </application>
 
+
+<uses-permission android:name="android.permission.SET_WALLPAPER"></uses-permission>
 </manifest> 
