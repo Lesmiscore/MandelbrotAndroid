@@ -36,6 +36,8 @@ public class Tile {
     @SuppressWarnings("unused") private int mNativePtr;
     private final int mMaxIter;
 
+	private boolean mCompleted;
+
     public Tile(int key, int zoomLevel, int i, int j, int maxIter) {
         mHashKey = key;
         mZoomLevel = zoomLevel;
@@ -95,7 +97,7 @@ public class Tile {
      * linked to the zoom level, so neither need to be hashed here.
      * 
      * The sign bit for i is in bit 15. The sign bit for j is in bit 31 (MSB).
-     * If j is negative, we count it from "-0" to "-N" (instead of -1..-N).
+     * If i or j is negative, we count it from "-0" to "-N" (instead of -1..-N).
      * This way, to get the "mirror key" in j we just need to xor bit 31.
      */
     public static int computeKey(int i, int j) {
@@ -106,7 +108,7 @@ public class Tile {
 		}
     	if (i < 0) {
     		h |= 0x00008000;
-    		i = -i;
+    		i = -i-1;
     	}
     	h |= (i & 0x07FFF) | ((j & 0x7FFF) << 16);
     	return h;
@@ -115,6 +117,14 @@ public class Tile {
     /** Key for mirror in j */
     public int computeMirrorKey() {
     	return mHashKey ^ 0x80000000;
+    }
+
+    /**
+     * Key for a lower zoom level, i.e. the immediate level "zoomed out" from this one,
+     * thus i/j shifted right by 1 in the hash key, preserving the bit signs.
+     */
+    public int computeLowerLevelKey() {
+    	return (mHashKey & 0x80008000) | ((mHashKey & 0x7FFE7FFE) >> 1);
     }
 
     @Override
@@ -137,11 +147,11 @@ public class Tile {
     }
 
     /** Has the bitmap been computed yet? */
-    public boolean isReady() {
-        return mBitmap != null;
+    public boolean isCompleted() {
+        return mCompleted;
     }
 
-    /** Returns bitmap. Null if isReady()==false */
+    /** Returns bitmap. Null if isCompleted()==false */
     public Bitmap getBitmap() {
         return mBitmap;
     }
@@ -172,7 +182,7 @@ public class Tile {
 
     /** Runs from the TileThread */
     public void compute() {
-        if (mBitmap == null) {
+        if (!mCompleted) {
         	int zoomFp8 = getZoomFp8(mZoomLevel);
             float inv_zoom = (float)FP8_1 / zoomFp8;
             float x = (float)mI * inv_zoom;
@@ -202,12 +212,13 @@ public class Tile {
             Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, BMP_CONFIG);
             bmp.setPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
             mBitmap = bmp;
+            mCompleted = true;
         }
     }
 
     /** Runs from the TileThread */
 	public void fromMirror(Tile tile) {
-		if (mBitmap == null && tile.mBitmap != null) {
+		if (tile != null && mBitmap == null && tile.mBitmap != null) {
             Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, BMP_CONFIG);
 
             tile.mBitmap.getPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
@@ -221,6 +232,21 @@ public class Tile {
             
             bmp.setPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
             mBitmap = bmp;
+		}
+	}
+	
+	public void zoomForLowerLevel(Tile largerTile) {
+		if (largerTile != null && mBitmap == null && largerTile.mBitmap != null) {
+			final int i = mI;
+			final int j = mJ;
+
+			final int SZ2 = SIZE / 2;
+
+			int x = (i & 1) != 0 ? SZ2 : 0;
+			int y = (j & 1) != 0 ? SZ2 : 0;
+
+            Bitmap tmp = Bitmap.createBitmap(largerTile.mBitmap, x, y, SZ2, SZ2);
+            mBitmap = Bitmap.createScaledBitmap(tmp, SIZE, SIZE, true);
 		}
 	}
 

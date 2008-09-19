@@ -402,7 +402,7 @@ public class TileContext {
 					it.hasNext();
 					) {
 				Tile t = it.next();
-				if (!t.isReady()) continue;
+				if (!t.isCompleted()) continue;
 
 				// if a tile is ready, remove it from the list and blit it
 				// into the dest bitmap
@@ -525,8 +525,23 @@ public class TileContext {
         if (t == null) {
             t = new Tile(key, mZoomLevel, i, j, mMaxIter);
             cache.put(key, t);
+            
+            // try to find a lower-level tile to zoom from
+            if (mZoomLevel > 0) {
+            	int lowerZoomLevel = (mZoomLevel > 1) ? mZoomLevel / 2 : 0;
+	    		synchronized (mLevelTileCaches) {
+	    			cache = mLevelTileCaches.get(lowerZoomLevel);
+	    		}
+	    		if (cache != null) {
+	    			key = t.computeLowerLevelKey();
+	    			Tile largerTile = cache.get(key);
+	    			if (largerTile != null) {
+	    				t.zoomForLowerLevel(largerTile);
+	    			}
+	    		}
+            }
         }
-        if (!t.isReady()) mTileThread.schedule(t);
+        if (!t.isCompleted()) mTileThread.schedule(t);
 
         return t;
     }
@@ -586,7 +601,7 @@ public class TileContext {
 		            TileCache cache = mLevelTileCaches.get(mZoomLevel);
 		            if (cache != null) {
 			            Tile mirror = cache.get(mirrorKey);
-			            if (mirror != null && !mirror.isReady()) {
+			            if (mirror != null && !mirror.isCompleted()) {
 			            	mirror.fromMirror(tile);
 				            invalidateTile(mirror);
 			            }
