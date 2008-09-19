@@ -7,13 +7,16 @@
 package com.alfray.mandelbrot.tiles;
 
 import java.io.File;
+import java.io.IOException;
 
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -26,6 +29,8 @@ import com.alfray.mandelbrot.util.AboutActivity;
 
 
 public class TileActivity extends Activity {
+
+    private static final String TAG = "TileActivity";
 
     private static final int DLG_SAVE_IMG = 0;
     private static final int DLG_WALLPAPER = 1;
@@ -124,16 +129,16 @@ public class TileActivity extends Activity {
             startActivity(intent);
             break;
         case R.string.save_image:
-            saveImage();
+            startSaveImage();
             break;
         case R.string.wallpaper:
-            saveWallpaper();
+            startSaveWallpaper();
             break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void saveImage() {
+    private void startSaveImage() {
         // create dir on sdcard and complain if it can't be found or created
         File d = new File("/sdcard/mandelbrot");
         if (!d.isDirectory() && !d.mkdir()) {
@@ -147,13 +152,13 @@ public class TileActivity extends Activity {
         showDialog(DLG_SAVE_IMG);
     }
 
-    private void saveWallpaper() {
+    private void startSaveWallpaper() {
         showDialog(DLG_WALLPAPER);
     }
     
     @Override
     protected Dialog onCreateDialog(final int id) {
-        ProgressDialog dialog = new ProgressDialog(this);
+        final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage("Please wait while the image gets generated...");
         dialog.setIndeterminate(true);
         dialog.setCancelable(true);
@@ -171,6 +176,16 @@ public class TileActivity extends Activity {
         mImageGenerator = mTileContext.newImageGenerator(sx, sy,
         		new Runnable() {
 					public void run() {
+						Bitmap bmp = mImageGenerator.getBitmap();
+						if (id == DLG_WALLPAPER) {
+							dialog.setMessage("Setting wallpaper...");
+							try {
+								setWallpaper(bmp);
+							} catch (IOException e) {
+								Log.e(TAG, "Set wallpaper failed", e);
+							}
+						}
+
 						mImageGenerator = null;
 						removeDialog(id);
 					}
@@ -188,4 +203,9 @@ public class TileActivity extends Activity {
         mImageGenerator.start();
         return dialog;
     }
+
+//	private void logd(String format, Object...args) {
+//        Log.d(TAG, String.format(format, args));
+//    }
+
 }
