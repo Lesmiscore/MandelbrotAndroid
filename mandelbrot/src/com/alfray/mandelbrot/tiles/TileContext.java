@@ -33,7 +33,8 @@ public class TileContext {
 
     private static final float sInterestingPlaces[] = {
     	-1.77f, 0,
-    	-1.25565f, 0.38156f
+    	-1.25565f, 0.38156f,
+    	-0.66992f, -0.45215f
     };
     
     private static class TileCache extends SparseArray<Tile> {
