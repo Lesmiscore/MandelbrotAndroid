@@ -6,15 +6,24 @@
 
 package com.alfray.mandelbrot.tiles;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.MediaScannerConnection;
+import android.media.MediaScannerConnection.MediaScannerConnectionClient;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -40,12 +49,16 @@ public class TileActivity extends Activity {
     private TileContext mTileContext;
 	private ImageGenerator mImageGenerator;
 
+	private TileActivity mActivity;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle inState) {
         super.onCreate(inState);
     
         setContentView(R.layout.tiles);
+
+        mActivity = this;
         
         TextView textView = (TextView) findViewById(R.id.text);
 
@@ -158,7 +171,7 @@ public class TileActivity extends Activity {
     
     @Override
     protected Dialog onCreateDialog(final int id) {
-    	final Activity context = this;
+    	final Activity activity = this;
         final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage("Please wait while the image gets generated...");
         dialog.setIndeterminate(true);
@@ -175,28 +188,7 @@ public class TileActivity extends Activity {
         }
 
         mImageGenerator = mTileContext.newImageGenerator(sx, sy,
-    		new ICompleted() {
-				public void completed() {
-					runOnUiThread(new Runnable() {
-						public void run() {
-							Bitmap bmp = mImageGenerator.getBitmap();
-							if (id == DLG_WALLPAPER) {
-								dialog.setMessage("Setting wallpaper...");
-								try {
-									setWallpaper(bmp);
-									Toast.makeText(context, "Wallpaper set", Toast.LENGTH_SHORT);
-								} catch (IOException e) {
-									Toast.makeText(context, "Set wallpaper failed", Toast.LENGTH_SHORT);
-									Log.e(TAG, "Set wallpaper failed", e);
-								}
-							}
-
-							mImageGenerator = null;
-							removeDialog(id);
-						}
-					});
-				}
-        });
+        		activity, new ImageGeneratorDone(dialog, id));
 
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
 			public void onCancel(DialogInterface dialog_interface) {
@@ -211,6 +203,96 @@ public class TileActivity extends Activity {
         mImageGenerator.start();
         return dialog;
     }
+
+    /**
+     * This runs on the UI thread to save the bitmap actually generated:
+     * - Save as a wallpaper.
+     * - Save as a PNG and tell the media scanner to scan the file.
+     */
+    private class ImageGeneratorDone implements Runnable {
+    	private final ProgressDialog mDialog;
+		private final int mId;
+		private MediaScannerConnection mScanner;
+
+		public ImageGeneratorDone(ProgressDialog dialog, int id) {
+			mDialog = dialog;
+			mId = id;
+		}
+
+		public void run() {
+			String toastResult = null;
+			try {
+				Bitmap bmp = mImageGenerator.getBitmap();
+				if (mId == DLG_WALLPAPER) {
+					mDialog.setMessage("Setting wallpaper...");
+					try {
+						setWallpaper(bmp);
+						toastResult = "Wallpaper set";
+					} catch (IOException e) {
+						toastResult = "Set wallpaper failed";
+						Log.e(TAG, "Set wallpaper failed", e);
+					}
+				} else if (mId == DLG_SAVE_IMG) {
+					mDialog.setMessage("Saving image...");
+					
+					final String name = String.format("/sdcard/mandelbrot/%d.png", System.currentTimeMillis());
+					FileOutputStream fos;
+					try {
+						fos = new FileOutputStream(name);
+						BufferedOutputStream bos = new BufferedOutputStream(fos, 8192);
+
+						boolean ok = bmp.compress(Bitmap.CompressFormat.PNG, 100 /*quality*/, bos);
+						
+						try {
+							bos.close();
+							fos.close();
+						} catch (IOException e) {
+							ok = false;
+						}
+						
+						if (ok) {
+							mScanner = new MediaScannerConnection(mActivity,
+								new MediaScannerConnectionClient() {
+									public void onMediaScannerConnected() {
+										mScanner.scanFile(name, null /*mimeType*/);
+									}
+	
+									public void onScanCompleted(String path, Uri uri) {
+										if (path.equals(name)) {
+											mActivity.runOnUiThread(new Runnable() {
+												public void run() {
+													Toast
+														.makeText(getApplicationContext(),
+															"Image now available in Home > Pictures",
+															Toast.LENGTH_SHORT)
+														.show();
+												}
+											});
+											mScanner.disconnect();
+										}
+									}
+								
+							});
+							mScanner.connect();
+						}
+
+						toastResult = ok ? "Image saved successfully" : "Failed to save image";
+					} catch (FileNotFoundException e) {
+						toastResult = "Could not write to file";
+						Log.e(TAG, "Can't open file for writing: " + name, e);
+					}
+				}
+			} finally {
+				mImageGenerator = null;
+				removeDialog(mId);
+				if (toastResult != null) {
+					Toast
+						.makeText(mActivity, toastResult, Toast.LENGTH_SHORT)
+						.show();;
+				}
+			}
+		}
+	}
 
 //	private void logd(String format, Object...args) {
 //        Log.d(TAG, String.format(format, args));

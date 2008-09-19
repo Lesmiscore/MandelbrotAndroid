@@ -11,6 +11,7 @@ import java.util.LinkedList;
 
 import com.alfray.mandelbrot.util.BaseThread;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
@@ -291,11 +292,12 @@ public class TileContext {
 	 *
 	 * @param width  The width in pixels of the image to generate. Use 0 for the view size.
 	 * @param height The height in pixels of the image to generate. Use 0 for the view size.
-	 * @param runOnCompletion If non-null, this runnable will run once the generation is
+	 * @param activity The activity on which to run the callback (in the UI thread)
+	 * @param callback If non-null, this runnable will run once the generation is
 	 *        complete, whether the actual image generation succeeded or not.
 	 */
-    public ImageGenerator newImageGenerator(int sx, int sy, ICompleted callback) {
-    	return new ImageGenerator(sx, sy, callback);
+    public ImageGenerator newImageGenerator(int sx, int sy, Activity activity, Runnable callback) {
+    	return new ImageGenerator(sx, sy, activity, callback);
     }
     
     /**
@@ -309,9 +311,9 @@ public class TileContext {
 		
 		private final int mWidth;
 		private final int mHeight;
+		private final Activity mActivity;
+		private final Runnable mCallback;
 		private Bitmap mBitmap;
-		private boolean mContinue;
-		private final ICompleted mCallback;
 		private LinkedList<Tile> mTiles;
 		private int mX1;
 		private int mY1;
@@ -326,10 +328,11 @@ public class TileContext {
 		 * @param runOnCompletion If non-null, this runnable will run once the generation is
 		 *        complete, whether the actual image generation succeeded or not.
 		 */
-		public ImageGenerator(int width, int height, ICompleted callback) {
+		public ImageGenerator(int width, int height, Activity activity, Runnable callback) {
 			super("ImageGenThread");
 			mWidth  = width;
 			mHeight = height;
+			mActivity = activity;
 			mCallback = callback;
 			mContinue = true;
 		}
@@ -429,9 +432,9 @@ public class TileContext {
 
 		@Override
 		protected void endRun() {
-			if (mCallback != null) {
+			if (mActivity != null && mCallback != null) {
 				logd("ImageGen: run completion.");
-				mCallback.completed();
+				mActivity.runOnUiThread(mCallback);
 			}
 		}
 	}
