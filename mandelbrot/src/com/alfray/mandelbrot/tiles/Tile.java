@@ -1,5 +1,5 @@
 /*
- * (c) ralfoide gmail com, 2008
+ * Copyright 2008 (c) ralfoide gmail com, 2008
  * Project: Mandelbrot
  * License: GPL version 3 or any later version
  */
@@ -13,6 +13,16 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 
 
+/**
+ * A Mandelbrot tile, for a given zoomlevel and iteration level.
+ * <p/>
+ * Tiles are 128x128 pixels wide, their bitmap is thus 32KB in RGB 565.
+ * <p/>
+ * Tiles have two states: they can be "completed" (meaning they have been
+ * computed) and they can have a bitmap. A tile can have a bitmap but not
+ * be completed when this tile bitmap comes from a zoom approximation of the
+ * previous level.
+ */
 public class Tile {
     
     public final static int SIZE = 128;
@@ -69,7 +79,7 @@ public class Tile {
         }
     }
 
-    /** Serialize to int array */
+    /** Serialize to int array. Runs from UI thread. */
     public int[] serialize() {
         Bitmap bmp = mBitmap;
         int nn = SIZE * SIZE;
@@ -157,6 +167,14 @@ public class Tile {
     public Bitmap getBitmap() {
         return mBitmap;
     }
+
+    /** Returns true if there was a bitmap and it has been reclaimed. 
+     * @return */
+    public boolean reclaimBitmap() {
+        if (mBitmap == null) return false;
+        mBitmap = null;
+        return true;
+    }
     
     public int getVirtualX() {
         return mI * SIZE;
@@ -182,10 +200,20 @@ public class Tile {
     	}
     }
 
-    /** Runs from the TileThread */
+    /**
+     * Runs from the TileThread
+     *
+     * To avoid expensive lock, we want to ensure this runs only from the
+     * tile thread.
+     */
     public void compute() {
         if (!mCompleted) {
-        	int zoomFp8 = getZoomFp8(mZoomLevel);
+            // allocate the memory first... if it fails, we want the
+            // caller to be able to free memory and retry before doing
+            // the expensive computations.
+            Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, BMP_CONFIG);
+
+            int zoomFp8 = getZoomFp8(mZoomLevel);
             float inv_zoom = (float)FP8_1 / zoomFp8;
             float x = (float)mI * inv_zoom;
             float y = (float)mJ * inv_zoom;
@@ -211,14 +239,18 @@ public class Tile {
                 sTempColor[k] = sColorMap[sTempBlock[k]];
             }
             
-            Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, BMP_CONFIG);
             bmp.setPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
             mBitmap = bmp;
             mCompleted = true;
         }
     }
 
-    /** Runs from the TileThread */
+    /**
+     * Runs from the TileThread
+     *
+     * To avoid expensive lock, we want to ensure this runs only from the
+     * tile thread.
+     */
 	public void fromMirror(Tile tile) {
 		if (tile != null && mBitmap == null && tile.mBitmap != null) {
             Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, BMP_CONFIG);
@@ -237,6 +269,7 @@ public class Tile {
 		}
 	}
 	
+	/** Runs from the UI thread */
 	public void zoomForLowerLevel(Tile largerTile) {
 		if (largerTile != null && mBitmap == null && largerTile.mBitmap != null) {
 			final int i = mI;

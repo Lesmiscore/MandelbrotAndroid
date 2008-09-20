@@ -1,5 +1,5 @@
 /*
- * (c) ralfoide gmail com, 2008
+ * Copyright 2008 (c) ralfoide gmail com, 2008
  * Project: Mandelbrot
  * License: GPL version 3 or any later version
  */
@@ -7,6 +7,7 @@
 package com.alfray.mandelbrot.tiles;
 
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 import android.util.Log;
 
@@ -16,13 +17,18 @@ public class TileThread extends BaseThread {
 
     private static final String TAG = "TileContext";
 
-    private LinkedList<Tile> mLifoList;
+    /** List of pending tiles to compute */
+    private LinkedList<Tile> mPendingList;
+    /** List of all tiles created here that have memory to reclaim */
+    private LinkedList<Tile> mMemoryList;
+    /** Callback to call when a tile computation is completed */
     private ITileCompleted mTileCompleted;
 
     public TileThread() {
         super("TileThread");
         
-        mLifoList = new LinkedList<Tile>();
+        mPendingList = new LinkedList<Tile>();
+        mMemoryList = new LinkedList<Tile>();
     }
     
     public void setCompletedCallback(ITileCompleted callback) {
@@ -32,8 +38,8 @@ public class TileThread extends BaseThread {
     public void schedule(Tile t) {
         if (t != null) {
             Log.d(TAG, "schedule: " + t.toString());
-            synchronized(mLifoList) {
-            	mLifoList.addFirst(t);
+            synchronized(mPendingList) {
+            	mPendingList.addFirst(t);
             }
             wakeUp();
         }
@@ -41,8 +47,8 @@ public class TileThread extends BaseThread {
 
     @Override
     public void clear() {
-        synchronized(mLifoList) {
-        	mLifoList.clear();
+        synchronized(mPendingList) {
+        	mPendingList.clear();
         }
     }
 
@@ -59,17 +65,72 @@ public class TileThread extends BaseThread {
     @Override
     protected void runIteration() {
     	Tile t = null;
-        synchronized(mLifoList) {
-        	t = mLifoList.poll();
+        synchronized(mPendingList) {
+        	t = mPendingList.poll();
         }
         if (t != null) {
-            Log.d(TAG, "Compute " + t.toString());
-            t.compute();
-            if (mTileCompleted != null) {
-                mTileCompleted.onTileCompleted(t);
+            Log.d(TAG, "compute: " + t.toString());
+
+            try {
+                for (int i = 0 ; i < 2; i++) {
+                    try {
+                        t.compute();
+                        if (mTileCompleted != null) {
+                            mTileCompleted.onTileCompleted(t);
+                        }
+                        mMemoryList.add(t);
+                        return;
+                    } catch (OutOfMemoryError e) {
+                        reclaimTiles(t.getZoomLevel());
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Uncatched Exception during tile " + t.toString(), e);
+            } catch (Throwable th) {
+                Log.e(TAG, "Uncatched Throwable during tile " + t.toString() + " : " + th.getMessage());
             }
         } else {
             waitForALongTime();
         }
+    }
+
+    /**
+     * Frees all tiles from a different level,
+     * at most half of the tiles,
+     * and at least 2 tiles.
+     */
+    private void reclaimTiles(int level) {
+        if (mMemoryList == null) return;
+        if (mMemoryList.isEmpty()) return;
+
+        // always free the first tile
+        mMemoryList.poll().reclaimBitmap();
+
+        // now is a good time to GC
+        System.gc();
+
+        // now free some more
+        int n = mMemoryList.size() / 2;
+        int r = 1;
+        for (ListIterator<Tile> it = mMemoryList.listIterator();
+                it.hasNext() && r < n;
+                ) {
+            Tile t = it.next();
+            if (t.getZoomLevel() != level && t.reclaimBitmap()) {
+                it.remove();
+                r++;
+            }
+        }
+
+        // always free at least two of them
+        if (r == 1 && !mMemoryList.isEmpty()) {
+            mMemoryList.poll().reclaimBitmap();
+            r++;
+        }
+        
+        Log.d(TAG, "Reclaimed: " + Integer.toString(r) + " tiles");
+
+        // now is a good time to GC
+        System.gc();
     }
 }

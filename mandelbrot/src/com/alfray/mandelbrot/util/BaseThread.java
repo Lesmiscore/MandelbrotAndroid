@@ -1,5 +1,5 @@
 /*
- * (c) ralfoide gmail com, 2008
+ * Copyright 2008 (c) ralfoide gmail com, 2008
  * Project: asqare
  * License: GPL version 3 or any later version
  */

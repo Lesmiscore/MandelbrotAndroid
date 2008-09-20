@@ -1,5 +1,5 @@
 /*
- * (c) ralfoide, http://gamez.googlecode.com/, 2008
+ * Copyright 2008 (c) ralfoide, http://gamez.googlecode.com/, 2008
  * Project: gamez
  * License: GPL version 3 or any later version
  */

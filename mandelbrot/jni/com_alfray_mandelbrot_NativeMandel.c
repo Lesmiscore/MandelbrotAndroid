@@ -1,3 +1,9 @@
+/*
+ * Copyright 2008 (c) ralfoide gmail com,
+ * Project: mandelbrot
+ * License: GPL version 3 or any later version
+ */
+
 #include "com_alfray_mandelbrot_NativeMandel.h"
 
 #include <stdlib.h>   // for malloc
