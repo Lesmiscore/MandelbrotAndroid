@@ -1,11 +1,10 @@
 ---- TODO ----
 
-20080914 [1] Feature: Capture image
-20080914 [1] Feature: Save as wallpaper
-20080914 [1] Feature: Trackball support
-
 ---- Done Version 0.5 ----
 
+20080918 [1] Feature: Capture image
+20080918 [1] Feature: Save as wallpaper
+20080917 [1] Feature: Trackball support
 20080914 [1] Feature: Activity save/restore
 20080914 [1] Feature: About activity
 20080914 [1] Feature: Options menu
