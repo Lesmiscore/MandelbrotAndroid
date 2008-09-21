@@ -51,6 +51,8 @@ public class TileActivity extends Activity {
 
 	private boolean mOrientLandscape;
 
+	private boolean mOrientSensor;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle inState) {
@@ -93,6 +95,7 @@ public class TileActivity extends Activity {
     protected void onSaveInstanceState(Bundle outState) {
         mTileContext.saveState(outState);
     	outState.putBoolean("orient-land", mOrientLandscape);
+    	outState.putBoolean("orient-sensor", mOrientSensor);
         super.onSaveInstanceState(outState);
     }
     
@@ -122,13 +125,16 @@ public class TileActivity extends Activity {
             .setIcon(R.drawable.ic_menu_save);
         menu.add(MENU_GRP_IMG, R.string.wallpaper,     0, R.string.wallpaper)
             .setIcon(R.drawable.ic_menu_save);
-        menu.add(0, R.string.flip_orient,      0, R.string.flip_orient);
+        menu.add(2, R.string.flip_orient,      0, R.string.flip_orient).setCheckable(true);
+        menu.add(3, R.string.sensor_orient,      0, R.string.sensor_orient).setCheckable(true);
         return super.onCreateOptionsMenu(menu);
     }
     
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
     	menu.setGroupEnabled(MENU_GRP_IMG, mImageGenerator == null);
+    	menu.findItem(R.string.flip_orient).setChecked(mOrientLandscape);
+    	menu.findItem(R.string.sensor_orient).setChecked(mOrientSensor);
     	return super.onPrepareOptionsMenu(menu);
     }
     
@@ -161,11 +167,19 @@ public class TileActivity extends Activity {
         case R.string.flip_orient:
         	if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
         		mOrientLandscape = false;
+        		mOrientSensor = false;
         		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         	} else {
         		mOrientLandscape = false;
+        		mOrientSensor = false;
         		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         	}
+    		break;
+        case R.string.sensor_orient:
+    		mOrientLandscape = false;
+    		mOrientSensor = true;
+    		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+    		break;
         }
         return super.onOptionsItemSelected(item);
     }
