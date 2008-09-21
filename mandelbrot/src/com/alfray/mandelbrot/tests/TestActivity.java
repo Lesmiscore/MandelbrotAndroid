@@ -76,15 +76,15 @@ public class TestActivity extends Activity {
 	
 	class NativeTests extends TestThread {
 
-		private static final int sx = 256;
-		private static final int sy = 256;
-		private static final float _xcenter = -0.5f;
-		private static final float xy_width = 3.0f;
-		private static final float x_step = xy_width / sx;
-		private static final float y_step = xy_width / sy;
-		private static final float x_start = _xcenter - xy_width/2;
-		private static final float y_start = 0.0f - xy_width/2;
-		private static final float y_end = 0.0f + xy_width/2;
+		private static final int SIZE = 128;
+
+		private static final float FULL_STEP = 1.0f / SIZE;
+		private static final float FULL_X_START = -1f;
+		private static final float FULL_Y_START = -1f;
+        
+		private static final float BLACK_STEP = 9.5f / SIZE;
+        private static final float BLACK_X_START = -0.5f;
+        private static final float BLACK_Y_START = -0.5f;
 		
 		
 		private int mState;
@@ -94,8 +94,8 @@ public class TestActivity extends Activity {
 		public NativeTests() {
 			super("nativeTestsThread");
 			mState = 1;
-			mResults1 = new int[sx];
-			mResults2 = new int[sx*sy];
+			mResults1 = new int[SIZE];
+			mResults2 = new int[SIZE*SIZE];
 		}
 		
 	    public void writeResult(String format, Object...params) {
@@ -116,22 +116,31 @@ public class TestActivity extends Activity {
 		protected void runIteration() {
 			switch(mState) {
 			case 1:
-				test_nothing();
+				test_native_overhead();
 				break;
 			case 2:
-				test_java1(20);
-				break;
-			case 3:
-				test_native1(20);
-				break;
+                test_full_java2(20);
+                break;
+            case 3:
+                test_full_native2(20);
+                break;
             case 4:
-                test_java2(100);
+                test_black_java2(20);
                 break;
             case 5:
-                test_native2(100);
+                test_black_native2(20);
                 break;
             case 6:
-                test_java3(100);
+				test_full_java2(100);
+				break;
+            case 7:
+				test_full_native2(100);
+				break;
+            case 8:
+                test_black_java2(100);
+                break;
+            case 9:
+                test_black_native2(100);
                 break;
 			default:
 				mState = 0; // loop
@@ -141,104 +150,92 @@ public class TestActivity extends Activity {
 			mState++;
 		}
 
-		private void test_nothing() {
+		private void test_native_overhead() {
 			long start = System.currentTimeMillis();
 
 			final int N=10000;
 			for (int i = 0; i < N; ++i) {
 				// calls native with size=0 => does nothing, returns asap
-				NativeMandel.mandelbrot1_native(0, 0, 0, 20, 0, mResults1);
+				NativeMandel.mandelbrot2_native(0, 0, 0, 0, 0, 0, 20, 0, mResults1);
 			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Empty [%d] = %g ms/call", N, (double)end/(double)N);
+			writeResult("Overhead [%d] = %g ms/call", N, (double)end/(double)N);
 		}
 
-		private void test_native1(int max_iter) {
-			long start = System.currentTimeMillis();
-
-			int N=0;
-			for (float y = y_start; y < y_end; y += y_step) {
-				NativeMandel.mandelbrot1_native(x_start, x_step, y, 20, sx, mResults1);
-				++N;
-			}
-			
-			long end = System.currentTimeMillis();
-			end -= start;
-			
-			writeResult("Native 1 [%dx%dx%d] = %.2f s -- %.2fms/call", sx, sy, max_iter, end/1000.0f, (double)end/N);
-		}
-
-		private void test_java1(int max_iter) {
-			long start = System.currentTimeMillis();
-
-			int N=0;
-			for (float y = y_start; y < y_end; y += y_step) {
-				NativeMandel.mandelbrot1_java(x_start, x_step, y, 20, sx, mResults1);
-				++N;
-			}
-			
-			long end = System.currentTimeMillis();
-			end -= start;
-			
-			writeResult("Java 1 [%dx%dx%d] = %.2f s -- %.2fms/call", sx, sy, max_iter, end/1000.0f, (double)end/N);
-		}
-
-		private void test_java2(int max_iter) {
+		private void test_full_java2(int max_iter) {
 			long start = System.currentTimeMillis();
 
 			final int N=10;
 			for (int k = 0; k < N; ++k) {
 				NativeMandel.mandelbrot2_java(
-						x_start, x_step,
-						y_start, y_start,
-						sx, sy,
+						FULL_X_START, FULL_STEP,
+						FULL_Y_START, FULL_STEP,
+						SIZE, SIZE,
 						max_iter, mResults2.length, mResults2);
 			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Jave 2 [%dx%dx%d] = %.2f ms/call", sx, sy, max_iter, (double)end/N);
+			writeResult("Full Java 2 [%dx%dx%d] = %.2f ms/call", SIZE, SIZE, max_iter, (double)end/N);
 		}
 
-		private void test_native2(int max_iter) {
+		private void test_full_native2(int max_iter) {
 			long start = System.currentTimeMillis();
 
 			final int N=10;
 			for (int k = 0; k < N; ++k) {
 				NativeMandel.mandelbrot2_native(
-						x_start, x_step,
-						y_start, y_start,
-						sx, sy,
+						FULL_X_START, FULL_STEP,
+						FULL_Y_START, FULL_STEP,
+						SIZE, SIZE,
 						max_iter, mResults2.length, mResults2);
 			}
 			
 			long end = System.currentTimeMillis();
 			end -= start;
 			
-			writeResult("Native 2 [%dx%dx%d] = %.2f ms/call", sx, sy, max_iter, (double)end/N);
+			writeResult("Full Native 2 [%dx%dx%d] = %.2f ms/call", SIZE, SIZE, max_iter, (double)end/N);
 		}
 
-		private void test_java3(int max_iter) {
-			long start = System.currentTimeMillis();
+        private void test_black_java2(int max_iter) {
+            long start = System.currentTimeMillis();
 
-			final int N=10;
-			for (int k = 0; k < N; ++k) {
-				NativeMandel.mandelbrot3_java(
-						x_start, x_step,
-						y_start, y_start,
-						sx, sy,
-						max_iter, mResults2.length, mResults2);
-			}
-			
-			long end = System.currentTimeMillis();
-			end -= start;
-			
-			writeResult("Jave 3 [%dx%dx%d] = %.2f ms/call", sx, sy, max_iter, (double)end/N);
-		}
+            final int N=10;
+            for (int k = 0; k < N; ++k) {
+                NativeMandel.mandelbrot2_java(
+                        BLACK_X_START, BLACK_STEP,
+                        BLACK_Y_START, BLACK_STEP,
+                        SIZE, SIZE,
+                        max_iter, mResults2.length, mResults2);
+            }
+            
+            long end = System.currentTimeMillis();
+            end -= start;
+            
+            writeResult("Black Java 2 [%dx%dx%d] = %.2f ms/call", SIZE, SIZE, max_iter, (double)end/N);
+        }
+
+        private void test_black_native2(int max_iter) {
+            long start = System.currentTimeMillis();
+
+            final int N=10;
+            for (int k = 0; k < N; ++k) {
+                NativeMandel.mandelbrot2_native(
+                        BLACK_X_START, BLACK_STEP,
+                        BLACK_Y_START, BLACK_STEP,
+                        SIZE, SIZE,
+                        max_iter, mResults2.length, mResults2);
+            }
+            
+            long end = System.currentTimeMillis();
+            end -= start;
+            
+            writeResult("Black Native 2 [%dx%dx%d] = %.2f ms/call", SIZE, SIZE, max_iter, (double)end/N);
+        }
 	}
 
 }

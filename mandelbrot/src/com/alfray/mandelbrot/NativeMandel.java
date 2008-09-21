@@ -35,67 +35,6 @@ public class NativeMandel {
 		}
 	}
 
-	public static void mandelbrot(float x_start, float x_step, float y_start,
-    		int max_iter,
-    		int size, int[] result) {
-		if (sLoaded) {
-			sNativePtr1 = doMandelbrot1(x_start, x_step, y_start, max_iter, size, result, sNativePtr1);
-		} else {
-			for(int i = 0; size > 0; ++i, --size, x_start += x_step) {
-			    // the "naive" mandelbrot computation. nothing fancy.
-			    float x = x_start;
-			    float y = y_start;
-			    float x2 = x * x;
-			    float y2 = y * y;
-			    int iter = 0;
-			    while (x2 + y2 < 4 && iter < max_iter) {
-			      float xtemp = x2 - y2 + x_start;
-			      y = 2 * x * y + y_start;
-			      x = xtemp;
-			      x2 = x * x;
-			      y2 = y * y;
-			      ++iter;
-			    }
-
-			    result[i] = iter;
-			}
-		}
-	}
-
-
-	// for benchmark purposes
-	public static void mandelbrot1_native(float x_start, float x_step, float y_start,
-    		int max_iter,
-    		int size, int[] result) {
-		if (sLoaded) {
-			sNativePtr1 = doMandelbrot1(x_start, x_step, y_start, max_iter, size, result, sNativePtr1);
-		}
-	}
-
-	// for benchmark purposes
-	public static void mandelbrot1_java(float x_start, float x_step, float y_start,
-    		int max_iter,
-    		int size, int[] result) {
-		for(int i = 0; size > 0; ++i, --size, x_start += x_step) {
-		    // the "naive" mandelbrot computation. nothing fancy.
-		    float x = x_start;
-		    float y = y_start;
-		    float x2 = x * x;
-		    float y2 = y * y;
-		    int iter = 0;
-		    while (x2 + y2 < 4 && iter < max_iter) {
-		      float xtemp = x2 - y2 + x_start;
-		      y = 2 * x * y + y_start;
-		      x = xtemp;
-		      x2 = x * x;
-		      y2 = y * y;
-		      ++iter;
-		    }
-
-		    result[i] = iter;
-		}
-	}
-
 	public static void mandelbrot(
 			float x_start, float x_step,
 			float y_start, float y_step,
@@ -164,125 +103,12 @@ public class NativeMandel {
 		} // j
 	}
 
-	// for benchmark purposes
-	public static void mandelbrot3_java(
-			float x_start, float x_step,
-			float y_start, float y_step,
-			int sx, int sy,
-    		int max_iter,
-    		int size, int[] result) {
-		final int  iexp = 24;
-        final int  iexp1 = iexp - 1;
-		final int  Lexp = 2 * iexp;
-		final int  Fexp = 1  << iexp;
-		final long L4   = 4L << Lexp;
-		final int  i2   = 2  << iexp;
-		
-		int ix_start = (int) (x_start * Fexp);
-		int ix_step  = (int) (x_step  * Fexp);
-		int iy_start = (int) (y_start * Fexp);
-		int iy_step  = (int) (y_step  * Fexp);
-
-	    int ix_begin = ix_start;
-        for(int j = 0, k = 0; j < sy; ++j, iy_start += iy_step) {
-            ix_start = ix_begin;
-            for(int i = 0; i < sx; ++i, ++k, ix_start += ix_step) {
-                // the "naive" mandelbrot computation. nothing fancy.
-                int ix = ix_start;
-                int iy = iy_start;
-
-                // int x2 = x * x;
-                long Lx2 = (long)ix;
-                    Lx2 = Lx2 * Lx2;
-                
-                // int y2 = y * y;
-                long Ly2 = (long)iy;
-                    Ly2 = Ly2 * Ly2;
-
-                int iter = 0;
-
-                long Ltemp = Lx2 + Ly2;
-                while (Ltemp < L4 && iter < max_iter) {
-                    // int xt = x2 - y2 + x_start;
-                    Ltemp = Lx2 - Ly2;
-                    int ixt = (int) (Ltemp >> iexp);
-                    ixt += ix_start;
-
-                    // y = 2 * x * y + y_start;
-                    Ltemp = (long)ix * iy;
-                    iy = (int) (Ltemp >> iexp1);
-                    iy += iy_start;
-
-                    // x = xt;
-                    ix = ixt;
-
-                    // x2 = xt * xt;
-                    Lx2 = (long)ixt;
-                        Lx2 = Lx2 * Lx2;
-
-                    // y2 = y * y;
-                    Ly2 = (long)iy;
-                        Ly2 = Ly2 * Ly2;
-
-                    Ltemp = Lx2 + Ly2;
-                    ++iter;
-                }
-	    
-                result[k] = iter;
-            } // i
-        } // j
-
-
-		/*
-		
-		float ix_start_old = ix_start;
-		for(int j = 0, k = 0; j < sy; ++j, iy_start += iy_step) {
-			ix_start = ix_start_old;
-			for(int i = 0; i < sx; ++i, ++k, ix_start += ix_step) {
-			    // the "naive" mandelbrot computation. nothing fancy.
-			    float ix = ix_start;
-			    float iy = iy_start;
-
-			    // float x2 = x * x;
-			    double Lx2 = (double)ix;
-			        Lx2 = Lx2 * Lx2;
-			    
-                // float y2 = y * y;
-			    double Ly2 = (double)iy;
-                    Ly2 = Ly2 * Ly2;
-
-			    int iter = 0;
-			    double Ltemp = Lx2 + Ly2; 
-			    while (Ltemp < L4 && iter < max_iter) {
-				    // float xt = x2 - y2 + x_start;
-			    	Ltemp = Lx2 - Ly2;
-			    	float ixt = (float) (Ltemp / Fexp / 2) ; //-- >> iexp+1);
-			    	ixt += ix_start;
-
-			    	// y = 2 * x * y + y_start;
-			    	Ltemp = 2 * (double)ix * (double)iy;
-			    	iy = (float) (Ltemp / Fexp); //-- >> iexp1); // R-shift by iexp-1 => *=2
-			    	iy += iy_start;
-
-	                // x2 = xt * xt;
-			    	Lx2 = (double)ixt;
-			    	    Lx2 = Lx2 * Lx2;
-
-		    	    // y2 = y * y;
-		    	    Ly2 = (double)iy;
-	                    Ly2 = Ly2 * Ly2;
-			    	
-                    Ltemp = Lx2 + Ly2; 
-		    	    ++iter;
-			    }
-	
-			    result[k] = iter;
-			} // i
-		} // j
-		*/
-	}
-
     private static boolean load(AssetManager assets) {
+        // This is an UGLY HACK initially done to see whether the system
+        // can be abuse or not. The answer was "not really".
+        // Please don't ashame yourself -- do not reuse this ugly hack or
+        // I shall taunt you a second time :-)
+        
     	Runtime r = Runtime.getRuntime();
     	ClassLoader loader = VMStack.getCallingClassLoader();
     	String libpath = "/data/data/com.alfray.mandelbrot/libMandelbrot.so";

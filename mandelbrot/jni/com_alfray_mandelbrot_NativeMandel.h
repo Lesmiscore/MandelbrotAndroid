@@ -7,13 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
- * Class:     com_alfray_mandelbrot_NativeMandel
- * Method:    doMandelbrot1
- * Signature: (FFFII[II)I
- */
-JNIEXPORT jint JNICALL Java_com_alfray_mandelbrot_NativeMandel_doMandelbrot1
-  (JNIEnv *, jclass, jfloat, jfloat, jfloat, jint, jint, jintArray, jint);
 
 /*
  * Class:     com_alfray_mandelbrot_NativeMandel
