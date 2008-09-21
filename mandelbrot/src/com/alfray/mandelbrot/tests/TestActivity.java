@@ -82,7 +82,7 @@ public class TestActivity extends Activity {
 		private static final float FULL_X_START = -1f;
 		private static final float FULL_Y_START = -1f;
         
-		private static final float BLACK_STEP = 9.5f / SIZE;
+		private static final float BLACK_STEP = 0.5f / SIZE;
         private static final float BLACK_X_START = -0.5f;
         private static final float BLACK_Y_START = -0.5f;
 		
