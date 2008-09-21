@@ -53,6 +53,35 @@ public class NativeMandel {
 			mandelbrot2_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
 		}
 	}
+
+    public static boolean mandelbrot3(
+            float x_start, float x_step,
+            float y_start, float y_step,
+            int sx, int sy,
+            byte max_iter,
+            int size, byte[] result) {
+        /* if (sLoaded) {
+            sNativePtr2 = doMandelbrot2(
+                    x_start, x_step,
+                    y_start, y_step,
+                    sx, sy,
+                    max_iter,
+                    size, result,
+                    sNativePtr2);
+        } else */ {
+            return mandelbrot3_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
+        }
+    }
+	
+	
+	// ------------------------------------------------------------------------
+	/*
+	 * version 2: computes a block using x_start+x_step / y_start+y_step.
+	 * maxIter is an int, returns SX*SY int ranging [1..maxIter].
+	 * Uses the "classic" float version, no fancy optims.
+	 * 
+	 * Aborts if maxIter or sx or sy <= 0.
+	 */
 	
 	// for benchmark purposes
 	public static void mandelbrot2_native(
@@ -79,6 +108,7 @@ public class NativeMandel {
 			int sx, int sy,
     		int max_iter,
     		int size, int[] result) {
+	    if (max_iter <= 0) return;
 		float x_begin = x_start;
 		for(int j = 0, k = 0; j < sy; ++j, y_start += y_step) {
 			x_start = x_begin;
@@ -103,6 +133,55 @@ public class NativeMandel {
 		} // j
 	}
 
+	// ------------------------------------------------------------------------
+	/*
+	 * Version 3: Similar to version 2, except its in fixed-point 16 bits (8.8).
+	 * MaxIter is a byte (1..255 except java doesn't have unsigned types so
+	 * we use -128..127 instead to mean 0..255).
+	 * Returns SX*SY bytes, ranging [-128..127] but really meaning [0..255].
+	 * 
+	 * Returns false if there isn't enough precision to use fp16 or
+	 * if maxter is -128 (which represents 0 here).
+	 */
+    // for benchmark purposes
+    public static boolean mandelbrot3_java(
+            final float x_start, final float x_step,
+            final float y_start, final float y_step,
+            final int sx, final int sy,
+            final byte max_iter,
+            final int size, byte[] result) {
+        if (max_iter == -128) return false;
+        final int ix_step = (int)(x_step  * 256);
+        final int iy_step = (int)(y_step  * 256);
+        if (ix_step <= 0 || iy_step <= 0) return false;
+        int ix_start = (int)(x_start * 256);
+        int iy_start = (int)(y_start * 256);
+        
+        int ix_begin = ix_start;
+        for(int j = 0, k = 0; j < sy; ++j, iy_start += iy_step) {
+            ix_start = ix_begin;
+            for(int i = 0; i < sx; ++i, ++k, ix_start += ix_step) {
+                int ix = ix_start;
+                int iy = iy_start;
+                int ix2 = (ix * ix) >> 8;
+                int iy2 = (iy * iy) >> 8;
+                byte iter = -128;
+                while (ix2 + iy2 < (4<<8) && iter < max_iter) {
+                  int ixt = (ix2 - iy2) + ix_start;
+                  iy = ((2 * ix * iy) >> 8) + iy_start;
+                  ix = ixt;
+                  ix2 = (ixt * ixt) >> 8;
+                  iy2 = (iy * iy) >> 8;
+                  ++iter;
+                }
+    
+                result[k] = iter;
+            } // i
+        } // j
+        return true;
+    }
+
+    // ------------------------------------------------------------------------
     private static boolean load(AssetManager assets) {
         // This is an UGLY HACK initially done to see whether the system
         // can be abuse or not. The answer was "not really".

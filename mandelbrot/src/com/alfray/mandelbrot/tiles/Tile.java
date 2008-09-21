@@ -33,6 +33,7 @@ public class Tile {
     private final static int SERIAL_VERSION = 2;
     
     private static int[] sTempBlock = new int[SIZE * SIZE];
+    private static byte[] sTempBlock3 = new byte[SIZE * SIZE];
     private static int[] sTempColor = new int[SIZE * SIZE];
     private static int[] sTempLine = new int[SIZE];
     private static int[] sColorMap = null;
@@ -243,15 +244,32 @@ public class Tile {
 
             final int n = sTempBlock.length; 
 
-            NativeMandel.mandelbrot(
+            boolean done = false;
+            
+            if (mMaxIter < 256) {
+                done = NativeMandel.mandelbrot3(
                         x, step,
                         y, step,
                         SIZE, SIZE,
-                        mMaxIter,
-                        n, sTempBlock);
-                
-            for (int k = 0; k < n; ++k) {
-                sTempColor[k] = sColorMap[sTempBlock[k]];
+                        (byte) (mMaxIter - 128),
+                        n, sTempBlock3);
+            }
+
+            if (done) {
+                for (int k = 0; k < n; ++k) {
+                    sTempColor[k] = sColorMap[(int)sTempBlock3[k] + 128];
+                }
+            } else {
+                NativeMandel.mandelbrot(
+                            x, step,
+                            y, step,
+                            SIZE, SIZE,
+                            mMaxIter,
+                            n, sTempBlock);
+                    
+                for (int k = 0; k < n; ++k) {
+                    sTempColor[k] = sColorMap[sTempBlock[k]];
+                }
             }
             
             bmp.setPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);

@@ -88,14 +88,14 @@ public class TestActivity extends Activity {
 		
 		
 		private int mState;
-		private int[] mResults1;
 		private int[] mResults2;
+        private byte[] mResults3;
 
 		public NativeTests() {
 			super("nativeTestsThread");
 			mState = 1;
-			mResults1 = new int[SIZE];
 			mResults2 = new int[SIZE*SIZE];
+            mResults3 = new byte[SIZE*SIZE];
 		}
 		
 	    public void writeResult(String format, Object...params) {
@@ -122,25 +122,16 @@ public class TestActivity extends Activity {
                 test_full_java2(20);
                 break;
             case 3:
-                test_full_native2(20);
+                test_full_java3(20);
                 break;
             case 4:
-                test_black_java2(20);
+                test_full_native2(20);
                 break;
             case 5:
-                test_black_native2(20);
+                test_black_java2(20);
                 break;
             case 6:
-				test_full_java2(100);
-				break;
-            case 7:
-				test_full_native2(100);
-				break;
-            case 8:
-                test_black_java2(100);
-                break;
-            case 9:
-                test_black_native2(100);
+                test_black_native2(20);
                 break;
 			default:
 				mState = 0; // loop
@@ -156,7 +147,7 @@ public class TestActivity extends Activity {
 			final int N=10000;
 			for (int i = 0; i < N; ++i) {
 				// calls native with size=0 => does nothing, returns asap
-				NativeMandel.mandelbrot2_native(0, 0, 0, 0, 0, 0, 20, 0, mResults1);
+				NativeMandel.mandelbrot2_native(0, 0, 0, 0, 0, 0, 20, 0, mResults2);
 			}
 			
 			long end = System.currentTimeMillis();
@@ -235,6 +226,25 @@ public class TestActivity extends Activity {
             end -= start;
             
             writeResult("Black Native 2 [%dx%dx%d] = %.2f ms/call", SIZE, SIZE, max_iter, (double)end/N);
+        }
+
+        private void test_full_java3(int max_iter) {
+            long start = System.currentTimeMillis();
+
+            final int N=10;
+            for (int k = 0; k < N; ++k) {
+                NativeMandel.mandelbrot3_java(
+                        FULL_X_START, FULL_STEP,
+                        FULL_Y_START, FULL_STEP,
+                        SIZE, SIZE,
+                        (byte)(max_iter - 128),
+                        mResults3.length, mResults3);
+            }
+            
+            long end = System.currentTimeMillis();
+            end -= start;
+            
+            writeResult("Full Java 3 [%dx%dx%d] = %.2f ms/call", SIZE, SIZE, max_iter, (double)end/N);
         }
 	}
 
