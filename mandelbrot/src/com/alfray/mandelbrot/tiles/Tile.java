@@ -7,6 +7,8 @@
 
 package com.alfray.mandelbrot.tiles;
 
+import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
+
 import com.alfray.mandelbrot.NativeMandel;
 
 import android.graphics.Bitmap;
@@ -47,6 +49,8 @@ public class Tile {
     private final int mMaxIter;
 
 	private boolean mCompleted;
+
+    private boolean mInMemory;
 
     public Tile(int key, int zoomLevel, int i, int j, int maxIter) {
         mHashKey = key;
@@ -168,12 +172,25 @@ public class Tile {
         return mBitmap;
     }
 
-    /** Returns true if there was a bitmap and it has been reclaimed. 
-     * @return */
-    public boolean reclaimBitmap() {
-        if (mBitmap == null) return false;
+    /**
+     * Reclaims the bitmap.
+     * Returns the bitmap if one was allocated.
+     */
+    public Bitmap reclaimBitmap() {
+        Bitmap b = mBitmap;
         mBitmap = null;
-        return true;
+        mCompleted = false;
+        return b;
+    }
+
+    /** Used by TileThread to know if this tile is already in the memory list */
+    public void setInMemory(boolean inMemory) {
+        mInMemory = inMemory;
+    }
+   
+    /** Used by TileThread to know if this tile is already in the memory list */
+    public boolean isInMemory() {
+        return mInMemory;
     }
     
     public int getVirtualX() {
@@ -266,6 +283,7 @@ public class Tile {
             
             bmp.setPixels(sTempColor, 0, SIZE, 0, 0, SIZE, SIZE);
             mBitmap = bmp;
+            mCompleted = tile.mCompleted;
 		}
 	}
 	

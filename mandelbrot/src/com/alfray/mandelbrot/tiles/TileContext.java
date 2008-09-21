@@ -32,8 +32,9 @@ public class TileContext {
     private static final int ZOOM_HIDE_DELAY_MS = 3000;
 
     private static final float sInterestingPlaces[] = {
-    	-1.77f, 0,
-    	-1.25565f, 0.38156f,
+    	//-1.76652f, -0.04164f,
+        -1.75967f,  0.02038f,
+    	-1.25565f,  0.38156f,
     	-0.66992f, -0.45215f
     };
     
@@ -272,11 +273,11 @@ public class TileContext {
     public void panToInterestingPlace() {
         int index = mInterestingPlaceIndex;
         
-        float zoom = (float)Tile.getZoomFp8(mZoomLevel);
+        float zoom = 0 - (float)Tile.getZoomFp8(mZoomLevel);
         float x = sInterestingPlaces[index++] * zoom;
         float y = sInterestingPlaces[index++] * zoom;
-        mPanningX = 0 - (int)x;
-        mPanningY = 0 - (int)y;
+        mPanningX = (int)x;
+        mPanningY = (int)y;
         updateCaption();
         updateAll(true /*force*/);
         invalidateView();
@@ -529,23 +530,26 @@ public class TileContext {
         if (t == null) {
             t = new Tile(key, mZoomLevel, i, j, mMaxIter);
             cache.put(key, t);
-            
-            // try to find a lower-level tile to zoom from
-            if (mZoomLevel > 0) {
-            	int lowerZoomLevel = (mZoomLevel > 1) ? mZoomLevel / 2 : 0;
-	    		synchronized (mLevelTileCaches) {
-	    			cache = mLevelTileCaches.get(lowerZoomLevel);
-	    		}
-	    		if (cache != null) {
-	    			key = t.computeLowerLevelKey();
-	    			Tile largerTile = cache.get(key);
-	    			if (largerTile != null) {
-	    				t.zoomForLowerLevel(largerTile);
-	    			}
-	    		}
-            }
         }
-        if (!t.isCompleted()) mTileThread.schedule(t);
+        if (!t.isCompleted()) {
+            // if there's no bitmap,
+            // try to find a lower-level tile to zoom from
+            if (t.getBitmap() == null && mZoomLevel > 0) {
+                int lowerZoomLevel = (mZoomLevel > 1) ? mZoomLevel / 2 : 0;
+                synchronized (mLevelTileCaches) {
+                    cache = mLevelTileCaches.get(lowerZoomLevel);
+                }
+                if (cache != null) {
+                    key = t.computeLowerLevelKey();
+                    Tile largerTile = cache.get(key);
+                    if (largerTile != null) {
+                        mTileThread.scheduleImgZoom(t, largerTile);
+                    }
+                }
+            }
+
+            mTileThread.schedule(t);
+        }
 
         return t;
     }
