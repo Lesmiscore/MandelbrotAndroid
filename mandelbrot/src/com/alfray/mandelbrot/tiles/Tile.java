@@ -7,12 +7,10 @@
 
 package com.alfray.mandelbrot.tiles;
 
-import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
-
-import com.alfray.mandelbrot.NativeMandel;
-
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+
+import com.alfray.mandelbrot.NativeMandel;
 
 
 /**
