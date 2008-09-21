@@ -17,6 +17,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
@@ -48,11 +49,21 @@ public class TileActivity extends Activity {
 
 	private TileActivity mActivity;
 
+	private boolean mOrientLandscape;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle inState) {
         super.onCreate(inState);
-    
+
+        if (inState != null) {
+        	if (inState.getBoolean("orient-land")) {
+            	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        	} else if (inState.getBoolean("orient-sensor")) {
+            	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+        	}
+        }
+
         setContentView(R.layout.tiles);
 
         mActivity = this;
@@ -70,6 +81,7 @@ public class TileActivity extends Activity {
         mTileContext.setText(textView);
         tileView.setTileContext(mTileContext);
         mTileContext.resetState(inState);
+        
     }
     
     @Override
@@ -80,6 +92,7 @@ public class TileActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         mTileContext.saveState(outState);
+    	outState.putBoolean("orient-land", mOrientLandscape);
         super.onSaveInstanceState(outState);
     }
     
@@ -109,6 +122,7 @@ public class TileActivity extends Activity {
             .setIcon(R.drawable.ic_menu_save);
         menu.add(MENU_GRP_IMG, R.string.wallpaper,     0, R.string.wallpaper)
             .setIcon(R.drawable.ic_menu_save);
+        menu.add(0, R.string.flip_orient,      0, R.string.flip_orient);
         return super.onCreateOptionsMenu(menu);
     }
     
@@ -144,6 +158,14 @@ public class TileActivity extends Activity {
         case R.string.wallpaper:
             startSaveWallpaper();
             break;
+        case R.string.flip_orient:
+        	if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+        		mOrientLandscape = false;
+        		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        	} else {
+        		mOrientLandscape = false;
+        		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        	}
         }
         return super.onOptionsItemSelected(item);
     }
