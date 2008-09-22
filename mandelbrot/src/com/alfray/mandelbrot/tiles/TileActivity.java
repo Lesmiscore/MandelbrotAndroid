@@ -54,10 +54,6 @@ public class TileActivity extends Activity {
 
 	private int mOrientation;
 	
-	private static final int ORIENT_DEFAULT = 0;
-	private static final int ORIENT_PORTRAIT = 1;
-	private static final int ORIENT_LAND = 2;
-	private static final int ORIENT_SENSOR = 3;
 	private static final int ORIENT_MAX = 3;
 	private static final int[] ORIENT_SET = {
 		ActivityInfo.SCREEN_ORIENTATION_USER,
@@ -105,6 +101,7 @@ public class TileActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        mTileContext.pause(false);
     }
     
     @Override
@@ -117,11 +114,14 @@ public class TileActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        mTileContext.pause(true);
     }
     
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mTileContext.destroy();
+        mTileContext = null;
     }
     
     @Override

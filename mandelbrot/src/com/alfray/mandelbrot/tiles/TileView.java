@@ -158,7 +158,7 @@ public class TileView extends View {
             if (mTileContext != null) {
             	float x = event.getX() * event.getXPrecision();
             	float y = event.getY() * event.getYPrecision();
-            	logd("Trackback MOVE: getX/Y: %f, %f => %f, %f", event.getX(), event.getY(), x ,y);
+            	if (DEBUG) logd("Trackback MOVE: getX/Y: %f, %f => %f, %f", event.getX(), event.getY(), x ,y);
             	// trackball events are delta motion
                 mDownOffsetX = mTileContext.getPanningX();
                 mDownOffsetY = mTileContext.getPanningY();

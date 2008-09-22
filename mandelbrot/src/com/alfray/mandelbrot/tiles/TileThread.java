@@ -17,6 +17,7 @@ import com.alfray.mandelbrot.util.BaseThread;
 public class TileThread extends BaseThread {
 
     private static final String TAG = "TileContext";
+    private static boolean DEBUG = false;
 
     private static class ImgZoomEntry {
         private final Tile mCurrentTile;
@@ -68,7 +69,7 @@ public class TileThread extends BaseThread {
 
     public void schedule(Tile t) {
         if (t != null) {
-            Log.d(TAG, "schedule: " + t.toString());
+            if (DEBUG) Log.d(TAG, "schedule: " + t.toString());
             synchronized(mPendingList) {
             	mPendingList.addFirst(t);
             }
@@ -132,7 +133,7 @@ public class TileThread extends BaseThread {
             	t = mPendingList.poll();
             }
             if (t != null) {
-                Log.d(TAG, "compute: " + t.toString());
+            	if (DEBUG) Log.d(TAG, "compute: " + t.toString());
 
                 for (int i = 0 ; i < 2; i++) {
                     try {

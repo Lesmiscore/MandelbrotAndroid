@@ -28,6 +28,7 @@ import android.widget.ZoomControls;
 public class TileContext {
     
     private static final String TAG = "TileContext";
+    private static boolean DEBUG = false;
 
     private static final int ZOOM_HIDE_DELAY_MS = 3000;
 
@@ -226,6 +227,15 @@ public class TileContext {
             mTileThread.pauseThread(shouldPause);
         }
         runUpdateCaption(false);
+	}
+
+    /** Runs from the UI (activity) thread */
+	public void destroy() {
+        if (mTileThread != null) {
+            logd("Kill TileThread");
+            mTileThread.waitForStop();
+            mTileThread = null;
+        }
 	}
 
     /** Runs from the UI thread */
@@ -488,7 +498,7 @@ public class TileContext {
         int xs = xy_for_ij(i);
         int ys = xy_for_ij(j);
         
-        logd("UpdateAll: (%d,%d) px(%d,%d)", i, j, xs, ys);
+        if (DEBUG) logd("UpdateAll: (%d,%d) px(%d,%d)", i, j, xs, ys);
 
         int k = 0;
         for (int y = ys; y < y2; y += SZ, j++) {
@@ -584,7 +594,7 @@ public class TileContext {
             final int SZ = Tile.SIZE;
             int x = tile.getVirtualX() + mMiddleX + mPanningX;
             int y = tile.getVirtualY() + mMiddleY + mPanningY;
-            logd("Invalidate %s @ (%d,%d)", tile.toString(), x, y);
+            if (DEBUG) logd("Invalidate %s @ (%d,%d)", tile.toString(), x, y);
             int x1 = x + SZ;
             int y1 = y + SZ;
             if (x < 0) x = 0;
