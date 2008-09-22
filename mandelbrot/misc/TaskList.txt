@@ -1,5 +1,13 @@
 ---- TODO ----
 
+---- Done Version 0.6 ----
+
+20080921 [1] Feature: FP32 (16.16) rendering (java only)
+20080921 [1] Feature: Flip orientation + sensor orientation
+20080920 [1] Feature: FP16 (8.8) rendering for first 2 zoom levels (java only)
+20080920 [1] Feature: Try to address out of memory errors by reclaiming bitmaps
+20080920 [1] Feature: Rework zoom-from-img pending list
+
 ---- Done Version 0.5 ----
 
 20080918 [1] Feature: Capture image
