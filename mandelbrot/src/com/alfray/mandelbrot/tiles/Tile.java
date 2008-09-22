@@ -48,7 +48,6 @@ public class Tile {
     private final int mMaxIter;
 
 	private boolean mCompleted;
-
     private boolean mInMemory;
 
     public Tile(int key, int zoomLevel, int i, int j, int maxIter) {

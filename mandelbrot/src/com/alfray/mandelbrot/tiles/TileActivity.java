@@ -24,6 +24,7 @@ import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -31,6 +32,7 @@ import android.widget.Toast;
 import android.widget.ZoomControls;
 
 import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot.tests.TestActivity;
 import com.alfray.mandelbrot.tiles.TileContext.ImageGenerator;
 import com.alfray.mandelbrot.util.AboutActivity;
 
@@ -185,7 +187,18 @@ public class TileActivity extends Activity {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);        		
 		}
 	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_T && event.isShiftPressed()) {
+			startActivity(new Intent(this, TestActivity.class));
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
+	}
 
+	// ---- wallpaper and images -------------------------
+	
     private void startSaveImage() {
         // create dir on sdcard and complain if it can't be found or created
         File d = new File("/sdcard/mandelbrot");
@@ -328,9 +341,4 @@ public class TileActivity extends Activity {
 			}
 		}
 	}
-
-//	private void logd(String format, Object...args) {
-//        Log.d(TAG, String.format(format, args));
-//    }
-
 }
