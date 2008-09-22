@@ -59,11 +59,9 @@ public class TileActivity extends Activity {
         super.onCreate(inState);
 
         if (inState != null) {
-        	if (inState.getBoolean("orient-land")) {
-            	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        	} else if (inState.getBoolean("orient-sensor")) {
-            	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-        	}
+        	mOrientLandscape = inState.getBoolean("orient-land");
+        	mOrientSensor = inState.getBoolean("orient-sensor");
+        	setOrientation();
         }
 
         setContentView(R.layout.tiles);
@@ -164,25 +162,29 @@ public class TileActivity extends Activity {
         case R.string.wallpaper:
             startSaveWallpaper();
             break;
-        case R.string.flip_orient:
-        	if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-        		mOrientLandscape = false;
-        		mOrientSensor = false;
-        		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-        	} else {
-        		mOrientLandscape = false;
-        		mOrientSensor = false;
-        		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        	}
-    		break;
         case R.string.sensor_orient:
     		mOrientLandscape = false;
-    		mOrientSensor = true;
-    		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+    		mOrientSensor = !mOrientSensor;
+    		setOrientation();
+    		break;
+        case R.string.flip_orient:
+    		mOrientLandscape = !mOrientLandscape;
+    		mOrientSensor = false;
+    		setOrientation();
     		break;
         }
         return super.onOptionsItemSelected(item);
     }
+
+	private void setOrientation() {
+		if (mOrientSensor) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+		} else if (mOrientLandscape) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+		} else {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);        		
+		}
+	}
 
     private void startSaveImage() {
         // create dir on sdcard and complain if it can't be found or created
