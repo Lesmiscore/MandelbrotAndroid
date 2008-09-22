@@ -253,6 +253,15 @@ public class Tile {
                         SIZE, SIZE,
                         (byte) (mMaxIter - 128),
                         n, sTempBlock3);
+                
+                if (!done) {
+	                done = NativeMandel.mandelbrot4(
+	                        x, step,
+	                        y, step,
+	                        SIZE, SIZE,
+	                        (byte) (mMaxIter - 128),
+	                        n, sTempBlock3);
+                }
             }
 
             if (done) {
@@ -260,7 +269,7 @@ public class Tile {
                     sTempColor[k] = sColorMap[(int)sTempBlock3[k] + 128];
                 }
             } else {
-                NativeMandel.mandelbrot(
+                NativeMandel.mandelbrot2(
                             x, step,
                             y, step,
                             SIZE, SIZE,

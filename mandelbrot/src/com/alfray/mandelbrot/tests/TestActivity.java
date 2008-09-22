@@ -22,6 +22,8 @@ import com.alfray.mandelbrot.R;
  */
 public class TestActivity extends Activity {
 
+	private static final String TAG = "TestActivity";
+	
 	private TextView mText;
 	private NativeTests mTestThread;
     private Button mStart;
@@ -74,7 +76,24 @@ public class TestActivity extends Activity {
 		mTestThread.waitForStop();
 	}
 	
+	/** Thread that actually runs the tests and controls their lifecycle. */
 	class NativeTests extends TestThread {
+
+		private AccessWrapper mWrapper;
+
+		public NativeTests() {
+			super("nativeTestsThread");
+			mWrapper = new AccessWrapper();
+		}
+		
+		@Override
+		protected void runIteration() {
+			mWrapper.runIteration();
+		}
+	}
+
+	/** Utility wrapper to access the protected internal methods of NativeMandel. */
+	public class AccessWrapper extends NativeMandel {
 
 		private static final int SIZE = 128;
 
@@ -86,19 +105,18 @@ public class TestActivity extends Activity {
         private static final float BLACK_X_START = -0.5f;
         private static final float BLACK_Y_START = -0.5f;
 		
-		
 		private int mState;
 		private int[] mResults2;
         private byte[] mResults3;
 
-		public NativeTests() {
-			super("nativeTestsThread");
+
+		public AccessWrapper() {
 			mState = 1;
 			mResults2 = new int[SIZE*SIZE];
             mResults3 = new byte[SIZE*SIZE];
 		}
 		
-	    public void writeResult(String format, Object...params) {
+		public void writeResult(String format, Object...params) {
 	        String msg = String.format(format, params);
 	        Log.d(TAG, msg);
 	        
@@ -112,8 +130,7 @@ public class TestActivity extends Activity {
 	        });
 	    }
 
-		@Override
-		protected void runIteration() {
+		public void runIteration() {
 			switch(mState) {
 			case 1:
 				test_native_overhead();
@@ -125,12 +142,15 @@ public class TestActivity extends Activity {
                 test_full_java3(20);
                 break;
             case 4:
-                test_full_native2(20);
+                test_full_java4(20);
                 break;
             case 5:
-                test_black_java2(20);
+                test_full_native2(20);
                 break;
             case 6:
+                test_black_java2(20);
+                break;
+            case 7:
                 test_black_native2(20);
                 break;
 			default:
@@ -246,6 +266,26 @@ public class TestActivity extends Activity {
             
             writeResult("Full Java 3 [%dx%dx%d] = %.2f ms/call", SIZE, SIZE, max_iter, (double)end/N);
         }
+
+        private void test_full_java4(int max_iter) {
+            long start = System.currentTimeMillis();
+
+            final int N=10;
+            for (int k = 0; k < N; ++k) {
+                NativeMandel.mandelbrot3_java(
+                        FULL_X_START, FULL_STEP,
+                        FULL_Y_START, FULL_STEP,
+                        SIZE, SIZE,
+                        (byte)(max_iter - 128),
+                        mResults3.length, mResults3);
+            }
+            
+            long end = System.currentTimeMillis();
+            end -= start;
+            
+            writeResult("Full Java 4 [%dx%dx%d] = %.2f ms/call", SIZE, SIZE, max_iter, (double)end/N);
+        }
+
 	}
 
 }

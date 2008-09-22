@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import android.util.Log;
-import android.widget.TextView;
 
 
 //-----------------------------------------------
