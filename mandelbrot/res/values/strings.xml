@@ -9,6 +9,9 @@
 <string name="about_title">About Mandelbrot Map</string>
 <string name="save_image">Save Image</string>
 <string name="wallpaper">Save as Wallpaper</string>
-<string name="flip_orient">Landscape Orientation</string>
-<string name="sensor_orient">Sensor Orientation</string>
+<string name="orient_land">Landscape</string>
+<string name="orient_sensor">Sensor</string>
+<string name="orient_default">Default</string>
+<string name="orient_portrait">Portrait</string>
+<string name="orient">Orientation</string>
 </resources>

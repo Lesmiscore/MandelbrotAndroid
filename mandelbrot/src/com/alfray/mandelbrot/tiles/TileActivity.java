@@ -27,6 +27,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
@@ -51,9 +52,25 @@ public class TileActivity extends Activity {
 
 	private TileActivity mActivity;
 
-	private boolean mOrientLandscape;
-
-	private boolean mOrientSensor;
+	private int mOrientation;
+	
+	private static final int ORIENT_DEFAULT = 0;
+	private static final int ORIENT_PORTRAIT = 1;
+	private static final int ORIENT_LAND = 2;
+	private static final int ORIENT_SENSOR = 3;
+	private static final int ORIENT_MAX = 3;
+	private static final int[] ORIENT_SET = {
+		ActivityInfo.SCREEN_ORIENTATION_USER,
+		ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+		ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
+		ActivityInfo.SCREEN_ORIENTATION_SENSOR,
+	};
+	private static final int[] ORIENT_STR = {
+		R.string.orient_default,
+		R.string.orient_portrait,
+		R.string.orient_land,
+		R.string.orient_sensor,
+	};
 
     /** Called when the activity is first created. */
     @Override
@@ -61,8 +78,7 @@ public class TileActivity extends Activity {
         super.onCreate(inState);
 
         if (inState != null) {
-        	mOrientLandscape = inState.getBoolean("orient-land");
-        	mOrientSensor = inState.getBoolean("orient-sensor");
+        	mOrientation = inState.getInt("orient");
         	setOrientation();
         }
 
@@ -94,8 +110,7 @@ public class TileActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         mTileContext.saveState(outState);
-    	outState.putBoolean("orient-land", mOrientLandscape);
-    	outState.putBoolean("orient-sensor", mOrientSensor);
+    	outState.putInt("orient", mOrientation);
         super.onSaveInstanceState(outState);
     }
     
@@ -125,23 +140,28 @@ public class TileActivity extends Activity {
             .setIcon(R.drawable.ic_menu_save);
         menu.add(MENU_GRP_IMG, R.string.wallpaper,     0, R.string.wallpaper)
             .setIcon(R.drawable.ic_menu_save);
-        menu.add(2, R.string.flip_orient,      0, R.string.flip_orient).setCheckable(true);
-        menu.add(3, R.string.sensor_orient,      0, R.string.sensor_orient).setCheckable(true);
+        SubMenu sub = menu.addSubMenu(R.string.orient);
+        sub.add(0, R.string.orient_default,  0, R.string.orient_default).setCheckable(true);
+        sub.add(0, R.string.orient_portrait, 0, R.string.orient_portrait).setCheckable(true);
+        sub.add(0, R.string.orient_land,     0, R.string.orient_land).setCheckable(true);
+        sub.add(0, R.string.orient_sensor,   0, R.string.orient_sensor).setCheckable(true);
         return super.onCreateOptionsMenu(menu);
     }
     
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
     	menu.setGroupEnabled(MENU_GRP_IMG, mImageGenerator == null);
-    	menu.findItem(R.string.flip_orient).setChecked(mOrientLandscape);
-    	menu.findItem(R.string.sensor_orient).setChecked(mOrientSensor);
+    	for (int orient = 0; orient <= ORIENT_MAX; orient++) {
+    		menu.findItem(ORIENT_STR[orient]).setChecked(mOrientation == orient);
+    	}
     	return super.onPrepareOptionsMenu(menu);
     }
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent;
-        switch(item.getItemId()) {
+        int id = item.getItemId();
+        switch(id) {
         case R.string.reset:
             mTileContext.resetState(null /*bundle*/);
             break;
@@ -164,27 +184,22 @@ public class TileActivity extends Activity {
         case R.string.wallpaper:
             startSaveWallpaper();
             break;
-        case R.string.sensor_orient:
-    		mOrientLandscape = false;
-    		mOrientSensor = !mOrientSensor;
-    		setOrientation();
-    		break;
-        case R.string.flip_orient:
-    		mOrientLandscape = !mOrientLandscape;
-    		mOrientSensor = false;
-    		setOrientation();
-    		break;
         }
+
+        for (int orient = 0; orient <= ORIENT_MAX; orient++) {
+        	if (id == ORIENT_STR[orient]) {
+        		mOrientation = orient;
+        		setOrientation();
+        		break;
+        	}
+    	}
+        
         return super.onOptionsItemSelected(item);
     }
 
 	private void setOrientation() {
-		if (mOrientSensor) {
-			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-		} else if (mOrientLandscape) {
-			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-		} else {
-			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);        		
+		if (mOrientation >= 0 && mOrientation <= ORIENT_MAX) {
+			setRequestedOrientation(ORIENT_SET[mOrientation]);
 		}
 	}
 	
