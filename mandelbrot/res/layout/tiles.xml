@@ -18,7 +18,10 @@
     android:lines="1" 
     android:focusable="false" 
     android:focusableInTouchMode="false" 
-    android:text="Mandelbrot Map" android:textAppearance="@style/TextCaption" android:gravity="center" android:background="@color/dark_blue"/>
+    android:text="Mandelbrot Map" 
+    android:textAppearance="@style/TextCaption" 
+    android:gravity="center" 
+    android:background="@color/dark_blue"/>
 	
 <com.alfray.mandelbrot.tiles.TileView
     android:id="@+id/tile_view" 

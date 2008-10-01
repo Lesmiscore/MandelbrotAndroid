@@ -12,7 +12,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -55,6 +54,8 @@ public class TileView extends View {
     private int mDownOffsetX;
     private int mDownOffsetY;
 
+	private Drawable mLogo;
+
     public TileView(Context context, AttributeSet attrs) {
         super(context, attrs);
         
@@ -87,7 +88,6 @@ public class TileView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (mTileContext == null) return;
         
         Tile[] tiles = null;
 
@@ -95,13 +95,22 @@ public class TileView extends View {
 
         if (tiles == null || tiles.length == 0 || mTileContext == null) {
             // fake display for design-time
-            mTempRect.set(0, 0, getWidth(), getHeight());
-            if (mNoTile != null) {
-                mNoTile.setBounds(mTempRect);
-                mNoTile.draw(canvas);
+        	if (mLogo == null) {
+        		mLogo = getContext().getResources().getDrawable(R.drawable.icon);
+        	}
+            if (mLogo != null) {
+                mTempRect.set(0, 0, getWidth(), getHeight());
+            	mLogo.setBounds(mTempRect);
+            	mLogo.draw(canvas);
             }
-            canvas.drawRect(mTempRect, mRed);
-            canvas.drawOval(new RectF(mTempRect), mRed);
+            if (mRed != null) {
+            	String s = "Custom view: " + this.getClass().getSimpleName();
+            	// The layout editor currently doesn't support the "CENTER" alignment
+            	// on the Paint.
+            	canvas.drawText(s,
+            			getWidth()/2,
+            			getHeight()/2, mRed);
+            }
             return;
         }
 
