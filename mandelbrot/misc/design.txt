@@ -80,3 +80,13 @@ Zoom*2:
 Zoom/2:
 - create new visible list at z=-1
 - move z=0->1 and (z=-1->0 with alpha 0->255)
+
+----
+20081022 no-tile version
+
+Two conflicting goals:
+- precision: slow computations, as in "perfect"
+- zoom: fast but imprecise heuristics, as in "Xaos".
+
+
+
