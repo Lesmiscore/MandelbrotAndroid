@@ -1,11 +1,11 @@
 <?xml version="1.0" ?>
-<project name="MandelbrotActivity" default="debug">
+<project name="TileActivity" default="debug">
     <!-- SDK Locations -->
-    <property name="sdk-folder" value="C:\ralf\google\android-sdk-windows-0.9_beta" />
-    <property name="android-tools" value="C:\ralf\google\android-sdk-windows-0.9_beta\tools" />
+    <property name="sdk-folder" value="C:\ralf\google\android-sdk_113454_windows" />
+    <property name="android-tools" value="C:\ralf\google\android-sdk_113454_windows\tools" />
     
     <!-- Application Package Name -->
-    <property name="application-package" value="com.alfray.mandelbrot.old" />
+    <property name="application-package" value="com.alfray.mandelbrot.tiles" />
 
     <!-- The intermediates directory -->
     <!-- Eclipse uses "bin" for its own output, so we do the same. -->
@@ -26,10 +26,19 @@
         <os family="windows"/>
     </condition>
 
+    <!-- folder for the 3rd party java libraries -->
     <property name="external-libs" value="libs" />
     <condition property="external-libs-ospath"
             value="${basedir}\${external-libs}"
             else="${basedir}/${external-libs}" >
+        <os family="windows"/>
+    </condition>
+
+    <!-- folder for the native libraries -->
+    <property name="native-libs" value="libs" />
+    <condition property="native-libs-ospath"
+            value="${basedir}\${native-libs}"
+            else="${basedir}/${native-libs}" >
         <os family="windows"/>
     </condition>
 
@@ -217,6 +226,8 @@
             <arg value="${srcdir-ospath}" />
             <arg value="-rj" />
             <arg value="${external-libs-ospath}" />
+            <arg value="-nf" />
+            <arg value="${native-libs-ospath}" />
         </exec>
     </target>
 
@@ -235,6 +246,8 @@
             <arg value="${srcdir-ospath}" />
             <arg value="-rj" />
             <arg value="${external-libs-ospath}" />
+            <arg value="-nf" />
+            <arg value="${native-libs-ospath}" />
         </exec>
         <echo>It will need to be signed with jarsigner before being published.</echo>
     </target>

@@ -32,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
 
+import com.alfray.mandelbrot.NativeMandel;
 import com.alfray.mandelbrot.R;
 import com.alfray.mandelbrot.tests.TestActivity;
 import com.alfray.mandelbrot.tiles.TileContext.ImageGenerator;
@@ -72,6 +73,8 @@ public class TileActivity extends Activity {
     @Override
     public void onCreate(Bundle inState) {
         super.onCreate(inState);
+
+        NativeMandel.init(getAssets());
 
         if (inState != null) {
         	mOrientation = inState.getInt("orient");

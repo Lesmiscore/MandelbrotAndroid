@@ -389,6 +389,11 @@ public class NativeMandel {
 
     // ------------------------------------------------------------------------
     private static boolean load(AssetManager assets) {
+
+        System.loadLibrary("Mandelbrot");
+        
+        if (false) {
+        
         // This is an UGLY HACK initially done to see whether the system
         // can be abused or not. The answer was "not really".
         // *** Please do not reuse this ugly hack or I shall taunt you a second time! ***
@@ -424,6 +429,8 @@ public class NativeMandel {
 		
 		Log.d(TAG, "libMandelbrot.so *NOT* loaded");
 		return false;
+        }
+        return true;
     }
 
     private static void setup(AssetManager assets, String dest_path) throws IOException {

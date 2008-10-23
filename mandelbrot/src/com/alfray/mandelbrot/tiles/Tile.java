@@ -245,7 +245,7 @@ public class Tile {
 
             boolean done = false;
             
-            if (mMaxIter < 256) {
+            if (false && mMaxIter < 256) {
                 done = NativeMandel.mandelbrot3(
                         x, step,
                         y, step,
