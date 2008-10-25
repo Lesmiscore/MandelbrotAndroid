@@ -5,6 +5,7 @@
 
 package com.alfray.mandelbrot;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -24,8 +25,12 @@ public class BitmapPanel extends JPanel {
 
         int w = getWidth();
         int h = getHeight();
+        
+        g.setColor(Color.red);
+        g.drawOval(0, 0, w, h);
+        
         if (mImage == null || mImage.getWidth() != w || mImage.getHeight() != h) {
-            mImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            mImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             fill(mImage);
         }
         g.drawImage(mImage, 0, 0, null);
@@ -34,6 +39,7 @@ public class BitmapPanel extends JPanel {
     private void fill(BufferedImage image) {
         int w = image.getWidth();
         int h = image.getHeight();
+
         WritableRaster raster = image.getRaster();
         ColorModel model = image.getColorModel();
         
@@ -41,7 +47,8 @@ public class BitmapPanel extends JPanel {
             for (int i = 0; i < w; i++) {
                 int a = (i+j) & 0x0FF;
                 a |= (a<<8) | (a<<16);
-                raster.setDataElements(i, j, model.getDataElements(a, null));
+                raster.setPixel(i, j, new int[] { a, a, a } );
+                // raster.setDataElements(i, j, model.getDataElements(a, null));
             }
         }
     }
