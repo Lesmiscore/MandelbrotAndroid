@@ -26,7 +26,7 @@ import android.widget.TextView;
 import android.widget.ZoomControls;
 
 public class TileContext {
-    
+
     private static final String TAG = "TileContext";
     private static boolean DEBUG = false;
 
@@ -38,10 +38,10 @@ public class TileContext {
     	-1.25565f,  0.38156f,
     	-0.66992f, -0.45215f
     };
-    
+
     private static class TileCache extends SparseArray<Tile> {
     }
-    
+
     private int mZoomLevel;
     private int mViewWidth;
     private int mViewHeight;
@@ -57,10 +57,10 @@ public class TileContext {
 
     /** lock to synchronize on zoom level change between tile thread and context */
     private Object mZoomLock = new Object();
-    
+
     private int mMaxIter;
     private boolean mViewNeedsInvalidate;
-    
+
     private int mMiddleX;
     private int mMiddleY;
 
@@ -68,7 +68,7 @@ public class TileContext {
 	private int mCurrentJ;
 
 	private int mInterestingPlaceIndex;
-	
+
     private long mHideZoomAfterMs;
     private HideZoomRunnable mHideZoomRunnable;
 	private TextView mTextView;
@@ -78,13 +78,13 @@ public class TileContext {
     public TileContext() {
 
     	mLevelTileCaches = new SparseArray<TileCache>(16);
-    	
+
         if (mTileThread == null) {
             mTileThread = new TileThread();
             mTileThread.setCompletedCallback(new TileCompletedCallback());
             mTileThread.start();
         }
-        
+
         mHandler = new Handler();
         mHideZoomRunnable = new HideZoomRunnable();
         mUpdateCaptionRunnable = new UpdateCaptionRunnable();
@@ -119,7 +119,7 @@ public class TileContext {
                     }
                 }
             }
-            
+
         }
         updateMaxIter();
         updateCaption();
@@ -133,13 +133,13 @@ public class TileContext {
         outState.putInt("mandelbrot.zoom", mZoomLevel);
         outState.putInt("mandelbrot.panX", mPanningX);
         outState.putInt("mandelbrot.panY", mPanningY);
-        
+
         // we're note going to save all tiles since this is just for the
         // transient state save (i.e. the activity is momentarily paused
         // because another one has precedence.) However in this case to
         // restore the activity quickly it would be nice to have all the
         // *current* visible tiles saved.
-        
+
         int nn = mVisibleTiles.length;
         outState.putInt("mandelbrot.nbtiles", nn);
         for (int k = 0; k < nn; k++) {
@@ -155,19 +155,19 @@ public class TileContext {
     public Tile[] getVisibleTiles() {
         return mVisibleTiles;
     }
-    
+
     public int getPanningX() {
         return mPanningX;
     }
-    
+
     public int getPanningY() {
         return mPanningY;
     }
-    
+
     public int getOffsetX() {
         return mMiddleX + mPanningX;
     }
-    
+
     public int getOffsetY() {
         return mMiddleY + mPanningY;
     }
@@ -178,10 +178,10 @@ public class TileContext {
 
         mViewWidth  = viewWidth;
         mViewHeight = viewHeight;
-        
+
         mMiddleX = viewWidth/2;
         mMiddleY = viewHeight/2;
-        
+
         updateAll(true /*force*/);
         invalidateView();
     }
@@ -211,7 +211,7 @@ public class TileContext {
             });
         }
     }
-    
+
     /** Runs from the UI (activity) thread */
     public void setView(TileView tileView) {
         mTileView = tileView;
@@ -282,7 +282,7 @@ public class TileContext {
 
     public void panToInterestingPlace() {
         int index = mInterestingPlaceIndex;
-        
+
         float zoom = 0 - (float)Tile.getZoomFp8(mZoomLevel);
         float x = sInterestingPlaces[index++] * zoom;
         float y = sInterestingPlaces[index++] * zoom;
@@ -291,10 +291,10 @@ public class TileContext {
         updateCaption();
         updateAll(true /*force*/);
         invalidateView();
-        
+
         mInterestingPlaceIndex = index == sInterestingPlaces.length ? 0 : index;
     }
-    
+
     public void zoom(boolean zoom_in) {
         if (zoom_in) {
             changeZoomBy(1);
@@ -304,7 +304,7 @@ public class TileContext {
     }
 
 	/**
-	 * Constructs a new ImageGenThread that can generated a new image.
+	 * Constructs a new ImageGenThread that can generate a new image.
 	 *
 	 * @param width  The width in pixels of the image to generate. Use 0 for the view size.
 	 * @param height The height in pixels of the image to generate. Use 0 for the view size.
@@ -315,16 +315,16 @@ public class TileContext {
     public ImageGenerator newImageGenerator(int sx, int sy, Activity activity, Runnable callback) {
     	return new ImageGenerator(sx, sy, activity, callback);
     }
-    
+
     /**
      * A thread that knows how to generate an image of the current view.
-     * 
+     *
 	 * This is similar to updateAll except that it is run from
 	 * a different thread. That means we must prevent stuff like
 	 * panning or zooming.
      */
 	public class ImageGenerator extends BaseThread {
-		
+
 		private final int mWidth;
 		private final int mHeight;
 		private final Activity mActivity;
@@ -337,7 +337,7 @@ public class TileContext {
 		private Canvas mCanvas;
 
 		/**
-		 * Constructs a new ImageGenThread that can generated a new image.
+		 * Constructs a new ImageGenThread that can generate a new image.
 		 *
 		 * @param width  The width in pixels of the image to generate. Use 0 for the view size.
 		 * @param height The height in pixels of the image to generate. Use 0 for the view size.
@@ -372,10 +372,10 @@ public class TileContext {
 			int sy = mHeight <= 0 ? mViewHeight : mHeight;
 
 			logd("Generating Image %d,%d", sx, sy);
-			
+
 			mDestBmp = Bitmap.createBitmap(sx, sy, Tile.BMP_CONFIG);
 			mCanvas = new Canvas(mDestBmp);
-			
+
 			int sx2 = sx / 2;
 			int sy2 = sy / 2;
 
@@ -386,16 +386,16 @@ public class TileContext {
 		        // boundaries in the virtual-screen space
 		        mX1 = -mPanningX - sx2;
 		        mY1 = -mPanningY - sy2;
-		        
+
 		        int x2 = -mPanningX + sx2;
 		        int y2 = -mPanningY + sy2;
-	
+
 		        int i = ij_for_xy(mX1);
 		        int j = ij_for_xy(mY1);
-	
+
 		        int xs = xy_for_ij(i);
 		        int ys = xy_for_ij(j);
-	
+
 		        // get the list of tiles we need
 		        for (int y = ys; y < y2; y += SZ, j++) {
 		            for (int i1 = i, x = xs; x < x2; x += SZ, i1++) {
@@ -408,7 +408,7 @@ public class TileContext {
 
 		/**
 		 * Transfer all completed tiles to the destination bitmap.
-		 * Loop whilst tiles are not completed (they are built asynchronously.
+		 * Loop whilst tiles are not completed (they are built asynchronously).
 		 */
 		@Override
 		protected void runIteration() {
@@ -425,14 +425,14 @@ public class TileContext {
 
 				Bitmap bmp = t.getBitmap();
 				if (bmp == null) continue; // should not happen
-				
+
 				int x = t.getVirtualX() - mX1;
 				int y = t.getVirtualY() - mY1;
 				mCanvas.drawBitmap(bmp, x, y, null /*paint*/);
-				
+
 				logd("ImageGen: apply tile %d,%d", x, y);
 			}
-			
+
 			if (mTiles.size() == 0) {
 				// job completed! set the final bitmap
 				mBitmap = mDestBmp;
@@ -456,14 +456,14 @@ public class TileContext {
 	}
 
     //----
-    
+
 	private void logd(String format, Object...args) {
         Log.d(TAG, String.format(format, args));
     }
 
     /**
      * Runs from the UI thread.
-     * This means stuff like panning or zoom cannot change while this executes.  
+     * This means stuff like panning or zoom cannot change while this executes.
      */
     private void updateAll(boolean force) {
         final int SZ = Tile.SIZE;
@@ -475,7 +475,7 @@ public class TileContext {
         	mVisibleTiles = new Tile[nn];
         	force = true;
         }
-        
+
         final int sx2 = mMiddleX;
         final int sy2 = mMiddleY;
 
@@ -488,7 +488,7 @@ public class TileContext {
 
         int i = ij_for_xy(x1);
         int j = ij_for_xy(y1);
-        
+
         if (!force && mCurrentI == i && mCurrentJ == j) {
     		return;
         }
@@ -497,7 +497,7 @@ public class TileContext {
 
         int xs = xy_for_ij(i);
         int ys = xy_for_ij(j);
-        
+
         if (DEBUG) logd("UpdateAll: (%d,%d) px(%d,%d)", i, j, xs, ys);
 
         int k = 0;
@@ -507,12 +507,12 @@ public class TileContext {
                 mVisibleTiles[k] = t;
             }
         }
-        
+
         for (; k < nn; k++) {
         	mVisibleTiles[k] = null;
         }
     }
-    
+
     private int xy_for_ij(int ij) {
         return ij * Tile.SIZE;
     }
@@ -613,7 +613,7 @@ public class TileContext {
         	synchronized(mZoomLock) {
 	            if (mZoomLevel == tile.getZoomLevel()) {
 		            invalidateTile(tile);
-	
+
 		            // do we want the mirror?
 		            int mirrorKey = tile.computeMirrorKey();
 		            TileCache cache = mLevelTileCaches.get(mZoomLevel);
@@ -695,14 +695,14 @@ public class TileContext {
 			mHandler.postAtTime(mHideZoomRunnable, mHideZoomAfterMs + 10);
 		}
 	}
-    
+
     private class HideZoomRunnable implements Runnable {
         public void run() {
             if (mZoomer != null && SystemClock.uptimeMillis() >= mHideZoomAfterMs) {
                 mZoomer.hide();
             }
         }
-        
+
     }
 
     /** This MUST be used from the UI thread */
@@ -712,20 +712,20 @@ public class TileContext {
     		mTextView.setText(s);
     	}
     }
-    
+
     /** This MUST be used from the UI thread */
     private void updateCaption() {
     	if (!mNeedUpdateCaption) {
     		mUpdateCaptionRunnable.run();
     	}
     }
-    
+
     private void runUpdateCaption(boolean run) {
     	boolean start = run && !mNeedUpdateCaption;
 		mNeedUpdateCaption = run;
 		if (start) mHandler.post(mUpdateCaptionRunnable);
     }
-    
+
     private class UpdateCaptionRunnable implements Runnable {
 		public void run() {
 	    	float zoom = 0-(float)Tile.getZoomFp8(mZoomLevel);

@@ -20,20 +20,21 @@ import dalvik.system.VMStack;
 public class NativeMandel {
 
 	private static String TAG = "NativeMandel";
-	
+
 	private static boolean sLoaded = false;
 	private static boolean sInit = false;
 	private static int sNativePtr2 = 0;
 	private static int sNativePtr3 = 0;
-	
+
 	public synchronized static void init(AssetManager assets) {
 		if (!sInit) {
 			sInit = true;
-			
-			sLoaded = load(assets);
+
+			// DISABLED till I switch to NDK -- RM 20091024
+			// sLoaded = load(assets);
 		}
 	}
-	
+
 	public static void dispose() {
 		if (sLoaded ) {
 			sNativePtr2 = doMandelbrot2(0, 0, 0, 0, 0, 0, 0, 0, null, sNativePtr2);
@@ -49,7 +50,7 @@ public class NativeMandel {
 	 * Version 2: computes a block using x_start+x_step / y_start+y_step.
 	 * maxIter is an int, returns SX*SY int ranging [1..maxIter].
 	 * Uses the "classic" float version, no fancy optims.
-	 * <p/> 
+	 * <p/>
 	 * Aborts if maxIter or sx or sy <= 0.
 	 */
 	public static void mandelbrot2(
@@ -125,7 +126,7 @@ public class NativeMandel {
 			      y2 = y * y;
 			      ++iter;
 			    }
-	
+
 			    result[k] = iter;
 			} // i
 		} // j
@@ -136,7 +137,7 @@ public class NativeMandel {
    private static final int DIR_X[] = { 1, 0, -1,  0 };
    private static final int DIR_Y[] = { 0, 1,  0, -1 };
 
-	
+
 	/** boundary detection with float */
     protected static void mandelbrot2b_java(
             final float x_start, final float x_step,
@@ -145,17 +146,17 @@ public class NativeMandel {
             final int max_iter,
             final int size, int[] result) {
         if (max_iter <= 0) return;
-        
+
         // visited bits, one per pixel
         int n_vis = size >> 5;
         int i_vis = sx >> 5;
         int[] visited = new int[n_vis];
-        
+
         // stats per line: 16 LSB==min fill, 16 MSB=max fill
         short[] fill = new short[sy*2];
 
         int todo = size;
-        
+
         while (todo > 0) {
             int i, j, k;
         _find_todo:
@@ -170,19 +171,19 @@ public class NativeMandel {
                     }
                 }
             }
-            
+
             if (i < 0 || j >= sy) {
                 // nothing found to do... not expected. abort anyway.
                 break; // breaks white todo
             }
-            
+
             // start boundary-detection in (i,j)
 
             int i0 = i, j0 = j;
             int dir = 0;
             int minJfill = j;
             int k_res = j0 * sx + i0;
-            
+
             // mark i0,j0 as visited
             int vk = (j0 * i_vis) + (i0 >> 5);
             visited[vk] |= (1 << (i0 & 31));
@@ -193,7 +194,7 @@ public class NativeMandel {
                 iter0 = z2c(x_start + i0 * x_step, y_start + j0 * y_step, max_iter);
                 result[k_res] = iter0;
             }
-            
+
             // set (i0,j0) fill
             fill[j*2 + 0] = (short) i0;
             fill[j*2 + 1] = (short) i0;
@@ -204,20 +205,20 @@ public class NativeMandel {
                 for (int delta_dir = -1; delta_dir <= 1; delta_dir++) {
                     int ddir = dir;
                     if (delta_dir != 0) ddir = (dir + delta_dir + 4) & 3;
-                    
+
                     int i1 = i + DIR_X[ddir];
                     int j1 = j + DIR_Y[ddir];
-                    
+
                     // finished if back to i0,j0
                     if (i1 == i0 && j1 == j0) break _do_bounds;
-                    
+
                     // discard if out of bounds
                     if (i1 < 0 || j1 < 0 || i1 >= sx || j1 >= sy) continue;
-                    
+
                     // discard if visited
                     vk = (j1 * i_vis) + (i1 >> 5);
                     if ((visited[vk] & (1 << (i0 & 31))) != 0) continue;
-                    
+
                     // compute i,j
                     k_res = j * sx + i;
                     int iter = result[k_res];
@@ -225,7 +226,7 @@ public class NativeMandel {
                         iter = z2c(x_start + i * x_step, y_start + j * y_step, max_iter);
                         result[k_res] = iter;
                     }
-                    
+
                     // CONTINUE HERE
                 }
             }
@@ -258,7 +259,7 @@ public class NativeMandel {
 	 * MaxIter is a byte (1..255 except java doesn't have unsigned types so
 	 * we use -128..127 instead to mean 0..255).
 	 * Returns SX*SY bytes, ranging [-128..127] but really meaning [0..255].
-	 * 
+	 *
 	 * Returns false if there isn't enough precision to use fp16 or
 	 * if maxter is -128 (which represents 0 here).
 	 */
@@ -293,7 +294,7 @@ public class NativeMandel {
         if (ix_step <= 0 || iy_step <= 0) return false;
         int ix_start = (int)(x_start * 256);
         int iy_start = (int)(y_start * 256);
-        
+
         int ix_begin = ix_start;
         for(int j = 0, k = 0; j < sy; ++j, iy_start += iy_step) {
             ix_start = ix_begin;
@@ -311,7 +312,7 @@ public class NativeMandel {
                   iy2 = (iy * iy) >> 8;
                   ++iter;
                 }
-    
+
                 result[k] = iter;
             } // i
         } // j
@@ -327,7 +328,7 @@ public class NativeMandel {
 	 * MaxIter is a byte (1..255 except java doesn't have unsigned types so
 	 * we use -128..127 instead to mean 0..255).
 	 * Returns SX*SY bytes, ranging [-128..127] but really meaning [0..255].
-	 * 
+	 *
 	 * Returns false if there isn't enough precision to use fp32 or
 	 * if maxter is -128 (which represents 0 here).
 	 */
@@ -362,7 +363,7 @@ public class NativeMandel {
         if (ix_step <= 0 || iy_step <= 0) return false;
         int ix_start = (int)(x_start * 65536);
         int iy_start = (int)(y_start * 65536);
-        
+
         int ix_begin = ix_start;
         for(int j = 0, k = 0; j < sy; ++j, iy_start += iy_step) {
             ix_start = ix_begin;
@@ -380,7 +381,7 @@ public class NativeMandel {
                   iy2 = (int)((Ly * Ly) >> 16);
                   ++iter;
                 }
-    
+
                 result[k] = iter;
             } // i
         } // j
@@ -391,13 +392,13 @@ public class NativeMandel {
     private static boolean load(AssetManager assets) {
 
         System.loadLibrary("Mandelbrot");
-        
+
         if (false) {
-        
+
         // This is an UGLY HACK initially done to see whether the system
         // can be abused or not. The answer was "not really".
         // *** Please do not reuse this ugly hack or I shall taunt you a second time! ***
-        
+
     	Runtime r = Runtime.getRuntime();
     	ClassLoader loader = VMStack.getCallingClassLoader();
     	// TODO use data path as given by context
@@ -405,14 +406,14 @@ public class NativeMandel {
 
     	try {
         	setup(assets, libpath);
-        	
+
 			Class<? extends Runtime> c = r.getClass();
 			Method m = c.getDeclaredMethod("load", new Class[] { String.class, ClassLoader.class });
 			m.setAccessible(true);
 			m.invoke(r, new Object[] { libpath, loader });
 			Log.d(TAG, "libMandelbrot.so loaded");
 			return true;
-					
+
 		} catch (SecurityException e) {
             Log.e("JNI", "WARNING: SecurityException: ", e);
 		} catch (NoSuchMethodException e) {
@@ -426,7 +427,7 @@ public class NativeMandel {
 		} catch (IOException e) {
             Log.e("JNI", "WARNING: IOException: ", e);
 		}
-		
+
 		Log.d(TAG, "libMandelbrot.so *NOT* loaded");
 		return false;
         }
@@ -445,7 +446,7 @@ public class NativeMandel {
                 }
             }
         }
-        
+
         byte[] buf = new byte[4096];
 
         InputStream is = assets.open("libMandelbrot.so");

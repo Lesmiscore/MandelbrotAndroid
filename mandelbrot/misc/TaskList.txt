@@ -1,5 +1,14 @@
 ---- TODO ----
 
+20091024 Market: remove old, upload new with new package & signature
+20091024 Use Activity to retain cache; only save pos/size/level
+20091024 Use NDK
+
+---- Done Version 0.7 ----
+
+20091024 Change package
+20091024 Support new screen configs from 1.6
+
 ---- Done Version 0.6 ----
 
 20080921 [1] Feature: FP32 (16.16) rendering (java only)
@@ -48,7 +57,7 @@
 20070810 [3] Options: Add option min/max iterations
 20070810 [3] Options: Add option max history depth
 20070810 [1] Activity: Create tab host for options w/ help + about
-20070809 [2] Activity: Implement onFreeze, onPause, onResume 
+20070809 [2] Activity: Implement onFreeze, onPause, onResume
 20070808 [3] Activity: Add options screen, linked from options menu
 20070808 [1] Builder: Fix progress in multi-pass builder thread
 

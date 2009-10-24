@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-		  package="com.alfray.mandelbrot" android:versionCode="7" android:versionName="0.7">
-    <application android:icon="@drawable/icon" android:label="@string/app_name" android:name=".tiles.TileApp">
-    <activity android:name=".tiles.TileActivity"
-        android:theme="@style/ThemeNoTitleBar" android:label="@string/app_name">
+		  android:versionCode="7" android:versionName="0.7" package="com.alfray.mandelbrot2">
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+    <activity android:theme="@style/ThemeNoTitleBar" android:label="@string/app_name" android:name="com.alfray.mandelbrot.tiles.TileActivity">
         <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.DEFAULT" />
         </intent-filter>
     </activity>
-    <activity android:name=".tests.TestActivity"
-              android:label="Speed Tests">
+    <activity android:label="Speed Tests" android:name="com.alfray.mandelbrot.tests.TestActivity">
         <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
         </intent-filter>
     </activity>
-<activity android:name=".util.AboutActivity"></activity>
+<activity android:name="com.alfray.mandelbrot.util.AboutActivity"></activity>
 </application>
 
 
 <uses-permission android:name="android.permission.SET_WALLPAPER"></uses-permission>
-<uses-sdk android:minSdkVersion="1"></uses-sdk>
+<uses-sdk android:minSdkVersion="2"></uses-sdk>
+<supports-screens android:resizeable="true" android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:anyDensity="true"></supports-screens>
 </manifest> 
