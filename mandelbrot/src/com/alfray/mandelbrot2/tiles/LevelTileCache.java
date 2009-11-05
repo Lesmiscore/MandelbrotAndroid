@@ -10,6 +10,7 @@ import android.util.SparseArray;
 
 //-----------------------------------------------
 
+/** @deprecated not used yet */
 public class LevelTileCache {
 
     public static class TileCache extends SparseArray<Tile> {
@@ -18,8 +19,8 @@ public class LevelTileCache {
     private static LevelTileCache sThis;
 
     private SparseArray<TileCache> mLevelCache;
-    
-    
+
+
     private LevelTileCache() {
     }
 

@@ -75,9 +75,33 @@ public class TileContext {
 	private boolean mNeedUpdateCaption;
 	private UpdateCaptionRunnable mUpdateCaptionRunnable;
 
-    public TileContext() {
+	/**
+	 * State preserved via {@link Activity#onRetainNonConfigurationInstance()}
+	 * and {@link Activity#getLastNonConfigurationInstance()}.
+	 *
+	 * We can't save the whole context because we have can't risk putting a
+	 * View reference in the saved context (it would leak the activity).
+	 * Instead we just want to preserve the visible tiles and tiles cache.
+	 */
+	private static class ConfigSavvyState {
+	    public final Tile[] mVisibleTiles2;
+        public final SparseArray<TileCache> mTileCache;
 
-    	mLevelTileCaches = new SparseArray<TileCache>(16);
+        public ConfigSavvyState(Tile[] visibleTiles, SparseArray<TileCache> tileCache) {
+            mVisibleTiles2 = visibleTiles;
+            mTileCache = tileCache;
+	    }
+	}
+
+    public TileContext(Object lastNonConfigurationInstance) {
+
+        if (lastNonConfigurationInstance instanceof ConfigSavvyState) {
+            ConfigSavvyState state = (ConfigSavvyState) lastNonConfigurationInstance;
+            mLevelTileCaches = state.mTileCache;
+            mVisibleTiles = state.mVisibleTiles2;
+        } else {
+            mLevelTileCaches = new SparseArray<TileCache>(16);
+        }
 
         if (mTileThread == null) {
             mTileThread = new TileThread();
@@ -88,6 +112,10 @@ public class TileContext {
         mHandler = new Handler();
         mHideZoomRunnable = new HideZoomRunnable();
         mUpdateCaptionRunnable = new UpdateCaptionRunnable();
+    }
+
+    public Object getNonConfigurationInstance() {
+        return new ConfigSavvyState(mVisibleTiles, mLevelTileCaches);
     }
 
     /** Runs from the UI thread */
@@ -134,19 +162,23 @@ public class TileContext {
         outState.putInt("mandelbrot.panX", mPanningX);
         outState.putInt("mandelbrot.panY", mPanningY);
 
-        // we're note going to save all tiles since this is just for the
+        // we're not going to save all tiles since this is just for the
         // transient state save (i.e. the activity is momentarily paused
         // because another one has precedence.) However in this case to
         // restore the activity quickly it would be nice to have all the
         // *current* visible tiles saved.
 
-        int nn = mVisibleTiles.length;
-        outState.putInt("mandelbrot.nbtiles", nn);
-        for (int k = 0; k < nn; k++) {
-            Tile t = mVisibleTiles[k];
-            if (t != null) {
-                outState.putIntArray(String.format("mandelbrot.tile_%02d", k),
-                        t.serialize());
+        if (false) {
+            // Disabled as we now use onRetainNonConfigurationInstance
+            // to preserve tiles between configuration changes.
+            int nn = mVisibleTiles.length;
+            outState.putInt("mandelbrot.nbtiles", nn);
+            for (int k = 0; k < nn; k++) {
+                Tile t = mVisibleTiles[k];
+                if (t != null) {
+                    outState.putIntArray(String.format("mandelbrot.tile_%02d", k),
+                            t.serialize());
+                }
             }
         }
     }

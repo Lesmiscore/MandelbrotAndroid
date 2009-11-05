@@ -92,13 +92,12 @@ public class TileActivity extends Activity {
 
         ZoomControls zoomer = (ZoomControls) findViewById(R.id.zoomer);
 
-        mTileContext = new TileContext();
+        mTileContext = new TileContext(getLastNonConfigurationInstance());
         mTileContext.setView(tileView);
         mTileContext.setZoomer(zoomer);
         mTileContext.setText(textView);
         tileView.setTileContext(mTileContext);
         mTileContext.resetState(inState);
-
     }
 
     @Override
@@ -112,6 +111,11 @@ public class TileActivity extends Activity {
         mTileContext.saveState(outState);
     	outState.putInt("orient", mOrientation);
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        return mTileContext.getNonConfigurationInstance();
     }
 
     @Override
