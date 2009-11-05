@@ -19,7 +19,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot2.R;
 
 /**
  * Workflow:
@@ -29,7 +29,7 @@ import com.alfray.mandelbrot.R;
  * - onWindowVisibilityChanged => TileContext.onViewLostVisibility to pause
  *    rendering threads
  * - trackball/mouse => change offset for panning
- * - 
+ * -
  */
 public class TileView extends View {
 
@@ -42,7 +42,7 @@ public class TileView extends View {
     	LINES,
     	TEXT
     }
-    
+
     private TileContext mTileContext;
     private Rect mTempBounds = new Rect();
     private Rect mTempRect = new Rect(0, 0, Tile.SIZE, Tile.SIZE);
@@ -58,14 +58,14 @@ public class TileView extends View {
 
     public TileView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        
+
         mNoTile = context.getResources().getDrawable(R.drawable.android_maps_no_tile_128);
-        
+
         mRed = new Paint();
         mRed.setColor(0xFFFF0000);
         mRed.setStyle(Paint.Style.STROKE);
         mRed.setTextAlign(Paint.Align.CENTER);
-        
+
         mGridMode = DEBUG ? GridMode.LINES : GridMode.NONE;
     }
 
@@ -84,11 +84,11 @@ public class TileView extends View {
         super.onWindowVisibilityChanged(visibility);
         if (mTileContext != null) mTileContext.pause(visibility != VISIBLE);
     }
-    
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        
+
         Tile[] tiles = null;
 
         if (mTileContext != null) tiles = mTileContext.getVisibleTiles();
@@ -120,7 +120,7 @@ public class TileView extends View {
         if (DEBUG) {
         	logd("Bounds %s", (useBounds ? bounds.toString() : "no"));
         }
-        
+
         final int ofx = mTileContext.getOffsetX();
         final int ofy = mTileContext.getOffsetY();
 
@@ -131,7 +131,7 @@ public class TileView extends View {
             int x = t.getVirtualX() + ofx;
             int y = t.getVirtualY() + ofy;
             rect.offsetTo(x, y);
-            
+
             if (useBounds && !Rect.intersects(bounds, rect)) continue;
 
             Bitmap bmp = t.getBitmap();
@@ -153,7 +153,7 @@ public class TileView extends View {
             }
         }
     }
-    
+
     @Override
     public boolean onTrackballEvent(MotionEvent event) {
         switch (event.getAction()) {
@@ -182,7 +182,7 @@ public class TileView extends View {
         }
         return super.onTrackballEvent(event);
     }
-    
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
@@ -219,7 +219,7 @@ public class TileView extends View {
         }
         return super.onTouchEvent(event);
     }
-    
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
     	if (keyCode == KeyEvent.KEYCODE_G) {
@@ -238,7 +238,7 @@ public class TileView extends View {
     }
 
     // ----
-    
+
     private void logd(String format, Object...args) {
         Log.d(TAG, String.format(format, args));
     }

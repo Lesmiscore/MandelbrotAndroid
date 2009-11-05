@@ -10,7 +10,7 @@ package com.alfray.mandelbrot.tiles;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 
-import com.alfray.mandelbrot.NativeMandel;
+import com.alfray.mandelbrot.JavaMandel;
 
 
 /**
@@ -246,7 +246,7 @@ public class Tile {
             boolean done = false;
             
             if (false && mMaxIter < 256) {
-                done = NativeMandel.mandelbrot3(
+                done = JavaMandel.mandelbrot3(
                         x, step,
                         y, step,
                         SIZE, SIZE,
@@ -254,7 +254,7 @@ public class Tile {
                         n, sTempBlock3);
                 
                 if (!done) {
-	                done = NativeMandel.mandelbrot4(
+	                done = JavaMandel.mandelbrot4(
 	                        x, step,
 	                        y, step,
 	                        SIZE, SIZE,
@@ -268,7 +268,7 @@ public class Tile {
                     sTempColor[k] = sColorMap[(int)sTempBlock3[k] + 128];
                 }
             } else {
-                NativeMandel.mandelbrot2(
+                JavaMandel.mandelbrot2(
                             x, step,
                             y, step,
                             SIZE, SIZE,

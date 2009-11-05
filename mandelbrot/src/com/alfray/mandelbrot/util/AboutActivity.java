@@ -10,7 +10,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.webkit.WebView;
 
-import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot2.R;
 
 public class AboutActivity extends Activity {
 
@@ -20,7 +20,7 @@ public class AboutActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
-	
+
 	    setContentView(R.layout.about);
 	    setTitle(R.string.about_title);
 	    WebView wv = (WebView) findViewById(R.id.web);

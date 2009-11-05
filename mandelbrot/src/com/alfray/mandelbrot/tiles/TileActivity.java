@@ -32,11 +32,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
 
-import com.alfray.mandelbrot.NativeMandel;
-import com.alfray.mandelbrot.R;
+import com.alfray.mandelbrot.JavaMandel;
 import com.alfray.mandelbrot.tests.TestActivity;
 import com.alfray.mandelbrot.tiles.TileContext.ImageGenerator;
 import com.alfray.mandelbrot.util.AboutActivity;
+import com.alfray.mandelbrot2.R;
 
 
 public class TileActivity extends Activity {
@@ -45,7 +45,7 @@ public class TileActivity extends Activity {
 
     private static final int DLG_SAVE_IMG = 0;
     private static final int DLG_WALLPAPER = 1;
-    
+
 	private static final int MENU_GRP_IMG = 1;
 
     private TileContext mTileContext;
@@ -54,7 +54,7 @@ public class TileActivity extends Activity {
 	private TileActivity mActivity;
 
 	private int mOrientation;
-	
+
 	private static final int ORIENT_MAX = 3;
 	private static final int[] ORIENT_SET = {
 		ActivityInfo.SCREEN_ORIENTATION_USER,
@@ -74,7 +74,7 @@ public class TileActivity extends Activity {
     public void onCreate(Bundle inState) {
         super.onCreate(inState);
 
-        NativeMandel.init(getAssets());
+        JavaMandel.init(getAssets());
 
         if (inState != null) {
         	mOrientation = inState.getInt("orient");
@@ -84,49 +84,49 @@ public class TileActivity extends Activity {
         setContentView(R.layout.tiles);
 
         mActivity = this;
-        
+
         TextView textView = (TextView) findViewById(R.id.text);
 
         TileView tileView = (TileView) findViewById(R.id.tile_view);
         tileView.requestFocus();
-        
+
         ZoomControls zoomer = (ZoomControls) findViewById(R.id.zoomer);
-        
+
         mTileContext = new TileContext();
         mTileContext.setView(tileView);
         mTileContext.setZoomer(zoomer);
         mTileContext.setText(textView);
         tileView.setTileContext(mTileContext);
         mTileContext.resetState(inState);
-        
+
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
         mTileContext.pause(false);
     }
-    
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         mTileContext.saveState(outState);
     	outState.putInt("orient", mOrientation);
         super.onSaveInstanceState(outState);
     }
-    
+
     @Override
     protected void onPause() {
         super.onPause();
         mTileContext.pause(true);
     }
-    
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mTileContext.destroy();
         mTileContext = null;
     }
-    
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, R.string.about,         0, R.string.about)
@@ -150,7 +150,7 @@ public class TileActivity extends Activity {
         sub.add(0, R.string.orient_sensor,   0, R.string.orient_sensor).setCheckable(true);
         return super.onCreateOptionsMenu(menu);
     }
-    
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
     	menu.setGroupEnabled(MENU_GRP_IMG, mImageGenerator == null);
@@ -159,7 +159,7 @@ public class TileActivity extends Activity {
     	}
     	return super.onPrepareOptionsMenu(menu);
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent;
@@ -196,7 +196,7 @@ public class TileActivity extends Activity {
         		break;
         	}
     	}
-        
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -205,7 +205,7 @@ public class TileActivity extends Activity {
 			setRequestedOrientation(ORIENT_SET[mOrientation]);
 		}
 	}
-	
+
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_T && event.isShiftPressed()) {
@@ -216,7 +216,7 @@ public class TileActivity extends Activity {
 	}
 
 	// ---- wallpaper and images -------------------------
-	
+
     private void startSaveImage() {
         // create dir on sdcard and complain if it can't be found or created
         File d = new File("/sdcard/mandelbrot");
@@ -227,14 +227,14 @@ public class TileActivity extends Activity {
             t.show();
             return;
         }
-        
+
         showDialog(DLG_SAVE_IMG);
     }
 
     private void startSaveWallpaper() {
         showDialog(DLG_WALLPAPER);
     }
-    
+
     @Override
     protected Dialog onCreateDialog(final int id) {
     	final Activity activity = this;
@@ -300,7 +300,7 @@ public class TileActivity extends Activity {
 					}
 				} else if (mId == DLG_SAVE_IMG) {
 					mDialog.setMessage("Saving image...");
-					
+
 					final String name = String.format("/sdcard/mandelbrot/%d.png", System.currentTimeMillis());
 					FileOutputStream fos;
 					try {
@@ -308,21 +308,21 @@ public class TileActivity extends Activity {
 						BufferedOutputStream bos = new BufferedOutputStream(fos, 8192);
 
 						boolean ok = bmp.compress(Bitmap.CompressFormat.PNG, 100 /*quality*/, bos);
-						
+
 						try {
 							bos.close();
 							fos.close();
 						} catch (IOException e) {
 							ok = false;
 						}
-						
+
 						if (ok) {
 							mScanner = new MediaScannerConnection(mActivity,
 								new MediaScannerConnectionClient() {
 									public void onMediaScannerConnected() {
 										mScanner.scanFile(name, null /*mimeType*/);
 									}
-	
+
 									public void onScanCompleted(String path, Uri uri) {
 										if (path.equals(name)) {
 											mActivity.runOnUiThread(new Runnable() {
@@ -337,7 +337,7 @@ public class TileActivity extends Activity {
 											mScanner.disconnect();
 										}
 									}
-								
+
 							});
 							mScanner.connect();
 						}

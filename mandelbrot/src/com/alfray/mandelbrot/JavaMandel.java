@@ -1,15 +1,6 @@
 package com.alfray.mandelbrot;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import android.content.res.AssetManager;
-import android.util.Log;
-import dalvik.system.VMStack;
 
 /**
  * Performs the Mandelbrot computation, either using a native wrapper or via pure Java calls.
@@ -17,29 +8,14 @@ import dalvik.system.VMStack;
  * The protected static methods are called from TestActivity.AccessWrapper for speed measurements.
  * For "real" code, rely on the public methods that abstract the native-vs-java calls.
  */
-public class NativeMandel {
+public class JavaMandel {
 
-	private static String TAG = "NativeMandel";
-
-	private static boolean sLoaded = false;
-	private static boolean sInit = false;
-	private static int sNativePtr2 = 0;
-	private static int sNativePtr3 = 0;
+	private static String TAG = "JavaMandel";
 
 	public synchronized static void init(AssetManager assets) {
-		if (!sInit) {
-			sInit = true;
-
-			// DISABLED till I switch to NDK -- RM 20091024
-			// sLoaded = load(assets);
-		}
 	}
 
 	public static void dispose() {
-		if (sLoaded ) {
-			sNativePtr2 = doMandelbrot2(0, 0, 0, 0, 0, 0, 0, 0, null, sNativePtr2);
-			//--TODO--sNativePtr3 = doMandelbrot3(0, 0, 0, 0, 0, 0, 0, 0, null, sNativePtr3);
-		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -59,46 +35,7 @@ public class NativeMandel {
 			int sx, int sy,
     		int max_iter,
     		int size, int[] result) {
-		if (sLoaded) {
-			sNativePtr2 = doMandelbrot2(
-					x_start, x_step,
-					y_start, y_step,
-					sx, sy,
-					max_iter,
-					size, result,
-					sNativePtr2);
-		} else {
-			mandelbrot2_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
-		}
-	}
-
-	/**
-     * Returns a temp buffer, which should be given back in last_ptr.
-     * Fills result for size elements.
-     */
-    private static native int doMandelbrot2(
-    		float x_start, float x_step,
-    		float y_start, float y_step,
-    		int sx, int sy,
-    		int max_iter,
-    		int size, int[] result,
-    		int last_ptr);
-
-	protected static void mandelbrot2_native(
-			float x_start, float x_step,
-			float y_start, float y_step,
-			int sx, int sy,
-    		int max_iter,
-    		int size, int[] result) {
-		if (sLoaded) {
-			sNativePtr2 = doMandelbrot2(
-					x_start, x_step,
-					y_start, y_step,
-					sx, sy,
-					max_iter,
-					size, result,
-					sNativePtr2);
-		}
+		mandelbrot2_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
 	}
 
 	protected static void mandelbrot2_java(
@@ -269,17 +206,7 @@ public class NativeMandel {
             int sx, int sy,
             byte max_iter,
             int size, byte[] result) {
-        /* if (sLoaded) {
-            sNativePtr3 = doMandelbrot3(
-                    x_start, x_step,
-                    y_start, y_step,
-                    sx, sy,
-                    max_iter,
-                    size, result,
-                    sNativePtr3);
-        } else */ {
-            return mandelbrot3_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
-        }
+        return mandelbrot3_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
     }
 
     protected static boolean mandelbrot3_java(
@@ -338,17 +265,7 @@ public class NativeMandel {
             int sx, int sy,
             byte max_iter,
             int size, byte[] result) {
-        /* if (sLoaded) {
-            sNativePtr3 = doMandelbrot4(
-                    x_start, x_step,
-                    y_start, y_step,
-                    sx, sy,
-                    max_iter,
-                    size, result,
-                    sNativePtr3);
-        } else */ {
-            return mandelbrot4_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
-        }
+        return mandelbrot4_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
     }
 
     protected static boolean mandelbrot4_java(
@@ -387,86 +304,5 @@ public class NativeMandel {
         } // j
         return true;
     }
-
-    // ------------------------------------------------------------------------
-    private static boolean load(AssetManager assets) {
-
-        System.loadLibrary("Mandelbrot");
-
-        if (false) {
-
-        // This is an UGLY HACK initially done to see whether the system
-        // can be abused or not. The answer was "not really".
-        // *** Please do not reuse this ugly hack or I shall taunt you a second time! ***
-
-    	Runtime r = Runtime.getRuntime();
-    	ClassLoader loader = VMStack.getCallingClassLoader();
-    	// TODO use data path as given by context
-    	String libpath = "/data/data/com.alfray.mandelbrot/libMandelbrot.so";
-
-    	try {
-        	setup(assets, libpath);
-
-			Class<? extends Runtime> c = r.getClass();
-			Method m = c.getDeclaredMethod("load", new Class[] { String.class, ClassLoader.class });
-			m.setAccessible(true);
-			m.invoke(r, new Object[] { libpath, loader });
-			Log.d(TAG, "libMandelbrot.so loaded");
-			return true;
-
-		} catch (SecurityException e) {
-            Log.e("JNI", "WARNING: SecurityException: ", e);
-		} catch (NoSuchMethodException e) {
-            Log.e("JNI", "WARNING: NoSuchMethodException: ", e);
-		} catch (IllegalArgumentException e) {
-            Log.e("JNI", "WARNING: IllegalArgumentException: ", e);
-		} catch (IllegalAccessException e) {
-            Log.e("JNI", "WARNING: IllegalAccessException: ", e);
-		} catch (InvocationTargetException e) {
-            Log.e("JNI", "WARNING: InvocationTargetException: ", e);
-		} catch (IOException e) {
-            Log.e("JNI", "WARNING: IOException: ", e);
-		}
-
-		Log.d(TAG, "libMandelbrot.so *NOT* loaded");
-		return false;
-        }
-        return true;
-    }
-
-    private static void setup(AssetManager assets, String dest_path) throws IOException {
-
-        File f = new File(dest_path);
-        if (!f.exists()) {
-            File d = new File(f.getParent());
-            if (!d.exists()) {
-                boolean worked = d.mkdirs();
-                if (!worked) {
-                    throw new IOException("Mkdir failed for " + f.getParent());
-                }
-            }
-        }
-
-        byte[] buf = new byte[4096];
-
-        InputStream is = assets.open("libMandelbrot.so");
-        try {
-	    	FileOutputStream fos = new FileOutputStream(dest_path);
-
-	    	try {
-		    	int n;
-		    	while ((n = is.read(buf)) > 0) {
-		    		fos.write(buf, 0, n);
-		    	}
-	    	} finally {
-		    	fos.close();
-	    	}
-        } finally {
-        	is.close();
-        }
-	}
-
-    //------------------------------------------------------------------
-
 }
 
