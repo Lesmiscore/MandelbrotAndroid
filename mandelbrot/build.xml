@@ -5,7 +5,7 @@
     <property name="android-tools" value="C:\ralf\google\android-sdk_113454_windows\tools" />
     
     <!-- Application Package Name -->
-    <property name="application-package" value="com.alfray.mandelbrot.tiles" />
+    <property name="application-package" value="com.alfray.mandelbrot2.tiles" />
 
     <!-- The intermediates directory -->
     <!-- Eclipse uses "bin" for its own output, so we do the same. -->

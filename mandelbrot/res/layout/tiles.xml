@@ -23,7 +23,7 @@
     android:gravity="center" 
     android:background="@color/dark_blue"/>
 	
-<com.alfray.mandelbrot.tiles.TileView
+<com.alfray.mandelbrot2.tiles.TileView
     android:id="@+id/tile_view" 
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent"
@@ -33,7 +33,7 @@
    android:layout_alignParentRight="true" 
    android:layout_alignParentLeft="true" 
    android:layout_alignParentBottom="true">
-</com.alfray.mandelbrot.tiles.TileView>
+</com.alfray.mandelbrot2.tiles.TileView>
 
 </RelativeLayout>
 
