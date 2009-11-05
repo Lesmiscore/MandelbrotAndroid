@@ -49,11 +49,13 @@ public class TileActivity extends Activity {
 	private static final int MENU_GRP_IMG = 1;
 
     private TileContext mTileContext;
+    private TileContext.FlyRunnable mFlyRunnable;
 	private ImageGenerator mImageGenerator;
 
 	private TileActivity mActivity;
 
 	private int mOrientation;
+
 
 	private static final int ORIENT_MAX = 3;
 	private static final int[] ORIENT_SET = {
@@ -121,6 +123,7 @@ public class TileActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        toggleFlyMode(true /*forceStop*/);
         mTileContext.pause(true);
     }
 
@@ -147,11 +150,14 @@ public class TileActivity extends Activity {
             .setIcon(R.drawable.ic_menu_save);
         menu.add(MENU_GRP_IMG, R.string.wallpaper,     0, R.string.wallpaper)
             .setIcon(R.drawable.ic_menu_save);
+
         SubMenu sub = menu.addSubMenu(R.string.orient);
         sub.add(0, R.string.orient_default,  0, R.string.orient_default).setCheckable(true);
         sub.add(0, R.string.orient_portrait, 0, R.string.orient_portrait).setCheckable(true);
         sub.add(0, R.string.orient_land,     0, R.string.orient_land).setCheckable(true);
         sub.add(0, R.string.orient_sensor,   0, R.string.orient_sensor).setCheckable(true);
+
+        menu.add(0, R.string.fly_mode, 0, R.string.fly_mode).setCheckable(true);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -161,6 +167,9 @@ public class TileActivity extends Activity {
     	for (int orient = 0; orient <= ORIENT_MAX; orient++) {
     		menu.findItem(ORIENT_STR[orient]).setChecked(mOrientation == orient);
     	}
+
+    	menu.findItem(R.string.fly_mode).setChecked(mFlyRunnable != null);
+
     	return super.onPrepareOptionsMenu(menu);
     }
 
@@ -191,6 +200,9 @@ public class TileActivity extends Activity {
         case R.string.wallpaper:
             startSaveWallpaper();
             break;
+        case R.string.fly_mode:
+            toggleFlyMode(false /* forceStop */);
+            break;
         }
 
         for (int orient = 0; orient <= ORIENT_MAX; orient++) {
@@ -215,6 +227,9 @@ public class TileActivity extends Activity {
 		if (keyCode == KeyEvent.KEYCODE_T && event.isShiftPressed()) {
 			startActivity(new Intent(this, TestActivity.class));
 			return true;
+		} else if (keyCode == KeyEvent.KEYCODE_F) {
+		    toggleFlyMode(false /*forceStop*/);
+		    return true;
 		}
 		return super.onKeyDown(keyCode, event);
 	}
@@ -363,4 +378,18 @@ public class TileActivity extends Activity {
 			}
 		}
 	}
+
+    // ---------- fly mode ------------------------------
+
+    private void toggleFlyMode(boolean forceStop) {
+
+        if (forceStop || mFlyRunnable != null) {
+            if (mFlyRunnable != null) mFlyRunnable.stop();
+            mFlyRunnable = null;
+            return;
+        }
+
+        mFlyRunnable = mTileContext.new FlyRunnable(this);
+        mFlyRunnable.start();
+    }
 }

@@ -27,16 +27,16 @@ public class TileThread extends BaseThread {
             mCurrentTile = currentTile;
             mLargerTile = largerTile;
         }
-        
+
         public Tile getCurrentTile() {
             return mCurrentTile;
         }
-        
+
         public Tile getLargerTile() {
             return mLargerTile;
         }
     }
-    
+
     /** List of pending tiles to compute */
     private LinkedList<Tile> mPendingList;
     /** List of pending titles for quick image zoom */
@@ -48,12 +48,18 @@ public class TileThread extends BaseThread {
 
     public TileThread() {
         super("TileThread");
-        
+
         mImgZoomList = new LinkedList<ImgZoomEntry>();
         mPendingList = new LinkedList<Tile>();
         mMemoryList = new LinkedList<Tile>();
     }
-    
+
+    public boolean hasPending() {
+        synchronized (mPendingList) {
+            return !mPendingList.isEmpty();
+        }
+    }
+
     public void setCompletedCallback(ITileCompleted callback) {
         mTileCompleted = callback;
     }
@@ -152,13 +158,13 @@ public class TileThread extends BaseThread {
                     }
                 }
             }
-            
+
         } catch (Exception e) {
             Log.e(TAG, "Uncatched Exception ", e);
         } catch (Throwable th) {
             Log.e(TAG, "Uncatched Throwable : " + th.getMessage());
         }
-        
+
         waitForALongTime();
     }
 
@@ -202,7 +208,7 @@ public class TileThread extends BaseThread {
             }
             r++;
         }
-        
+
         Log.d(TAG, "Reclaimed: " + Integer.toString(r) + " tiles");
 
         // now is a good time to GC

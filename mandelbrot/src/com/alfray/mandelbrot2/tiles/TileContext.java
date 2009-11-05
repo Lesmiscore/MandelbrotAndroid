@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import com.alfray.mandelbrot2.util.BaseThread;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ZoomControls;
 
 public class TileContext {
@@ -32,11 +34,40 @@ public class TileContext {
 
     private static final int ZOOM_HIDE_DELAY_MS = 3000;
 
+    /**
+     * Interesting places (P.O.I = Points Of Interest).
+     * Each one has 2 floats: cX and cY.
+     */
     private static final float sInterestingPlaces[] = {
-    	//-1.76652f, -0.04164f,
         -1.75967f,  0.02038f,
     	-1.25565f,  0.38156f,
-    	-0.66992f, -0.45215f
+    	-0.66992f, -0.45215f,
+    };
+
+    private static final int FLY_RESET = 0;
+    private static final int FLY_PAN   = 1;
+    private static final int FLY_ZOOM  = 2;
+    private static final float sFlyData[] = {
+        FLY_RESET,
+        FLY_PAN, -1.75967f, 0,
+        FLY_ZOOM, 16,
+        FLY_PAN, -1.75967f, 0,    // (same coord, to fix offset)
+        FLY_PAN, -1.62354f, 0,
+        FLY_PAN, -1.47754f, 0,
+        FLY_PAN, -1.41357f, 0,
+        FLY_PAN, -1.35742f, 0.09521f,
+        FLY_PAN, -1.26562f, 0.09277f,
+        FLY_PAN, -1.18799f, 0.31543f,
+        FLY_ZOOM, 32,
+        FLY_PAN, -1.20581f, 0.32373f,
+        FLY_ZOOM, 64,
+        FLY_PAN, -1.20593f, 0.32019f,
+        FLY_ZOOM, 128,
+        FLY_ZOOM, 2,
+        FLY_PAN, -0.72266f, 0.30469f,
+        FLY_ZOOM, 256,
+        FLY_PAN, -0.72452f, 0.29898f,
+        FLY_ZOOM, 4096,
     };
 
     private static class TileCache extends SparseArray<Tile> {
@@ -315,16 +346,24 @@ public class TileContext {
     public void panToInterestingPlace() {
         int index = mInterestingPlaceIndex;
 
+        panToReal(sInterestingPlaces[index++], sInterestingPlaces[index++]);
+
+        mInterestingPlaceIndex = index == sInterestingPlaces.length ? 0 : index;
+    }
+
+    private void panToReal(float realX, float realY) {
         float zoom = 0 - (float)Tile.getZoomFp8(mZoomLevel);
-        float x = sInterestingPlaces[index++] * zoom;
-        float y = sInterestingPlaces[index++] * zoom;
-        mPanningX = (int)x;
-        mPanningY = (int)y;
+        float x = realX * zoom;
+        float y = realY * zoom;
+        panToPixels((int)x, (int)y);
+    }
+
+    private void panToPixels(int x, int y) {
+        mPanningX = x;
+        mPanningY = y;
         updateCaption();
         updateAll(true /*force*/);
         invalidateView();
-
-        mInterestingPlaceIndex = index == sInterestingPlaces.length ? 0 : index;
     }
 
     public void zoom(boolean zoom_in) {
@@ -772,4 +811,132 @@ public class TileContext {
 	    	}
 		}
     }
+
+
+    public class FlyRunnable implements Runnable {
+
+        private static final int NOOP = -1;
+
+        private long mStartTime;
+        private boolean mRunning;
+        private int mCurrentInst = NOOP;
+        private int mIndex;
+        private int mTargetZoom;
+        private int mTargetPanX;
+        private int mTargetPanY;
+
+        private int kTileSq = Tile.SIZE * Tile.SIZE;
+
+        private final Context mContext;
+
+
+        public FlyRunnable(Context context) {
+            mContext = context;
+            mIndex = 0;
+        }
+
+        public void start() {
+            Toast.makeText(mContext, "Fly Mode Started", Toast.LENGTH_SHORT).show();
+            mRunning = true;
+            mStartTime = System.currentTimeMillis();
+            reschedule();
+        }
+
+        public void stop() {
+            long elapsed = System.currentTimeMillis() - mStartTime;
+            Toast.makeText(mContext,
+                    String.format("Fly Mode Stopped. %.1f seconds.", (float)elapsed / 1000),
+                    Toast.LENGTH_SHORT).show();
+            mRunning = false;
+        }
+
+        private void reschedule() {
+            if (mRunning && mTileThread != null) {
+                mTileView.postDelayed(this, 50 /*millis*/);
+            }
+        }
+
+        @Override
+        public void run() {
+            if (!mRunning || mTileThread == null) return;
+
+            if (mTileThread.hasPending()) {
+                reschedule();
+                return;
+            }
+
+            switch(mCurrentInst) {
+            case FLY_ZOOM:
+                if (mZoomLevel != mTargetZoom) {
+                    Log.d(TAG, "FlyMode: Zoom");
+                    zoom(mTargetZoom > mZoomLevel);
+                    reschedule();
+                    return;
+                }
+                mCurrentInst = NOOP;
+                break;
+
+            case FLY_PAN:
+                Log.d(TAG, "FlyMode: Pan");
+
+                // estimate how many pixels to pan
+                int dx = mTargetPanX - mPanningX;
+                int dy = mTargetPanY - mPanningY;
+
+                int dist2 = dx*dx + dy*dy;
+                if (dist2 < kTileSq) {
+                    panToPixels(mTargetPanX, mTargetPanY);
+                    mCurrentInst = NOOP;
+                } else {
+                    // advance one tile at a time
+                    float ratio = (float) (Tile.SIZE / Math.sqrt(dist2));
+                    dx = (int) (dx * ratio);
+                    dy = (int) (dy * ratio);
+                    panToPixels(mPanningX + dx, mPanningY + dy);
+                }
+                reschedule();
+                return;
+            }
+
+            mCurrentInst = (int) sFlyData[mIndex++];
+            switch(mCurrentInst) {
+            case FLY_RESET:
+                mZoomLevel = 0;
+                mPanningX  = 0;
+                mPanningY  = 0;
+                updateMaxIter();
+                updateCaption();
+                updateAll(true /*force*/);
+                invalidateView();
+                break;
+
+            case FLY_ZOOM:
+                mTargetZoom = (int) sFlyData[mIndex++];
+                break;
+
+            case FLY_PAN:
+                float zoom = 0 - (float)Tile.getZoomFp8(mZoomLevel);
+                float x = sFlyData[mIndex++] * zoom;
+                float y = sFlyData[mIndex++] * zoom;
+                mTargetPanX = (int)x;
+                mTargetPanY = (int)y;
+                break;
+
+            default:
+                // invalid instruction? abort.
+                Log.w(TAG, "FlyMode: Invalid Next Inst " + Integer.toString(mCurrentInst));
+                stop();
+            }
+
+            if (mIndex == sFlyData.length) {
+                // we're done.
+                stop();
+                mIndex = 0;
+            }
+
+            reschedule();
+        }
+
+    }
+
 }
