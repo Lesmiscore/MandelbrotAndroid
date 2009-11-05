@@ -337,6 +337,9 @@ public class TileContext {
 		case KeyEvent.KEYCODE_S:
 			panToInterestingPlace();
 			break;
+		case KeyEvent.KEYCODE_C:
+		    clearTileCache();
+		    break;
 		default:
 			return false;
 		}
@@ -377,8 +380,8 @@ public class TileContext {
 	/**
 	 * Constructs a new ImageGenThread that can generate a new image.
 	 *
-	 * @param width  The width in pixels of the image to generate. Use 0 for the view size.
-	 * @param height The height in pixels of the image to generate. Use 0 for the view size.
+	 * @param sx  The width in pixels of the image to generate. Use 0 for the view size.
+	 * @param sy The height in pixels of the image to generate. Use 0 for the view size.
 	 * @param activity The activity on which to run the callback (in the UI thread)
 	 * @param callback If non-null, this runnable will run once the generation is
 	 *        complete, whether the actual image generation succeeded or not.
@@ -598,7 +601,7 @@ public class TileContext {
     /** Runs from the UI thread */
     private Tile requestTile(int i, int j) {
     	TileCache cache;
-		synchronized (mLevelTileCaches) {
+		synchronized(mLevelTileCaches) {
 			cache = mLevelTileCaches.get(mZoomLevel);
 			if (cache == null) {
     			mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
@@ -647,6 +650,14 @@ public class TileContext {
         cache.put(t.hashCode(), t);
     }
 
+    /** Runs from the UI thread (from fly mode or keypress). */
+    private void clearTileCache() {
+        synchronized (mLevelTileCaches) {
+            mLevelTileCaches.clear();
+            mVisibleTiles = null;
+        }
+    }
+
 	/** Runs from the UI thread */
     private void invalidateView() {
         if (mTileView != null) {
@@ -687,7 +698,10 @@ public class TileContext {
 
 		            // do we want the mirror?
 		            int mirrorKey = tile.computeMirrorKey();
-		            TileCache cache = mLevelTileCaches.get(mZoomLevel);
+		            TileCache cache = null;
+		            synchronized(mLevelTileCaches) {
+	                    cache = mLevelTileCaches.get(mZoomLevel);
+                    }
 		            if (cache != null) {
 			            Tile mirror = cache.get(mirrorKey);
 			            if (mirror != null && !mirror.isCompleted()) {
@@ -836,7 +850,9 @@ public class TileContext {
         }
 
         public void start() {
-            Toast.makeText(mContext, "Fly Mode Started", Toast.LENGTH_SHORT).show();
+            String s = "Fly Mode Started";
+            Log.d(TAG, s);
+            Toast.makeText(mContext, s, Toast.LENGTH_SHORT).show();
             mRunning = true;
             mStartTime = System.currentTimeMillis();
             reschedule();
@@ -844,9 +860,9 @@ public class TileContext {
 
         public void stop() {
             long elapsed = System.currentTimeMillis() - mStartTime;
-            Toast.makeText(mContext,
-                    String.format("Fly Mode Stopped. %.1f seconds.", (float)elapsed / 1000),
-                    Toast.LENGTH_SHORT).show();
+            String s = String.format("Fly Mode Stopped. %.1f seconds.", (float)elapsed / 1000);
+            Log.d(TAG, s);
+            Toast.makeText(mContext, s, Toast.LENGTH_LONG).show();
             mRunning = false;
         }
 
@@ -856,7 +872,6 @@ public class TileContext {
             }
         }
 
-        @Override
         public void run() {
             if (!mRunning || mTileThread == null) return;
 
@@ -888,8 +903,8 @@ public class TileContext {
                     panToPixels(mTargetPanX, mTargetPanY);
                     mCurrentInst = NOOP;
                 } else {
-                    // advance one tile at a time
-                    float ratio = (float) (Tile.SIZE / Math.sqrt(dist2));
+                    // advance half a tile at a time
+                    float ratio = (float) (Tile.SIZE/2 / Math.sqrt(dist2));
                     dx = (int) (dx * ratio);
                     dy = (int) (dy * ratio);
                     panToPixels(mPanningX + dx, mPanningY + dy);
@@ -904,6 +919,7 @@ public class TileContext {
                 mZoomLevel = 0;
                 mPanningX  = 0;
                 mPanningY  = 0;
+                clearTileCache(); // TODO RM 20091105 for DEMO/BENCHMARK ONLY!
                 updateMaxIter();
                 updateCaption();
                 updateAll(true /*force*/);
