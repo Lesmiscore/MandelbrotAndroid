@@ -53,11 +53,27 @@ public class TileContext {
         FLY_PAN, -1.76685f, 0.00000f,
         FLY_PAN, -1.48315f, 0.00000f,
         FLY_PAN, -1.40771f, 0.00000f,
+        //
+        FLY_PAN, -1.36963f,-0.06470f,
+        FLY_PAN, -1.27393f,-0.05981f,
+        //
+        FLY_ZOOM, 256,
+        FLY_PAN, -1.25374f,-0.03046f,
+        //
+        FLY_ZOOM, 16,
+        FLY_PAN, -1.15576f, 0.27539f,
+        FLY_PAN, -0.91699f, 0.27222f,
+        FLY_ZOOM, 512,
+
+        /*
         FLY_PAN, -1.36523f, 0.08325f,
         FLY_PAN, -1.26929f, 0.14380f,
         FLY_PAN, -1.20044f, 0.32007f,
         FLY_PAN, -1.05786f, 0.33154f,
+        */
     };
+
+    private static final int FLY_ADVANCE_NTH = 4;
 
     private static class TileCache extends SparseArray<Tile> {
     }
@@ -963,7 +979,7 @@ public class TileContext {
                     mCurrentInst = NOOP;
                 } else {
                     // advance 1/4th a tile at a time
-                    float ratio = (float) (Tile.SIZE/8 / Math.sqrt(dist2));
+                    float ratio = (float) (Tile.SIZE/FLY_ADVANCE_NTH / Math.sqrt(dist2));
                     dx = (int) (dx * ratio);
                     dy = (int) (dy * ratio);
                     panToPixels(mPanningX + dx, mPanningY + dy);
