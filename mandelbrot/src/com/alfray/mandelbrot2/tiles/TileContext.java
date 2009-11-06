@@ -31,7 +31,7 @@ import java.util.LinkedList;
 public class TileContext {
 
     private static final String TAG = "TileContext";
-    private static boolean DEBUG = true;
+    private static boolean DEBUG = false;
 
     private static final int ZOOM_HIDE_DELAY_MS = 3000;
 
@@ -49,28 +49,13 @@ public class TileContext {
     private static final int FLY_PAN   = 1;
     private static final int FLY_ZOOM  = 2;
     private static final float sFlyData[] = {
-        //FLY_INIT, 32, -1.80737f, 0.00000f,
-
-        FLY_INIT, 1,  -0.70000f, 0.00000f,
-        FLY_PAN, -1.31250f, 0.00000f,
-        FLY_ZOOM, 16,
-        FLY_PAN, -1.80737f, 0.00000f,
-        FLY_ZOOM, 32, -1.80737f, 0.00000f,
-
-        FLY_PAN, -1.76685f, 0.00000f,
-        FLY_PAN, -1.48315f, 0.00000f,
-        FLY_PAN, -1.40771f, 0.00000f,
+        FLY_INIT, 64, -1.40771f, 0.00000f,
         //
-        FLY_PAN, -1.36963f,-0.06470f,
-        FLY_PAN, -1.27393f,-0.05981f,
+        FLY_PAN,      -1.36963f, 0.06470f,
+        FLY_PAN,      -1.27393f, 0.05981f,
         //
-        FLY_ZOOM, 256,
-        FLY_PAN, -1.25374f,-0.03046f,
-        //
-        FLY_ZOOM, 16,
-        FLY_PAN, -1.15576f, 0.27539f,
-        FLY_PAN, -0.91699f, 0.27222f,
-        FLY_ZOOM, 512,
+        FLY_PAN,      -1.15576f, 0.27539f,
+        FLY_PAN,      -0.91699f, 0.27222f,
 
         /*
         FLY_PAN, -1.36523f, 0.08325f,
@@ -80,7 +65,7 @@ public class TileContext {
         */
     };
 
-    private static final int FLY_ADVANCE_NTH = 4;
+    private static final int FLY_ADVANCE_NTH = 2;
 
     private static class TileCache extends SparseArray<Tile> {
     }
@@ -824,7 +809,7 @@ public class TileContext {
         // width 0.1 => 60 iter
         // width 0.01 => 120
         // int max_iter = Math.max(mPrefMinIter, (int)(mPrefStepIter * Math.log10(1.0 / w)));
-        return 15 + (int) (10 * Math.log1p(zoomLevel));
+        return 15 + (int)(15*Math.log1p(zoomLevel));
     }
 
     private void showZoomer(boolean force) {
@@ -1029,6 +1014,14 @@ public class TileContext {
                 return;
             }
 
+            // process next instruction or stop here
+            if (mIndex == sFlyData.length) {
+                // we're done.
+                stop();
+                mIndex = 0;
+                return;
+            }
+
             mCurrentInst = (int) sFlyData[mIndex++];
             switch(mCurrentInst) {
             case FLY_INIT:
@@ -1067,12 +1060,6 @@ public class TileContext {
                 // invalid instruction? abort.
                 Log.w(TAG, "FlyMode: Invalid Next Inst " + Integer.toString(mCurrentInst));
                 stop();
-            }
-
-            if (mIndex == sFlyData.length) {
-                // we're done.
-                stop();
-                mIndex = 0;
             }
 
             reschedule();
