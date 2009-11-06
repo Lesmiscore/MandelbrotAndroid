@@ -38,9 +38,9 @@ public class TileView extends View {
     private static boolean DEBUG = false;
 
     private enum GridMode {
-    	NONE,
-    	LINES,
-    	TEXT
+        NONE,
+        LINES,
+        TEXT
     }
 
     private TileContext mTileContext;
@@ -54,7 +54,7 @@ public class TileView extends View {
     private int mDownOffsetX;
     private int mDownOffsetY;
 
-	private Drawable mLogo;
+    private Drawable mLogo;
 
     public TileView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -95,21 +95,21 @@ public class TileView extends View {
 
         if (tiles == null || tiles.length == 0 || mTileContext == null) {
             // fake display for design-time
-        	if (mLogo == null) {
-        		mLogo = getContext().getResources().getDrawable(R.drawable.icon);
-        	}
+            if (mLogo == null) {
+                mLogo = getContext().getResources().getDrawable(R.drawable.icon);
+                }
             if (mLogo != null) {
                 mTempRect.set(0, 0, getWidth(), getHeight());
-            	mLogo.setBounds(mTempRect);
-            	mLogo.draw(canvas);
+                mLogo.setBounds(mTempRect);
+                mLogo.draw(canvas);
             }
             if (mRed != null) {
-            	String s = "Custom view: " + this.getClass().getSimpleName();
-            	// The layout editor currently doesn't support the "CENTER" alignment
-            	// on the Paint.
-            	canvas.drawText(s,
-            			getWidth()/2,
-            			getHeight()/2, mRed);
+                String s = "Custom view: " + this.getClass().getSimpleName();
+                // The layout editor currently doesn't support the "CENTER" alignment
+                // on the Paint.
+                canvas.drawText(s,
+                                getWidth()/2,
+                                getHeight()/2, mRed);
             }
             return;
         }
@@ -118,7 +118,7 @@ public class TileView extends View {
         boolean useBounds = canvas.getClipBounds(bounds);
 
         if (DEBUG) {
-        	logd("Bounds %s", (useBounds ? bounds.toString() : "no"));
+            logd("Bounds %s", (useBounds ? bounds.toString() : "no"));
         }
 
         final int ofx = mTileContext.getOffsetX();
@@ -158,23 +158,23 @@ public class TileView extends View {
     public boolean onTrackballEvent(MotionEvent event) {
         switch (event.getAction()) {
         case MotionEvent.ACTION_DOWN:
-        	// trackball selected... ignore
-        	break;
+            // trackball selected... ignore
+            break;
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_CANCEL:
-        	// trackball selected... ignore
+            // trackball selected... ignore
         case MotionEvent.ACTION_MOVE:
             if (mTileContext != null) {
-            	float x = event.getX() * event.getXPrecision();
-            	float y = event.getY() * event.getYPrecision();
-            	if (DEBUG) logd("Trackback MOVE: getX/Y: %f, %f => %f, %f", event.getX(), event.getY(), x ,y);
-            	// trackball events are delta motion
+                float x = event.getX() * event.getXPrecision();
+                float y = event.getY() * event.getYPrecision();
+                if (DEBUG) logd("Trackback MOVE: getX/Y: %f, %f => %f, %f", event.getX(), event.getY(), x ,y);
+                // trackball events are delta motion
                 mDownOffsetX = mTileContext.getPanningX();
                 mDownOffsetY = mTileContext.getPanningY();
-            	int newOfx = mDownOffsetX + (int)x;
-            	int newOfy = mDownOffsetY + (int)y;
+                int newOfx = mDownOffsetX + (int)x;
+                int newOfy = mDownOffsetY + (int)y;
                 if (DEBUG) {
-                	logd("Move: to-of7(%d,%d)", newOfx, newOfy);
+                    logd("Move: to-of7(%d,%d)", newOfx, newOfy);
                 }
                 mTileContext.onPanTo(newOfx, newOfy);
                 return true;
@@ -188,53 +188,53 @@ public class TileView extends View {
         switch (event.getAction()) {
         case MotionEvent.ACTION_DOWN:
             if (mTileContext != null) {
-            	// touch events are absolute positions
+                // touch events are absolute positions
                 mDownX = event.getX();
                 mDownY = event.getY();
                 mDownOffsetX = mTileContext.getPanningX();
                 mDownOffsetY = mTileContext.getPanningY();
                 if (DEBUG) {
-                	logd("Down: down(%.2f,%.2f), of7(%d,%d)", mDownX, mDownY, mDownOffsetX, mDownOffsetY);
+                    logd("Down: down(%.2f,%.2f), of7(%d,%d)", mDownX, mDownY, mDownOffsetX, mDownOffsetY);
                 }
                 mTileContext.onPanStarted();
             }
             return (mTileContext != null);
         case MotionEvent.ACTION_MOVE:
             if (mTileContext != null) {
-            	// touch events are absolute positions, make relative to start position
+                // touch events are absolute positions, make relative to start position
                 int newOfx = mDownOffsetX + (int)(event.getX() - mDownX);
                 int newOfy = mDownOffsetY + (int)(event.getY() - mDownY);
                 if (DEBUG) {
-                	logd("Move: to-of7(%d,%d)", newOfx, newOfy);
+                    logd("Move: to-of7(%d,%d)", newOfx, newOfy);
                 }
                 mTileContext.onPanTo(newOfx, newOfy);
                 return true;
             }
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_CANCEL:
-        	if (mTileContext != null) {
-        		mTileContext.onPanFinished();
-        		return true;
-        	}
+            if (mTileContext != null) {
+                mTileContext.onPanFinished();
+                return true;
+                }
         }
         return super.onTouchEvent(event);
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-    	if (keyCode == KeyEvent.KEYCODE_G) {
-    		if (mGridMode == GridMode.NONE) {
-				mGridMode = GridMode.LINES;
-			} else if (mGridMode == GridMode.LINES) {
-				mGridMode = GridMode.TEXT;
-			} else {
-				mGridMode = GridMode.NONE;
-			}
-    		invalidate();
-    	} else if (mTileContext != null && mTileContext.onKeyDown(event)) {
-			return true;
-		}
-    	return super.onKeyDown(keyCode, event);
+        if (keyCode == KeyEvent.KEYCODE_G) {
+            if (mGridMode == GridMode.NONE) {
+                mGridMode = GridMode.LINES;
+            } else if (mGridMode == GridMode.LINES) {
+                mGridMode = GridMode.TEXT;
+            } else {
+                mGridMode = GridMode.NONE;
+            }
+            invalidate();
+        } else if (mTileContext != null && mTileContext.onKeyDown(event)) {
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     // ----

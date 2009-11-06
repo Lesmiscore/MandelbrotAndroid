@@ -86,7 +86,7 @@ public class TileThread extends BaseThread {
         if (t != null) {
             if (DEBUG) Log.d(TAG, "schedule: " + t.toString());
             synchronized(mPendingList) {
-            	mPendingList.addFirst(t);
+                mPendingList.addFirst(t);
             }
             wakeUp();
         }
@@ -95,7 +95,7 @@ public class TileThread extends BaseThread {
     @Override
     public void clear() {
         synchronized(mPendingList) {
-        	mPendingList.clear();
+            mPendingList.clear();
         }
     }
 
@@ -145,10 +145,10 @@ public class TileThread extends BaseThread {
 
             // -- process pending tile computations
             synchronized(mPendingList) {
-            	t = mPendingList.poll();
+                t = mPendingList.poll();
             }
             if (t != null) {
-            	if (DEBUG) Log.d(TAG, "compute: " + t.toString());
+                if (DEBUG) Log.d(TAG, "compute: " + t.toString());
 
                 for (int i = 0 ; i < 2; i++) {
                     try {

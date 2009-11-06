@@ -48,29 +48,29 @@ public class TileActivity extends Activity {
     private static final int DLG_SAVE_IMG = 0;
     private static final int DLG_WALLPAPER = 1;
 
-	private static final int MENU_GRP_IMG = 1;
+    private static final int MENU_GRP_IMG = 1;
 
     private TileContext mTileContext;
-	private ImageGenerator mImageGenerator;
+    private ImageGenerator mImageGenerator;
 
-	private TileActivity mActivity;
+    private TileActivity mActivity;
 
-	private int mOrientation;
+    private int mOrientation;
 
 
-	private static final int ORIENT_MAX = 3;
-	private static final int[] ORIENT_SET = {
-		ActivityInfo.SCREEN_ORIENTATION_USER,
-		ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
-		ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
-		ActivityInfo.SCREEN_ORIENTATION_SENSOR,
-	};
-	private static final int[] ORIENT_STR = {
-		R.string.orient_default,
-		R.string.orient_portrait,
-		R.string.orient_land,
-		R.string.orient_sensor,
-	};
+    private static final int ORIENT_MAX = 3;
+    private static final int[] ORIENT_SET = {
+        ActivityInfo.SCREEN_ORIENTATION_USER,
+        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
+        ActivityInfo.SCREEN_ORIENTATION_SENSOR,
+        };
+    private static final int[] ORIENT_STR = {
+        R.string.orient_default,
+        R.string.orient_portrait,
+        R.string.orient_land,
+        R.string.orient_sensor,
+        };
 
     /** Called when the activity is first created. */
     @Override
@@ -80,8 +80,8 @@ public class TileActivity extends Activity {
         JavaMandel.init(getAssets());
 
         if (inState != null) {
-        	mOrientation = inState.getInt("orient");
-        	setOrientation();
+            mOrientation = inState.getInt("orient");
+            setOrientation();
         }
 
         setContentView(R.layout.tiles);
@@ -112,7 +112,7 @@ public class TileActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         mTileContext.saveState(outState);
-    	outState.putInt("orient", mOrientation);
+        outState.putInt("orient", mOrientation);
         super.onSaveInstanceState(outState);
     }
 
@@ -163,14 +163,14 @@ public class TileActivity extends Activity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-    	menu.setGroupEnabled(MENU_GRP_IMG, mImageGenerator == null);
-    	for (int orient = 0; orient <= ORIENT_MAX; orient++) {
-    		menu.findItem(ORIENT_STR[orient]).setChecked(mOrientation == orient);
-    	}
+        menu.setGroupEnabled(MENU_GRP_IMG, mImageGenerator == null);
+        for (int orient = 0; orient <= ORIENT_MAX; orient++) {
+            menu.findItem(ORIENT_STR[orient]).setChecked(mOrientation == orient);
+        }
 
-    	menu.findItem(R.string.fly_mode).setChecked(mTileContext.inFlyMode());
+        menu.findItem(R.string.fly_mode).setChecked(mTileContext.inFlyMode());
 
-    	return super.onPrepareOptionsMenu(menu);
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -206,35 +206,35 @@ public class TileActivity extends Activity {
         }
 
         for (int orient = 0; orient <= ORIENT_MAX; orient++) {
-        	if (id == ORIENT_STR[orient]) {
-        		mOrientation = orient;
-        		setOrientation();
-        		break;
-        	}
-    	}
+            if (id == ORIENT_STR[orient]) {
+                mOrientation = orient;
+                setOrientation();
+                break;
+            }
+        }
 
         return super.onOptionsItemSelected(item);
     }
 
-	private void setOrientation() {
-		if (mOrientation >= 0 && mOrientation <= ORIENT_MAX) {
-			setRequestedOrientation(ORIENT_SET[mOrientation]);
-		}
-	}
+    private void setOrientation() {
+        if (mOrientation >= 0 && mOrientation <= ORIENT_MAX) {
+            setRequestedOrientation(ORIENT_SET[mOrientation]);
+        }
+    }
 
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_T && event.isShiftPressed()) {
-			startActivity(new Intent(this, TestActivity.class));
-			return true;
-		} else if (keyCode == KeyEvent.KEYCODE_F) {
-		    toggleFlyMode();
-		    return true;
-		}
-		return super.onKeyDown(keyCode, event);
-	}
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_T && event.isShiftPressed()) {
+            startActivity(new Intent(this, TestActivity.class));
+            return true;
+        } else if (keyCode == KeyEvent.KEYCODE_F) {
+            toggleFlyMode();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 
-	// ---- wallpaper and images -------------------------
+    // ---- wallpaper and images -------------------------
 
     private void startSaveImage() {
         // create dir on sdcard and complain if it can't be found or created
@@ -256,33 +256,33 @@ public class TileActivity extends Activity {
 
     @Override
     protected Dialog onCreateDialog(final int id) {
-    	final Activity activity = this;
+        final Activity activity = this;
         final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage("Please wait while the image gets generated...");
         dialog.setIndeterminate(true);
         dialog.setCancelable(true);
 
-    	int sx = 0;
-    	int sy = 0;
+        int sx = 0;
+        int sy = 0;
         if (id == DLG_WALLPAPER) {
-    		sx = getWallpaperDesiredMinimumWidth();
-    		sy = getWallpaperDesiredMinimumHeight();
+            sx = getWallpaperDesiredMinimumWidth();
+            sy = getWallpaperDesiredMinimumHeight();
             dialog.setTitle("Generating Wallpaper");
         } else {
             dialog.setTitle("Generating Image");
         }
 
-        mImageGenerator = mTileContext.newImageGenerator(sx, sy,
-        		activity, new ImageGeneratorDone(dialog, id));
+        mImageGenerator = mTileContext.newImageGenerator(sx, sy, activity,
+                        new ImageGeneratorDone(dialog, id));
 
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-			public void onCancel(DialogInterface dialog_interface) {
-				dialog.setMessage("Aborting...");
-				ImageGenerator t = mImageGenerator;
-				mImageGenerator = null;
-				if (t != null) t.waitForStop();
-				removeDialog(id);
-			}
+            public void onCancel(DialogInterface dialog_interface) {
+                dialog.setMessage("Aborting...");
+                ImageGenerator t = mImageGenerator;
+                mImageGenerator = null;
+                if (t != null) t.waitForStop();
+                removeDialog(id);
+            }
         });
 
         mImageGenerator.start();
@@ -295,89 +295,96 @@ public class TileActivity extends Activity {
      * - Save as a PNG and tell the media scanner to scan the file.
      */
     private class ImageGeneratorDone implements Runnable {
-    	private final ProgressDialog mDialog;
-		private final int mId;
-		private MediaScannerConnection mScanner;
+        private final ProgressDialog mDialog;
 
-		public ImageGeneratorDone(ProgressDialog dialog, int id) {
-			mDialog = dialog;
-			mId = id;
-		}
+        private final int mId;
 
-		public void run() {
-			String toastResult = null;
-			try {
-				Bitmap bmp = mImageGenerator.getBitmap();
-				if (mId == DLG_WALLPAPER) {
-					mDialog.setMessage("Setting wallpaper...");
-					try {
-						setWallpaper(bmp);
-						toastResult = "Wallpaper set";
-					} catch (IOException e) {
-						toastResult = "Set wallpaper failed";
-						Log.e(TAG, "Set wallpaper failed", e);
-					}
-				} else if (mId == DLG_SAVE_IMG) {
-					mDialog.setMessage("Saving image...");
+        private MediaScannerConnection mScanner;
 
-					final String name = String.format("/sdcard/mandelbrot/%d.png", System.currentTimeMillis());
-					FileOutputStream fos;
-					try {
-						fos = new FileOutputStream(name);
-						BufferedOutputStream bos = new BufferedOutputStream(fos, 8192);
+        public ImageGeneratorDone(ProgressDialog dialog, int id) {
+            mDialog = dialog;
+            mId = id;
+        }
 
-						boolean ok = bmp.compress(Bitmap.CompressFormat.PNG, 100 /*quality*/, bos);
+        public void run() {
+            String toastResult = null;
+            try {
+                Bitmap bmp = mImageGenerator.getBitmap();
+                if (mId == DLG_WALLPAPER) {
+                    mDialog.setMessage("Setting wallpaper...");
+                    try {
+                        setWallpaper(bmp);
+                        toastResult = "Wallpaper set";
+                    } catch (IOException e) {
+                        toastResult = "Set wallpaper failed";
+                        Log.e(TAG, "Set wallpaper failed", e);
+                    }
+                } else if (mId == DLG_SAVE_IMG) {
+                    mDialog.setMessage("Saving image...");
 
-						try {
-							bos.close();
-							fos.close();
-						} catch (IOException e) {
-							ok = false;
-						}
+                    final String name = String.format(
+                                    "/sdcard/mandelbrot/%d.png", System
+                                                    .currentTimeMillis());
+                    FileOutputStream fos;
+                    try {
+                        fos = new FileOutputStream(name);
+                        BufferedOutputStream bos = new BufferedOutputStream(
+                                        fos, 8192);
 
-						if (ok) {
-							mScanner = new MediaScannerConnection(mActivity,
-								new MediaScannerConnectionClient() {
-									public void onMediaScannerConnected() {
-										mScanner.scanFile(name, null /*mimeType*/);
-									}
+                        boolean ok = bmp.compress(Bitmap.CompressFormat.PNG,
+                                        100 /* quality */, bos);
 
-									public void onScanCompleted(String path, Uri uri) {
-										if (path.equals(name)) {
-											mActivity.runOnUiThread(new Runnable() {
-												public void run() {
-													Toast
-														.makeText(getApplicationContext(),
-															"Image now available in Home > Pictures",
-															Toast.LENGTH_SHORT)
-														.show();
-												}
-											});
-											mScanner.disconnect();
-										}
-									}
+                        try {
+                            bos.close();
+                            fos.close();
+                        } catch (IOException e) {
+                            ok = false;
+                        }
 
-							});
-							mScanner.connect();
-						}
+                        if (ok) {
+                            mScanner = new MediaScannerConnection(mActivity,
+                                new MediaScannerConnectionClient() {
+                                    public void onMediaScannerConnected() {
+                                        mScanner.scanFile(name,
+                                                          null /* mimeType */);
+                                    }
 
-						toastResult = ok ? "Image saved successfully" : "Failed to save image";
-					} catch (FileNotFoundException e) {
-						toastResult = "Could not write to file";
-						Log.e(TAG, "Can't open file for writing: " + name, e);
-					}
-				}
-			} finally {
-				mImageGenerator = null;
-				removeDialog(mId);
-				if (toastResult != null) {
-					Toast
-						.makeText(mActivity, toastResult, Toast.LENGTH_SHORT)
-						.show();
-				}
-			}
-		}
-	}
+                                public void onScanCompleted(String path, Uri uri) {
+                                    if (path.equals(name)) {
+                                        mActivity.runOnUiThread(new Runnable() {
+                                            public void run() {
+                                                Toast.makeText(
+                                                    getApplicationContext(),
+                                                    "Image now available in Home > Pictures",
+                                                    Toast.LENGTH_SHORT)
+                                                .show();
+                                            }
+                                        });
+                                        mScanner.disconnect();
+                                    }
+                                }
+
+                            });
+                            mScanner.connect();
+                        }
+
+                        toastResult = ok ? "Image saved successfully"
+                                        : "Failed to save image";
+                    } catch (FileNotFoundException e) {
+                        toastResult = "Could not write to file";
+                        Log.e(TAG, "Can't open file for writing: " + name, e);
+                    }
+                }
+            } finally {
+                mImageGenerator = null;
+                removeDialog(mId);
+                if (toastResult != null) {
+                    Toast.makeText(mActivity, toastResult, Toast.LENGTH_SHORT)
+                                    .show();
+                }
+            }
+        }
+    }
 
     // ---------- fly mode ------------------------------
 

@@ -41,15 +41,22 @@ public class TileContext {
      */
     private static final float sInterestingPlaces[] = {
         -1.75967f,  0.02038f,
-    	-1.25565f,  0.38156f,
-    	-0.66992f, -0.45215f,
+        -1.25565f,  0.38156f,
+        -0.66992f, -0.45215f,
     };
 
     private static final int FLY_INIT = 0;
     private static final int FLY_PAN   = 1;
     private static final int FLY_ZOOM  = 2;
     private static final float sFlyData[] = {
-        FLY_INIT, 32, -1.80737f, 0.00000f,
+        //FLY_INIT, 32, -1.80737f, 0.00000f,
+
+        FLY_INIT, 1,  -0.70000f, 0.00000f,
+        FLY_PAN, -1.31250f, 0.00000f,
+        FLY_ZOOM, 16,
+        FLY_PAN, -1.80737f, 0.00000f,
+        FLY_ZOOM, 32, -1.80737f, 0.00000f,
+
         FLY_PAN, -1.76685f, 0.00000f,
         FLY_PAN, -1.48315f, 0.00000f,
         FLY_PAN, -1.40771f, 0.00000f,
@@ -100,35 +107,35 @@ public class TileContext {
     private int mMiddleX;
     private int mMiddleY;
 
-	private int mCurrentI;
-	private int mCurrentJ;
+    private int mCurrentI;
+    private int mCurrentJ;
 
-	private int mInterestingPlaceIndex;
+    private int mInterestingPlaceIndex;
 
     private long mHideZoomAfterMs;
     private HideZoomRunnable mHideZoomRunnable;
-	private TextView mTextView;
-	private boolean mNeedUpdateCaption;
-	private UpdateCaptionRunnable mUpdateCaptionRunnable;
+    private TextView mTextView;
+    private boolean mNeedUpdateCaption;
+    private UpdateCaptionRunnable mUpdateCaptionRunnable;
     private FlyRunnable mFlyRunnable;
 
-	/**
-	 * State preserved via {@link Activity#onRetainNonConfigurationInstance()}
-	 * and {@link Activity#getLastNonConfigurationInstance()}.
-	 *
-	 * We can't save the whole context because we have can't risk putting a
-	 * View reference in the saved context (it would leak the activity).
-	 * Instead we just want to preserve the visible tiles and tiles cache.
-	 */
-	private static class ConfigSavvyState {
-	    public final Tile[] mVisibleTiles2;
+    /**
+     * State preserved via {@link Activity#onRetainNonConfigurationInstance()}
+     * and {@link Activity#getLastNonConfigurationInstance()}.
+     *
+     * We can't save the whole context because we have can't risk putting a
+     * View reference in the saved context (it would leak the activity).
+     * Instead we just want to preserve the visible tiles and tiles cache.
+     */
+    private static class ConfigSavvyState {
+            public final Tile[] mVisibleTiles2;
         public final SparseArray<TileCache> mTileCache;
 
         public ConfigSavvyState(Tile[] visibleTiles, SparseArray<TileCache> tileCache) {
             mVisibleTiles2 = visibleTiles;
             mTileCache = tileCache;
-	    }
-	}
+        }
+    }
 
     public TileContext(Object lastNonConfigurationInstance) {
 
@@ -174,13 +181,13 @@ public class TileContext {
                 for (int k = 0; k < nn; k++) {
                     int[] a = inState.getIntArray(String.format("mandelbrot.tile_%02d", k));
                     if (a != null) {
-                    	try {
-	                        Tile t = new Tile(a);
-	                        mVisibleTiles[k] = t;
-	                        cacheTile(t);
-                    	} catch (Exception e) {
-                    		// ignore
-                    	}
+                        try {
+                            Tile t = new Tile(a);
+                            mVisibleTiles[k] = t;
+                            cacheTile(t);
+                        } catch (Exception e) {
+                            // ignore
+                        }
                     }
                 }
             }
@@ -256,9 +263,9 @@ public class TileContext {
     }
 
     /** Runs from the UI (activity) thread */
-	public void setText(TextView textView) {
-		mTextView = textView;
-	}
+    public void setText(TextView textView) {
+        mTextView = textView;
+    }
 
     /** Runs from the UI (activity) thread */
     public void setZoomer(ZoomControls zoomer) {
@@ -268,15 +275,15 @@ public class TileContext {
             showZoomer(true /*force*/);
 
             zoomer.setOnZoomInClickListener(new OnClickListener() {
-				public void onClick(View v) {
-					changeZoomBy(1);
-				}
+                public void onClick(View v) {
+                    changeZoomBy(1);
+                }
             });
 
             zoomer.setOnZoomOutClickListener(new OnClickListener() {
-				public void onClick(View v) {
-					changeZoomBy(-1);
-				}
+                public void onClick(View v) {
+                    changeZoomBy(-1);
+                }
             });
         }
     }
@@ -290,25 +297,25 @@ public class TileContext {
     }
 
     /** Runs from the UI (activity) thread */
-	public void pause(boolean shouldPause) {
-	    if (shouldPause) {
-	        stopFlyMode();
-	    }
+    public void pause(boolean shouldPause) {
+        if (shouldPause) {
+            stopFlyMode();
+        }
         if (mTileThread != null) {
             logd("Pause TileThread: %s", shouldPause ? "yes" : "no");
             mTileThread.pauseThread(shouldPause);
         }
         runUpdateCaption(false);
-	}
+    }
 
     /** Runs from the UI (activity) thread */
-	public void destroy() {
+    public void destroy() {
         if (mTileThread != null) {
             logd("Kill TileThread");
             mTileThread.waitForStop();
             mTileThread = null;
         }
-	}
+    }
 
     /** Runs from the UI thread */
     public void onPanTo(int x, int y) {
@@ -322,38 +329,38 @@ public class TileContext {
     }
 
     /** Runs from the UI thread */
-	public void onPanStarted() {
+    public void onPanStarted() {
         showZoomer(false /*force*/);
         runUpdateCaption(true);
-	}
+    }
 
     /** Runs from the UI thread */
-	public void onPanFinished() {
+    public void onPanFinished() {
         runUpdateCaption(false);
-	}
+    }
 
     /** Runs from the UI thread */
-	public boolean onKeyDown(KeyEvent event) {
-		switch(event.getKeyCode()) {
-		case KeyEvent.KEYCODE_PLUS:
-		case KeyEvent.KEYCODE_I:
-			changeZoomBy(1);
-			break;
-		case KeyEvent.KEYCODE_MINUS:
-		case KeyEvent.KEYCODE_O:
-			changeZoomBy(-1);
-			break;
-		case KeyEvent.KEYCODE_S:
-			panToInterestingPlace();
-			break;
-		case KeyEvent.KEYCODE_C:
-		    clearTileCache();
-		    break;
-		default:
-			return false;
-		}
-		return true;
-	}
+    public boolean onKeyDown(KeyEvent event) {
+        switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_PLUS:
+            case KeyEvent.KEYCODE_I:
+                changeZoomBy(1);
+                break;
+            case KeyEvent.KEYCODE_MINUS:
+            case KeyEvent.KEYCODE_O:
+                changeZoomBy(-1);
+                break;
+            case KeyEvent.KEYCODE_S:
+                panToInterestingPlace();
+                break;
+            case KeyEvent.KEYCODE_C:
+                clearTileCache();
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
 
     public void panToInterestingPlace() {
         int index = mInterestingPlaceIndex;
@@ -386,161 +393,159 @@ public class TileContext {
         }
     }
 
-	/**
-	 * Constructs a new ImageGenThread that can generate a new image.
-	 *
-	 * @param sx  The width in pixels of the image to generate. Use 0 for the view size.
-	 * @param sy The height in pixels of the image to generate. Use 0 for the view size.
-	 * @param activity The activity on which to run the callback (in the UI thread)
-	 * @param callback If non-null, this runnable will run once the generation is
-	 *        complete, whether the actual image generation succeeded or not.
-	 */
+    /**
+     * Constructs a new ImageGenThread that can generate a new image.
+     *
+     * @param sx  The width in pixels of the image to generate. Use 0 for the view size.
+     * @param sy The height in pixels of the image to generate. Use 0 for the view size.
+     * @param activity The activity on which to run the callback (in the UI thread)
+     * @param callback If non-null, this runnable will run once the generation is
+     *        complete, whether the actual image generation succeeded or not.
+     */
     public ImageGenerator newImageGenerator(int sx, int sy, Activity activity, Runnable callback) {
-    	return new ImageGenerator(sx, sy, activity, callback);
+        return new ImageGenerator(sx, sy, activity, callback);
     }
 
     /**
      * A thread that knows how to generate an image of the current view.
      *
-	 * This is similar to updateAll except that it is run from
-	 * a different thread. That means we must prevent stuff like
-	 * panning or zooming.
+     * This is similar to updateAll except that it is run from
+     * a different thread. That means we must prevent stuff like
+     * panning or zooming.
      */
-	public class ImageGenerator extends BaseThread {
+    public class ImageGenerator extends BaseThread {
 
-		private final int mWidth;
-		private final int mHeight;
-		private final Activity mActivity;
-		private final Runnable mCallback;
-		private Bitmap mBitmap;
-		private LinkedList<Tile> mTiles;
-		private int mX1;
-		private int mY1;
-		private Bitmap mDestBmp;
-		private Canvas mCanvas;
+        private final int mWidth;
+        private final int mHeight;
+        private final Activity mActivity;
+        private final Runnable mCallback;
+        private Bitmap mBitmap;
+        private LinkedList<Tile> mTiles;
+        private int mX1;
+        private int mY1;
+        private Bitmap mDestBmp;
+        private Canvas mCanvas;
 
-		/**
-		 * Constructs a new ImageGenThread that can generate a new image.
-		 *
-		 * @param width  The width in pixels of the image to generate. Use 0 for the view size.
-		 * @param height The height in pixels of the image to generate. Use 0 for the view size.
-		 * @param runOnCompletion If non-null, this runnable will run once the generation is
-		 *        complete, whether the actual image generation succeeded or not.
-		 */
-		public ImageGenerator(int width, int height, Activity activity, Runnable callback) {
-			super("ImageGenThread");
-			mWidth  = width;
-			mHeight = height;
-			mActivity = activity;
-			mCallback = callback;
-			mContinue = true;
-		}
+        /**
+         * Constructs a new ImageGenThread that can generate a new image.
+         *
+         * @param width  The width in pixels of the image to generate. Use 0 for the view size.
+         * @param height The height in pixels of the image to generate. Use 0 for the view size.
+         * @param runOnCompletion If non-null, this runnable will run once the generation is
+         *        complete, whether the actual image generation succeeded or not.
+         */
+        public ImageGenerator(int width, int height, Activity activity, Runnable callback) {
+            super("ImageGenThread");
+            mWidth  = width;
+            mHeight = height;
+            mActivity = activity;
+            mCallback = callback;
+            mContinue = true;
+            }
 
-		/**
-		 * Returns the computed bitmap.
-		 * Null as long as the image as not been successfully completed.
-		 */
-		public Bitmap getBitmap() {
-			return mBitmap;
-		}
+        /**
+         * Returns the computed bitmap.
+         * Null as long as the image as not been successfully completed.
+         */
+        public Bitmap getBitmap() {
+            return mBitmap;
+            }
 
 
-		@Override
-		public void clear() {
-		}
+        @Override
+        public void clear() {
+            }
 
-		@Override
-		protected void startRun() {
-			int sx = mWidth <= 0 ? mViewWidth : mWidth;
-			int sy = mHeight <= 0 ? mViewHeight : mHeight;
+        @Override
+        protected void startRun() {
+            int sx = mWidth <= 0 ? mViewWidth : mWidth;
+            int sy = mHeight <= 0 ? mViewHeight : mHeight;
 
-			logd("Generating Image %d,%d", sx, sy);
+            logd("Generating Image %d,%d", sx, sy);
 
-			mDestBmp = Bitmap.createBitmap(sx, sy, Tile.BMP_CONFIG);
-			mCanvas = new Canvas(mDestBmp);
+            mDestBmp = Bitmap.createBitmap(sx, sy, Tile.BMP_CONFIG);
+            mCanvas = new Canvas(mDestBmp);
 
-			int sx2 = sx / 2;
-			int sy2 = sy / 2;
+            int sx2 = sx / 2;
+            int sy2 = sy / 2;
 
-			final int SZ = Tile.SIZE;
+            final int SZ = Tile.SIZE;
 
-			mTiles = new LinkedList<Tile>();
-			synchronized(mZoomLock) {
-		        // boundaries in the virtual-screen space
-		        mX1 = -mPanningX - sx2;
-		        mY1 = -mPanningY - sy2;
+            mTiles = new LinkedList<Tile>();
+            synchronized (mZoomLock) {
+                // boundaries in the virtual-screen space
+                mX1 = -mPanningX - sx2;
+                mY1 = -mPanningY - sy2;
 
-		        int x2 = -mPanningX + sx2;
-		        int y2 = -mPanningY + sy2;
+                int x2 = -mPanningX + sx2;
+                int y2 = -mPanningY + sy2;
 
-		        int i = ij_for_xy(mX1);
-		        int j = ij_for_xy(mY1);
+                int i = ij_for_xy(mX1);
+                int j = ij_for_xy(mY1);
 
-		        int xs = xy_for_ij(i);
-		        int ys = xy_for_ij(j);
+                int xs = xy_for_ij(i);
+                int ys = xy_for_ij(j);
 
-		        // get the list of tiles we need
-		        for (int y = ys; y < y2; y += SZ, j++) {
-		            for (int i1 = i, x = xs; x < x2; x += SZ, i1++) {
-		                Tile t = requestTile(i1, j);
-		                mTiles.add(t);
-		            }
-		        }
-			}
-		}
+                // get the list of tiles we need
+                for (int y = ys; y < y2; y += SZ, j++) {
+                    for (int i1 = i, x = xs; x < x2; x += SZ, i1++) {
+                        Tile t = requestTile(i1, j);
+                        mTiles.add(t);
+                    }
+                }
+            }
+        }
 
-		/**
-		 * Transfer all completed tiles to the destination bitmap.
-		 * Loop whilst tiles are not completed (they are built asynchronously).
-		 */
-		@Override
-		protected void runIteration() {
+        /**
+         * Transfer all completed tiles to the destination bitmap. Loop whilst
+         * tiles are not completed (they are built asynchronously).
+         */
+        @Override
+        protected void runIteration() {
 
-			for (Iterator<Tile> it = mTiles.iterator();
-					it.hasNext();
-					) {
-				Tile t = it.next();
-				if (!t.isCompleted()) continue;
+            for (Iterator<Tile> it = mTiles.iterator(); it.hasNext();) {
+                Tile t = it.next();
+                if (!t.isCompleted()) continue;
 
-				// if a tile is ready, remove it from the list and blit it
-				// into the dest bitmap
-				it.remove();
+                // if a tile is ready, remove it from the list and blit it
+                // into the dest bitmap
+                it.remove();
 
-				Bitmap bmp = t.getBitmap();
-				if (bmp == null) continue; // should not happen
+                Bitmap bmp = t.getBitmap();
+                if (bmp == null) continue; // should not happen
 
-				int x = t.getVirtualX() - mX1;
-				int y = t.getVirtualY() - mY1;
-				mCanvas.drawBitmap(bmp, x, y, null /*paint*/);
+                int x = t.getVirtualX() - mX1;
+                int y = t.getVirtualY() - mY1;
+                mCanvas.drawBitmap(bmp, x, y, null /* paint */);
 
-				logd("ImageGen: apply tile %d,%d", x, y);
-			}
+                logd("ImageGen: apply tile %d,%d", x, y);
+            }
 
-			if (mTiles.size() == 0) {
-				// job completed! set the final bitmap
-				mBitmap = mDestBmp;
-				logd("ImageGen: completed.");
-				setCompleted();
-			} else {
-				// Wait a bit for the remaining tiles to complete.
-				// The 10 milliseconds per tile should be optimistic.
-				logd("ImageGen: Waiting for %d tiles", mTiles.size());
-				waitFor(mTiles.size() * 10 /*ms*/);
-			}
-		}
+            if (mTiles.size() == 0) {
+                // job completed! set the final bitmap
+                mBitmap = mDestBmp;
+                logd("ImageGen: completed.");
+                setCompleted();
+            } else {
+                // Wait a bit for the remaining tiles to complete.
+                // The 10 milliseconds per tile should be optimistic.
+                logd("ImageGen: Waiting for %d tiles", mTiles.size());
+                waitFor(mTiles.size() * 10 /* ms */);
+            }
+        }
 
-		@Override
-		protected void endRun() {
-			if (mActivity != null && mCallback != null) {
-				logd("ImageGen: run completion.");
-				mActivity.runOnUiThread(mCallback);
-			}
-		}
-	}
+        @Override
+        protected void endRun() {
+            if (mActivity != null && mCallback != null) {
+                logd("ImageGen: run completion.");
+                mActivity.runOnUiThread(mCallback);
+            }
+        }
+    }
 
     //----
 
-	private void logd(String format, Object...args) {
+    private void logd(String format, Object...args) {
         Log.d(TAG, String.format(format, args));
     }
 
@@ -555,8 +560,8 @@ public class TileContext {
         final int ny = (mViewHeight / SZ) + 2;
         final int nn = nx * ny;
         if (mVisibleTiles == null || mVisibleTiles.length != nn) {
-        	mVisibleTiles = new Tile[nn];
-        	force = true;
+            mVisibleTiles = new Tile[nn];
+            force = true;
         }
 
         final int sx2 = mMiddleX;
@@ -573,10 +578,10 @@ public class TileContext {
         int j = ij_for_xy(y1);
 
         if (!force && mCurrentI == i && mCurrentJ == j) {
-    		return;
+            return;
         }
-    	mCurrentI = i;
-    	mCurrentJ = j;
+        mCurrentI = i;
+        mCurrentJ = j;
 
         int xs = xy_for_ij(i);
         int ys = xy_for_ij(j);
@@ -592,7 +597,7 @@ public class TileContext {
         }
 
         for (; k < nn; k++) {
-        	mVisibleTiles[k] = null;
+            mVisibleTiles[k] = null;
         }
     }
 
@@ -609,26 +614,31 @@ public class TileContext {
 
     /** Runs from the UI thread */
     private Tile requestTile(int i, int j) {
-    	TileCache cache;
-		synchronized(mLevelTileCaches) {
-			cache = mLevelTileCaches.get(mZoomLevel);
-			if (cache == null) {
-    			mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
-    		}
-    	}
-
-    	int key = Tile.computeKey(i, j);
-        Tile t = cache.get(key);
-
-        if (t == null) {
-            t = new Tile(key, mZoomLevel, i, j, mMaxIter);
-            cache.put(key, t);
+        int key;
+        Tile t = null;
+        synchronized (mLevelTileCaches) {
+            TileCache cache = mLevelTileCaches.get(mZoomLevel);
+            if (cache == null) {
+                mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
+            }
+            key = Tile.computeKey(i, j);
+            t = cache.get(key);
+            if (t == null) {
+                t = new Tile(key, mZoomLevel, i, j, mMaxIter);
+                cache.put(key, t);
+            }
         }
+
         if (!t.isCompleted()) {
+            if (t.getBitmap() == null && mZoomLevel > 0) {
+                prepareLowerZoomTile(i, j, t, mZoomLevel);
+            }
             // if there's no bitmap,
             // try to find a lower-level tile to zoom from
+            /*
             if (t.getBitmap() == null && mZoomLevel > 0) {
                 int lowerZoomLevel = (mZoomLevel > 1) ? mZoomLevel / 2 : 0;
+                TileCache cache;
                 synchronized (mLevelTileCaches) {
                     cache = mLevelTileCaches.get(lowerZoomLevel);
                 }
@@ -640,6 +650,7 @@ public class TileContext {
                     }
                 }
             }
+            */
 
             mTileThread.schedule(t);
         }
@@ -647,16 +658,46 @@ public class TileContext {
         return t;
     }
 
+    /** Runs from the UI thread (only from requestTile). */
+    private void prepareLowerZoomTile(int i, int j, Tile t, int zoomLevel) {
+        if (zoomLevel == 0) return;
+
+        TileCache cache = null;
+        Tile largerTile = null;
+        int lowerZoomLevel = (zoomLevel > 1) ? zoomLevel / 2 : 0;
+        synchronized (mLevelTileCaches) {
+            cache = mLevelTileCaches.get(lowerZoomLevel);
+        }
+        if (cache != null) {
+            int key = t.computeLowerLevelKey();
+            largerTile = cache.get(key);
+            if (largerTile == null) {
+                // create it
+                int i1 = i >> 1;
+                int j1 = i >> 1;
+
+                if (DEBUG) logd(TAG, "preZoom: " + t.toString());
+
+                largerTile = new Tile(key, lowerZoomLevel, i1, j1, getMaxIter(lowerZoomLevel));
+                cache.put(key, largerTile);
+                prepareLowerZoomTile(i1, j1, largerTile, lowerZoomLevel);
+            }
+        }
+        if (largerTile != null) {
+            // finally use the lower-level zoom tile to create this one
+            t.zoomForLowerLevel(largerTile);
+        }
+    }
+
     /** Runs from the UI thread. Called when restoring state. */
     private void cacheTile(Tile t) {
-    	TileCache cache;
-		synchronized (mLevelTileCaches) {
-			cache = mLevelTileCaches.get(mZoomLevel);
-			if (cache == null) {
-				mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
-			}
-		}
-        cache.put(t.hashCode(), t);
+        synchronized (mLevelTileCaches) {
+            TileCache cache = mLevelTileCaches.get(mZoomLevel);
+            if (cache == null) {
+                mLevelTileCaches.put(mZoomLevel, cache = new TileCache());
+            }
+            cache.put(t.hashCode(), t);
+        }
     }
 
     /** Runs from the UI thread (from fly mode or keypress). */
@@ -668,7 +709,7 @@ public class TileContext {
         }
     }
 
-	/** Runs from the UI thread */
+    /** Runs from the UI thread */
     private void invalidateView() {
         if (mTileView != null) {
             mViewNeedsInvalidate = false;
@@ -700,27 +741,27 @@ public class TileContext {
     /** Runs from the TileThread */
     private class TileCompletedCallback implements ITileCompleted {
         public void onTileCompleted(Tile tile) {
-        	// the callback may be fired just after a zoom level change, in which case
-        	// we'll ignore the update. however it cannot happen during a zoom change.
-        	synchronized(mZoomLock) {
-	            if (mZoomLevel == tile.getZoomLevel()) {
-		            invalidateTile(tile);
+            // the callback may be fired just after a zoom level change, in which case
+            // we'll ignore the update. however it cannot happen during a zoom change.
+            synchronized (mZoomLock) {
+                if (mZoomLevel == tile.getZoomLevel()) {
+                    invalidateTile(tile);
 
-		            // do we want the mirror?
-		            int mirrorKey = tile.computeMirrorKey();
-		            TileCache cache = null;
-		            synchronized(mLevelTileCaches) {
-	                    cache = mLevelTileCaches.get(mZoomLevel);
+                    // do we want the mirror?
+                    int mirrorKey = tile.computeMirrorKey();
+                    TileCache cache = null;
+                    synchronized (mLevelTileCaches) {
+                        cache = mLevelTileCaches.get(mZoomLevel);
                     }
-		            if (cache != null) {
-			            Tile mirror = cache.get(mirrorKey);
-			            if (mirror != null && !mirror.isCompleted()) {
-			            	mirror.fromMirror(tile);
-				            invalidateTile(mirror);
-			            }
-		            }
-	            }
-        	}
+                    if (cache != null) {
+                        Tile mirror = cache.get(mirrorKey);
+                        if (mirror != null && !mirror.isCompleted()) {
+                            mirror.fromMirror(tile);
+                            invalidateTile(mirror);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -730,70 +771,74 @@ public class TileContext {
      * @param delta 1 for zoom in, -1 for zoom out, 0 for no zooming
      */
     private void changeZoomBy(int delta) {
-    	if (delta != 0) {
-    		int oldZoomLevel = mZoomLevel;
-	        if (delta > 0) {
-	        	// zoom in by 1 (i.e. x2)
-	        	synchronized(mZoomLock) {
-	        		if (mZoomLevel == 0) {
-	        			mZoomLevel = 1;
-	        		} else {
-	        			mZoomLevel *= 2;
-	        		}
-	        	}
-	        } else if (delta < 0 && mZoomLevel > 0) {
-	        	// zoom out by 1 (i.e. x0.5)
-	        	synchronized(mZoomLock) {
-	        		if (mZoomLevel > 1) {
-	        			mZoomLevel /= 2;
-	        		} else {
-	        			mZoomLevel = 0;
-	        		}
-	        	}
-	        }
-	        if (mZoomLevel != oldZoomLevel) {
-	        	float oldZoom = Tile.getZoomFp8(oldZoomLevel);
-	        	float newZoom = Tile.getZoomFp8(mZoomLevel);
-	        	float factor = newZoom / oldZoom;
-	        	mPanningX *= factor;
-	        	mPanningY *= factor;
-	        	// clear the tile thread pending queue when changing levels
-	    		if (mTileThread != null) {
-	    			mTileThread.clear();
-	    		}
-	        	updateMaxIter();
-	            updateCaption();
-	        	updateAll(true /*force*/);
-	    		invalidateView();
-	        }
-    	}
+        if (delta != 0) {
+            int oldZoomLevel = mZoomLevel;
+            if (delta > 0) {
+                // zoom in by 1 (i.e. x2)
+                synchronized (mZoomLock) {
+                    if (mZoomLevel == 0) {
+                        mZoomLevel = 1;
+                    } else {
+                        mZoomLevel *= 2;
+                    }
+                }
+            } else if (delta < 0 && mZoomLevel > 0) {
+                // zoom out by 1 (i.e. x0.5)
+                synchronized (mZoomLock) {
+                    if (mZoomLevel > 1) {
+                        mZoomLevel /= 2;
+                    } else {
+                        mZoomLevel = 0;
+                    }
+                }
+            }
+            if (mZoomLevel != oldZoomLevel) {
+                float oldZoom = Tile.getZoomFp8(oldZoomLevel);
+                float newZoom = Tile.getZoomFp8(mZoomLevel);
+                float factor = newZoom / oldZoom;
+                mPanningX *= factor;
+                mPanningY *= factor;
+                // clear the tile thread pending queue when changing levels
+                if (mTileThread != null) {
+                    mTileThread.clear();
+                }
+                updateMaxIter();
+                updateCaption();
+                updateAll(true /* force */);
+                invalidateView();
+            }
+        }
 
         if (mZoomer != null) {
             mZoomer.setIsZoomOutEnabled(mZoomLevel > 0);
         }
     }
 
-	private void updateMaxIter() {
+    private void updateMaxIter() {
+        mMaxIter = getMaxIter(mZoomLevel);
+    }
+
+    private int getMaxIter(int zoomLevel) {
         // Dynamically adapt the number of iterations to the width:
         // width 3..1 => 20 iter
         // width 0.1 => 60 iter
         // width 0.01 => 120
         // int max_iter = Math.max(mPrefMinIter, (int)(mPrefStepIter * Math.log10(1.0 / w)));
+        return 15 + (int) (10 * Math.log1p(zoomLevel));
+    }
 
-		mMaxIter = 15 + (int)(10*Math.log1p(mZoomLevel));
-	}
-
-	private void showZoomer(boolean force) {
-		if (force || mZoomer.getVisibility() != View.VISIBLE) {
-			mZoomer.show();
-			mHideZoomAfterMs = SystemClock.uptimeMillis() + ZOOM_HIDE_DELAY_MS;
-			mHandler.postAtTime(mHideZoomRunnable, mHideZoomAfterMs + 10);
-		}
-	}
+    private void showZoomer(boolean force) {
+        if (force || mZoomer.getVisibility() != View.VISIBLE) {
+            mZoomer.show();
+            mHideZoomAfterMs = SystemClock.uptimeMillis() + ZOOM_HIDE_DELAY_MS;
+            mHandler.postAtTime(mHideZoomRunnable, mHideZoomAfterMs + 10);
+        }
+    }
 
     private class HideZoomRunnable implements Runnable {
         public void run() {
-            if (mZoomer != null && SystemClock.uptimeMillis() >= mHideZoomAfterMs) {
+            if (mZoomer != null
+                            && SystemClock.uptimeMillis() >= mHideZoomAfterMs) {
                 mZoomer.hide();
             }
         }
@@ -801,39 +846,35 @@ public class TileContext {
     }
 
     /** This MUST be used from the UI thread */
-    private void setTextCaption(String format, Object...args) {
-    	if (mTextView != null) {
-    		String s = String.format(format, args);
-    		mTextView.setText(s);
-    	}
+    private void setTextCaption(String format, Object... args) {
+        if (mTextView != null) {
+            String s = String.format(format, args);
+            mTextView.setText(s);
+        }
     }
 
     /** This MUST be used from the UI thread */
     private void updateCaption() {
-    	if (!mNeedUpdateCaption) {
-    		mUpdateCaptionRunnable.run();
-    	}
+        if (!mNeedUpdateCaption) {
+            mUpdateCaptionRunnable.run();
+        }
     }
 
     private void runUpdateCaption(boolean run) {
-    	boolean start = run && !mNeedUpdateCaption;
-		mNeedUpdateCaption = run;
-		if (start) mHandler.post(mUpdateCaptionRunnable);
+        boolean start = run && !mNeedUpdateCaption;
+        mNeedUpdateCaption = run;
+        if (start) mHandler.post(mUpdateCaptionRunnable);
     }
 
     private class UpdateCaptionRunnable implements Runnable {
-		public void run() {
-	    	float zoom = 0-(float)Tile.getZoomFp8(mZoomLevel);
-	    	setTextCaption("x%1$d, Iter:%2$d, c:%3$.5f, %4$.5f, ",
-	    			mZoomLevel,
-	    			mMaxIter,
-	    			mPanningX / zoom,
-	    			mPanningY / zoom
-				);
-	    	if (mNeedUpdateCaption && mHandler != null) {
-	    		mHandler.post(mUpdateCaptionRunnable);
-	    	}
-		}
+        public void run() {
+            float zoom = 0 - (float) Tile.getZoomFp8(mZoomLevel);
+            setTextCaption("x%1$d, Iter:%2$d, c:%3$.5f, %4$.5f, ", mZoomLevel,
+                            mMaxIter, mPanningX / zoom, mPanningY / zoom);
+            if (mNeedUpdateCaption && mHandler != null) {
+                mHandler.post(mUpdateCaptionRunnable);
+            }
+        }
     }
 
     // ---------- fly mode ------------------------------
