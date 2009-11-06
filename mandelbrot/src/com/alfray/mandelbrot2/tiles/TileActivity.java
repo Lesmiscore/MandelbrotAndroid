@@ -6,15 +6,17 @@
 
 package com.alfray.mandelbrot2.tiles;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.alfray.mandelbrot2.JavaMandel;
+import com.alfray.mandelbrot2.R;
+import com.alfray.mandelbrot2.tests.TestActivity;
+import com.alfray.mandelbrot2.tiles.TileContext.ImageGenerator;
+import com.alfray.mandelbrot2.util.AboutActivity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -32,11 +34,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
 
-import com.alfray.mandelbrot2.JavaMandel;
-import com.alfray.mandelbrot2.R;
-import com.alfray.mandelbrot2.tests.TestActivity;
-import com.alfray.mandelbrot2.tiles.TileContext.ImageGenerator;
-import com.alfray.mandelbrot2.util.AboutActivity;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 
 public class TileActivity extends Activity {
@@ -49,7 +51,6 @@ public class TileActivity extends Activity {
 	private static final int MENU_GRP_IMG = 1;
 
     private TileContext mTileContext;
-    private TileContext.FlyRunnable mFlyRunnable;
 	private ImageGenerator mImageGenerator;
 
 	private TileActivity mActivity;
@@ -123,7 +124,6 @@ public class TileActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        toggleFlyMode(true /*forceStop*/);
         mTileContext.pause(true);
     }
 
@@ -168,7 +168,7 @@ public class TileActivity extends Activity {
     		menu.findItem(ORIENT_STR[orient]).setChecked(mOrientation == orient);
     	}
 
-    	menu.findItem(R.string.fly_mode).setChecked(mFlyRunnable != null);
+    	menu.findItem(R.string.fly_mode).setChecked(mTileContext.inFlyMode());
 
     	return super.onPrepareOptionsMenu(menu);
     }
@@ -201,7 +201,7 @@ public class TileActivity extends Activity {
             startSaveWallpaper();
             break;
         case R.string.fly_mode:
-            toggleFlyMode(false /* forceStop */);
+            toggleFlyMode();
             break;
         }
 
@@ -228,7 +228,7 @@ public class TileActivity extends Activity {
 			startActivity(new Intent(this, TestActivity.class));
 			return true;
 		} else if (keyCode == KeyEvent.KEYCODE_F) {
-		    toggleFlyMode(false /*forceStop*/);
+		    toggleFlyMode();
 		    return true;
 		}
 		return super.onKeyDown(keyCode, event);
@@ -373,7 +373,7 @@ public class TileActivity extends Activity {
 				if (toastResult != null) {
 					Toast
 						.makeText(mActivity, toastResult, Toast.LENGTH_SHORT)
-						.show();;
+						.show();
 				}
 			}
 		}
@@ -381,15 +381,26 @@ public class TileActivity extends Activity {
 
     // ---------- fly mode ------------------------------
 
-    private void toggleFlyMode(boolean forceStop) {
+    private void toggleFlyMode() {
 
-        if (forceStop || mFlyRunnable != null) {
-            if (mFlyRunnable != null) mFlyRunnable.stop();
-            mFlyRunnable = null;
-            return;
+        if (mTileContext.inFlyMode()) {
+            mTileContext.stopFlyMode();
+        } else {
+            mTileContext.startFlyMode(this, new Runnable() {
+                public void run() {
+                    // Stop was called (either end of fly mode or aborted)
+                    String s = String.format("Fly mode finished in %.1f seconds.",
+                                    mTileContext.getFlyModeTime());
+                    Log.d(TAG, s);
+
+                    Builder b = new AlertDialog.Builder(TileActivity.this);
+                    b.setMessage(s);
+                    b.setPositiveButton("Dismiss", null);
+
+                    AlertDialog d = b.create();
+                    d.show();
+                }
+            });
         }
-
-        mFlyRunnable = mTileContext.new FlyRunnable(this);
-        mFlyRunnable.start();
     }
 }

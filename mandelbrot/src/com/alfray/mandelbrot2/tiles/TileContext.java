@@ -6,9 +6,6 @@
 
 package com.alfray.mandelbrot2.tiles;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-
 import com.alfray.mandelbrot2.util.BaseThread;
 
 import android.app.Activity;
@@ -17,20 +14,24 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.os.SystemClock;
+import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ZoomControls;
+
+import java.util.Iterator;
+import java.util.LinkedList;
 
 public class TileContext {
 
     private static final String TAG = "TileContext";
-    private static boolean DEBUG = false;
+    private static boolean DEBUG = true;
 
     private static final int ZOOM_HIDE_DELAY_MS = 3000;
 
@@ -44,30 +45,18 @@ public class TileContext {
     	-0.66992f, -0.45215f,
     };
 
-    private static final int FLY_RESET = 0;
+    private static final int FLY_INIT = 0;
     private static final int FLY_PAN   = 1;
     private static final int FLY_ZOOM  = 2;
     private static final float sFlyData[] = {
-        FLY_RESET,
-        FLY_PAN, -1.75967f, 0,
-        FLY_ZOOM, 16,
-        FLY_PAN, -1.75967f, 0,    // (same coord, to fix offset)
-        FLY_PAN, -1.62354f, 0,
-        FLY_PAN, -1.47754f, 0,
-        FLY_PAN, -1.41357f, 0,
-        FLY_PAN, -1.35742f, 0.09521f,
-        FLY_PAN, -1.26562f, 0.09277f,
-        FLY_PAN, -1.18799f, 0.31543f,
-        FLY_ZOOM, 32,
-        FLY_PAN, -1.20581f, 0.32373f,
-        FLY_ZOOM, 64,
-        FLY_PAN, -1.20593f, 0.32019f,
-        FLY_ZOOM, 128,
-        FLY_ZOOM, 2,
-        FLY_PAN, -0.72266f, 0.30469f,
-        FLY_ZOOM, 256,
-        FLY_PAN, -0.72452f, 0.29898f,
-        FLY_ZOOM, 4096,
+        FLY_INIT, 32, -1.80737f, 0.00000f,
+        FLY_PAN, -1.76685f, 0.00000f,
+        FLY_PAN, -1.48315f, 0.00000f,
+        FLY_PAN, -1.40771f, 0.00000f,
+        FLY_PAN, -1.36523f, 0.08325f,
+        FLY_PAN, -1.26929f, 0.14380f,
+        FLY_PAN, -1.20044f, 0.32007f,
+        FLY_PAN, -1.05786f, 0.33154f,
     };
 
     private static class TileCache extends SparseArray<Tile> {
@@ -105,6 +94,7 @@ public class TileContext {
 	private TextView mTextView;
 	private boolean mNeedUpdateCaption;
 	private UpdateCaptionRunnable mUpdateCaptionRunnable;
+    private FlyRunnable mFlyRunnable;
 
 	/**
 	 * State preserved via {@link Activity#onRetainNonConfigurationInstance()}
@@ -285,6 +275,9 @@ public class TileContext {
 
     /** Runs from the UI (activity) thread */
 	public void pause(boolean shouldPause) {
+	    if (shouldPause) {
+	        stopFlyMode();
+	    }
         if (mTileThread != null) {
             logd("Pause TileThread: %s", shouldPause ? "yes" : "no");
             mTileThread.pauseThread(shouldPause);
@@ -655,6 +648,7 @@ public class TileContext {
         synchronized (mLevelTileCaches) {
             mLevelTileCaches.clear();
             mVisibleTiles = null;
+            mTileThread.clear();
         }
     }
 
@@ -826,12 +820,36 @@ public class TileContext {
 		}
     }
 
+    // ---------- fly mode ------------------------------
 
-    public class FlyRunnable implements Runnable {
+    public void startFlyMode(Context context, Runnable doneCallback) {
+        if (!inFlyMode()) {
+            new FlyRunnable(context, doneCallback).start();
+        }
+    }
+
+    public void stopFlyMode() {
+        FlyRunnable a = mFlyRunnable;
+        if (a != null) {
+            a.stop();
+        }
+    }
+
+    public boolean inFlyMode() {
+        return mFlyRunnable != null;
+    }
+
+    public float getFlyModeTime() {
+        FlyRunnable a = mFlyRunnable;
+        return a == null ? 0 : a.getElapsedTime();
+    }
+
+    private class FlyRunnable implements Runnable {
 
         private static final int NOOP = -1;
 
         private long mStartTime;
+        private float mElapsedTime;
         private boolean mRunning;
         private int mCurrentInst = NOOP;
         private int mIndex;
@@ -842,33 +860,73 @@ public class TileContext {
         private int kTileSq = Tile.SIZE * Tile.SIZE;
 
         private final Context mContext;
+        private final Runnable mDoneCallback;
 
+        private WakeLock mWL;
 
-        public FlyRunnable(Context context) {
+        public FlyRunnable(Context context, Runnable doneCallback) {
             mContext = context;
+            mDoneCallback = doneCallback;
             mIndex = 0;
         }
 
+        /**
+         * Start the animation.
+         * There MUST be a matching call to {@link #stop()} as we hold a wake lock.
+         */
         public void start() {
-            String s = "Fly Mode Started";
-            Log.d(TAG, s);
-            Toast.makeText(mContext, s, Toast.LENGTH_SHORT).show();
+            logd("Fly mode started");
             mRunning = true;
+            mFlyRunnable = this;
+
+            PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+            mWL = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "Mandelbrot2FlyMode");
+            mWL.acquire();
+
             mStartTime = System.currentTimeMillis();
             reschedule();
         }
 
+        /**
+         * Stops the animation and releases the wake lock.
+         */
         public void stop() {
-            long elapsed = System.currentTimeMillis() - mStartTime;
-            String s = String.format("Fly Mode Stopped. %.1f seconds.", (float)elapsed / 1000);
-            Log.d(TAG, s);
-            Toast.makeText(mContext, s, Toast.LENGTH_LONG).show();
+            mElapsedTime = (System.currentTimeMillis() - mStartTime) / 1000.f;
             mRunning = false;
+
+            if (mWL != null) {
+                mWL.release();
+                mWL = null;
+            }
+
+            if (mDoneCallback != null) {
+                mDoneCallback.run();
+            }
+
+            mFlyRunnable = null;
+        }
+
+        /**
+         * Make sure to release the wakelock if the object becomes garbage collected.
+         * This should not be necessary since {@link #stop()} releases the WL.
+         */
+        @Override
+        protected void finalize() throws Throwable {
+            if (mWL != null) {
+                mWL.release();
+                mWL = null;
+            }
+            super.finalize();
+        }
+
+        /** Returns elapsed time between start and stop, in seconds. */
+        public float getElapsedTime() {
+            return mElapsedTime;
         }
 
         private void reschedule() {
             if (mRunning && mTileThread != null) {
-                mTileView.postDelayed(this, 50 /*millis*/);
+                mTileView.postDelayed(this, 1000/20 /*millis, 20fps*/);
             }
         }
 
@@ -876,6 +934,7 @@ public class TileContext {
             if (!mRunning || mTileThread == null) return;
 
             if (mTileThread.hasPending()) {
+                if (DEBUG) logd("FlyMode: %d tiles pending", mTileThread.getNumPending());
                 reschedule();
                 return;
             }
@@ -883,7 +942,7 @@ public class TileContext {
             switch(mCurrentInst) {
             case FLY_ZOOM:
                 if (mZoomLevel != mTargetZoom) {
-                    Log.d(TAG, "FlyMode: Zoom");
+                    if (DEBUG) logd("FlyMode: Zoom");
                     zoom(mTargetZoom > mZoomLevel);
                     reschedule();
                     return;
@@ -892,7 +951,7 @@ public class TileContext {
                 break;
 
             case FLY_PAN:
-                Log.d(TAG, "FlyMode: Pan");
+                if (DEBUG) logd("FlyMode: Pan");
 
                 // estimate how many pixels to pan
                 int dx = mTargetPanX - mPanningX;
@@ -903,8 +962,8 @@ public class TileContext {
                     panToPixels(mTargetPanX, mTargetPanY);
                     mCurrentInst = NOOP;
                 } else {
-                    // advance half a tile at a time
-                    float ratio = (float) (Tile.SIZE/2 / Math.sqrt(dist2));
+                    // advance 1/4th a tile at a time
+                    float ratio = (float) (Tile.SIZE/8 / Math.sqrt(dist2));
                     dx = (int) (dx * ratio);
                     dy = (int) (dy * ratio);
                     panToPixels(mPanningX + dx, mPanningY + dy);
@@ -915,10 +974,19 @@ public class TileContext {
 
             mCurrentInst = (int) sFlyData[mIndex++];
             switch(mCurrentInst) {
-            case FLY_RESET:
+            case FLY_INIT:
+                if (DEBUG) logd("FlyMode: Init");
                 mZoomLevel = 0;
                 mPanningX  = 0;
                 mPanningY  = 0;
+
+                mTargetZoom = (int) sFlyData[mIndex++];
+                while (mZoomLevel != mTargetZoom) {
+                    zoom(mTargetZoom > mZoomLevel);
+                }
+
+                panToReal(sFlyData[mIndex++], sFlyData[mIndex++]);
+
                 clearTileCache(); // TODO RM 20091105 for DEMO/BENCHMARK ONLY!
                 updateMaxIter();
                 updateCaption();

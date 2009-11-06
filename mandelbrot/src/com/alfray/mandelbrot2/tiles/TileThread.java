@@ -60,6 +60,15 @@ public class TileThread extends BaseThread {
         }
     }
 
+    /** for debugging purposes.
+     * @see hasPending */
+    public int getNumPending() {
+        synchronized (mPendingList) {
+            return mPendingList.size();
+        }
+    }
+
+
     public void setCompletedCallback(ITileCompleted callback) {
         mTileCompleted = callback;
     }
