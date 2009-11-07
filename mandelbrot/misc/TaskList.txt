@@ -1,8 +1,16 @@
 ---- TODO ----
 
-20091024 Market: remove old, upload new with new package & signature
-20091024 Use Activity to retain cache; only save pos/size/level
+20091107 Finish boundary fill routine (java first)
 20091024 Use NDK
+
+---- Done Version 0.11 ----
+
+20091106 Adjust fly mode for benchmark demo
+20091106 Rework way tiles are filled with lower-level cached image
+20091105 Wake lock during fly mode
+20091104 Fly mode
+20091104 Use Activity to retain cache; only save pos/size/level
+20091104 Market: remove old, upload new with new package & signature
 
 ---- Done Version 0.7 ----
 
