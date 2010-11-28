@@ -10,7 +10,10 @@ import android.util.SparseArray;
 
 //-----------------------------------------------
 
-/** @deprecated not used yet */
+/** @deprecated not used yet.
+ * The idea was to extract the tile cache that is intermixed in {@link TileContext}.
+ * I never got around to it, so this is left as an exercise to the reader :-)
+ */
 public class LevelTileCache {
 
     public static class TileCache extends SparseArray<Tile> {
