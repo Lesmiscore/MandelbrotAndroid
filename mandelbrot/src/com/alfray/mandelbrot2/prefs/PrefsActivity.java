@@ -27,7 +27,6 @@ public class PrefsActivity extends PreferenceActivity {
         Preference useDataTogglePref = findPreference("use_rs");
         if (useDataTogglePref != null) {
             useDataTogglePref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
-                @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     mDataChanged  = true;
                     return true;
