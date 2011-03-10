@@ -1,6 +1,9 @@
 package com.alfray.mandelbrot2;
 
-import android.content.res.AssetManager;
+import android.content.Context;
+import android.util.Log;
+
+import com.alfray.mandelbrot2.prefs.BasePrefsValues;
 
 /**
  * Performs the Mandelbrot computation, either using a native wrapper or via pure Java calls.
@@ -12,12 +15,33 @@ import android.content.res.AssetManager;
  */
 public class JavaMandel {
 
-    private static String TAG = "JavaMandel";
+    private static String TAG = JavaMandel.class.getSimpleName();
+    private static boolean mHasRs = false;
+    private static boolean mUseRs = true;
 
-    public synchronized static void init(AssetManager assets) {
+    public synchronized static void init(Context context) {
+        try {
+            mHasRs  = Mandel_RS.init(context);
+        } catch (VerifyError e) {
+            Log.d(TAG, "RenderScript API not present");
+
+        } catch (Throwable t) {
+            Log.w(TAG, "RenderScript init error", t);
+        }
+
+        prefsChanged(context);
     }
 
     public static void dispose() {
+    }
+
+    public static boolean hasRs() {
+        return mHasRs;
+    }
+
+    public static void prefsChanged(Context context) {
+        BasePrefsValues pv = new BasePrefsValues(context.getApplicationContext());
+        mUseRs = pv.useRenderScript();
     }
 
     // ------------------------------------------------------------------------
@@ -37,7 +61,11 @@ public class JavaMandel {
             int sx, int sy,
             int max_iter,
             int size, int[] result) {
-        mandelbrot2_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
+        if (mHasRs && mUseRs) {
+            Mandel_RS.mandelbrot2_RS(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
+        } else {
+            mandelbrot2_java(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
+        }
     }
 
     protected static void mandelbrot2_java(
@@ -69,124 +97,6 @@ public class JavaMandel {
                 result[k] = iter;
             } // i
         } // j
-    }
-
-    /** direction vectors, going 'to the right' */
-    //                            dir: ->, v, <-,  ^
-   private static final int DIR_X[] = { 1, 0, -1,  0 };
-   private static final int DIR_Y[] = { 0, 1,  0, -1 };
-
-
-    /** boundary detection with float */
-    protected static void mandelbrot2b_java(
-            final float x_start, final float x_step,
-            final float y_start, final float y_step,
-            final int sx, final int sy,
-            final int max_iter,
-            final int size, int[] result) {
-        if (max_iter <= 0) return;
-
-        // visited bits, one per pixel
-        int n_vis = size >> 5;
-        int i_vis = sx >> 5;
-        int[] visited = new int[n_vis];
-
-        // stats per line: 16 LSB==min fill, 16 MSB=max fill
-        short[] fill = new short[sy*2];
-
-        int todo = size;
-
-        while (todo > 0) {
-            int i, j, k;
-        _find_todo:
-            for (i = -1, j = 0, k = 0; j < sy; j++) {
-                for (int ik = 0; ik < i_vis; ik++, k++) {
-                    int a = visited[k];
-                    if (a != -1) {
-                        for (i = ik << 5; (a&1) != 0; i++) {
-                            a = a>>1;
-                        }
-                        break _find_todo;
-                    }
-                }
-            }
-
-            if (i < 0 || j >= sy) {
-                // nothing found to do... not expected. abort anyway.
-                break; // breaks white todo
-            }
-
-            // start boundary-detection in (i,j)
-
-            int i0 = i, j0 = j;
-            int dir = 0;
-            int minJfill = j;
-            int k_res = j0 * sx + i0;
-
-            // mark i0,j0 as visited
-            int vk = (j0 * i_vis) + (i0 >> 5);
-            visited[vk] |= (1 << (i0 & 31));
-
-            // compute i0,j0
-            int iter0 = result[k_res];
-            if (iter0 != 0) {
-                iter0 = z2c(x_start + i0 * x_step, y_start + j0 * y_step, max_iter);
-                result[k_res] = iter0;
-            }
-
-            // set (i0,j0) fill
-            fill[j*2 + 0] = (short) i0;
-            fill[j*2 + 1] = (short) i0;
-
-            _do_bounds:
-            while (true) {
-                // check points at dir -1/0/+1
-                for (int delta_dir = -1; delta_dir <= 1; delta_dir++) {
-                    int ddir = dir;
-                    if (delta_dir != 0) ddir = (dir + delta_dir + 4) & 3;
-
-                    int i1 = i + DIR_X[ddir];
-                    int j1 = j + DIR_Y[ddir];
-
-                    // finished if back to i0,j0
-                    if (i1 == i0 && j1 == j0) break _do_bounds;
-
-                    // discard if out of bounds
-                    if (i1 < 0 || j1 < 0 || i1 >= sx || j1 >= sy) continue;
-
-                    // discard if visited
-                    vk = (j1 * i_vis) + (i1 >> 5);
-                    if ((visited[vk] & (1 << (i0 & 31))) != 0) continue;
-
-                    // compute i,j
-                    k_res = j * sx + i;
-                    int iter = result[k_res];
-                    if (iter != 0) {
-                        iter = z2c(x_start + i * x_step, y_start + j * y_step, max_iter);
-                        result[k_res] = iter;
-                    }
-
-                    // CONTINUE HERE
-                }
-            }
-        }
-    }
-
-    private static int z2c(final float xs, final float ys, final int max_iter) {
-        int iter = 0;
-        float x = xs;
-        float y = ys;
-        float x2 = x * x;
-        float y2 = y * y;
-        while (x2 + y2 < 4 && iter < max_iter) {
-          float xt = x2 - y2 + xs;
-          y = 2 * x * y + ys;
-          x = xt;
-          x2 = xt * xt;
-          y2 = y * y;
-          ++iter;
-        }
-        return iter;
     }
 
     // ------------------------------------------------------------------------
