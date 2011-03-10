@@ -245,7 +245,7 @@ public class Tile {
 
             boolean done = false;
 
-            if (false && mMaxIter < 256) {
+            if (mMaxIter < 256) {
                 done = JavaMandel.mandelbrot3(
                         x, step,
                         y, step,

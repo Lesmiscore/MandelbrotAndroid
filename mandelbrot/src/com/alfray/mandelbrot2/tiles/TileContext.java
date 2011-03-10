@@ -6,6 +6,7 @@
 
 package com.alfray.mandelbrot2.tiles;
 
+import com.alfray.mandelbrot2.JavaMandel;
 import com.alfray.mandelbrot2.util.BaseThread;
 
 import android.app.Activity;
@@ -809,7 +810,8 @@ public class TileContext {
         // width 0.1 => 60 iter
         // width 0.01 => 120
         // int max_iter = Math.max(mPrefMinIter, (int)(mPrefStepIter * Math.log10(1.0 / w)));
-        return 15 + (int)(15*Math.log1p(zoomLevel));
+        final int coef = JavaMandel.useRs() ? 30 : 15;
+        return coef + (int)(coef*Math.log1p(zoomLevel));
     }
 
     private void showZoomer(boolean force) {

@@ -39,6 +39,10 @@ public class JavaMandel {
         return mHasRs;
     }
 
+    public static boolean useRs() {
+        return mHasRs && mUseRs;
+    }
+
     public static void prefsChanged(Context context) {
         BasePrefsValues pv = new BasePrefsValues(context.getApplicationContext());
         mUseRs = pv.useRenderScript();
