@@ -8,7 +8,7 @@ import android.util.Log;
 
 /*
  * Mandelbrot wrapper for RenderScript.
- * Requires API 11 to work, will fail with VerifyError on previous versions.
+ * Requires API 11 to work, will likely fail with VerifyError on previous versions.
  */
 public class Mandel_RS {
 
