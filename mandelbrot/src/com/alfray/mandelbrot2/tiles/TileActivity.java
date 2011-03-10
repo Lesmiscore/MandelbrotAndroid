@@ -8,6 +8,7 @@ package com.alfray.mandelbrot2.tiles;
 
 import com.alfray.mandelbrot2.JavaMandel;
 import com.alfray.mandelbrot2.R;
+import com.alfray.mandelbrot2.prefs.PrefsActivity;
 import com.alfray.mandelbrot2.tests.TestActivity;
 import com.alfray.mandelbrot2.tiles.TileContext.ImageGenerator;
 import com.alfray.mandelbrot2.util.AboutActivity;
@@ -77,7 +78,7 @@ public class TileActivity extends Activity {
     public void onCreate(Bundle inState) {
         super.onCreate(inState);
 
-        JavaMandel.init(getAssets());
+        JavaMandel.init(this);
 
         if (inState != null) {
             mOrientation = inState.getInt("orient");
@@ -158,6 +159,8 @@ public class TileActivity extends Activity {
         sub.add(0, R.string.orient_sensor,   0, R.string.orient_sensor).setCheckable(true);
 
         menu.add(0, R.string.fly_mode, 0, R.string.fly_mode).setCheckable(true);
+        menu.add(0, R.string.test_mode, 0, R.string.test_mode);
+        menu.add(0, R.string.settings, 0, R.string.settings);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -202,6 +205,14 @@ public class TileActivity extends Activity {
             break;
         case R.string.fly_mode:
             toggleFlyMode();
+            break;
+        case R.string.test_mode:
+            intent = new Intent(this, TestActivity.class);
+            startActivity(intent);
+            break;
+        case R.string.settings:
+            intent = new Intent(this, PrefsActivity.class);
+            startActivity(intent);
             break;
         }
 

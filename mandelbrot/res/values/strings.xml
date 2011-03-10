@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="fly_mode">Fly Mode</string>
     <string name="app_name">Mandelbrot Map</string>
+
     <string name="about">About...</string>
-<string name="reset">Reset</string>
-<string name="zoom_in">Zoom In</string>
-<string name="zoom_out">Zoom Out</string>
-<string name="interesting">Next P.O.I.</string>
-<string name="about_title">About Mandelbrot Map</string>
-<string name="save_image">Save Image</string>
-<string name="wallpaper">Save as Wallpaper</string>
-<string name="orient_land">Landscape</string>
-<string name="orient_sensor">Sensor</string>
-<string name="orient_default">Default</string>
-<string name="orient_portrait">Portrait</string>
-<string name="orient">Orientation</string>
+    <string name="reset">Reset</string>
+    <string name="zoom_in">Zoom In</string>
+    <string name="zoom_out">Zoom Out</string>
+    <string name="interesting">Next P.O.I.</string>
+    <string name="about_title">About Mandelbrot Map</string>
+    <string name="save_image">Save Image</string>
+    <string name="wallpaper">Save as Wallpaper</string>
+
+    <string name="orient_land">Landscape</string>
+    <string name="orient_sensor">Sensor</string>
+    <string name="orient_default">Default</string>
+    <string name="orient_portrait">Portrait</string>
+    <string name="orient">Orientation</string>
+
+    <string name="fly_mode">Fly Mode</string>
+    <string name="test_mode">Test Mode</string>
+    <string name="settings">Settings</string>
+
+    <string name="prefs_title">$APP - Settings</string>
+
 </resources>
