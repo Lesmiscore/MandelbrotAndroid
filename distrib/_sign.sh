@@ -2,9 +2,6 @@
 
 set -e # fail early
 
-VERS="$1"
-[ -n "$VERS" ] && VERS="${VERS}_"
-
 function die() {
   echo "Error: " $*
   echo
@@ -12,8 +9,6 @@ function die() {
   echo "Automatically sign [A-Z].apk"
   exit 1
 }
-
-[ -z "$1" ] && die
 
 shopt -s extglob  # extended glob pattern
 
@@ -54,6 +49,36 @@ function process() {
 	echo "$DEST has been signed and zipaligned (added $((SIZE2-SIZE1)) bytes)" 
 }
 
-for i in [M]+([^_]).apk ; do
+
+if [[ "${1/.apk/}" != "$1" ]]; then
+	APK="$1"
+	shift
+else
+	APK=( [M]+([^_]).apk )
+	APK="${APK}"
+fi
+if [ ! -f "$APK" ]; then
+    die "Failed to find an APK to sign"
+fi
+
+VERS="$1"
+if [ -z "$VERS" ]; then
+    # Try to use AAPT on first APK to guess the version number
+    AAPT=( ~/sdk/platform-tools/aapt.exe )
+    AAPT="${AAPT}"  # convert first's array value into its own value
+    if [ ! -x "$AAPT" ]; then
+        die "Failed to find aapt.exe"
+    fi
+    
+    VERS=`"$AAPT" dump badging "$APK" | grep versionName | sed "s/.*versionName='\(.*\)'/\1/g"`
+    [ -n "$VERS" ] && VERS="v${VERS}"
+    echo "Found version $VERS"
+fi
+
+[ -n "$VERS" ] && VERS="${VERS}_"
+
+[ -z "$VERS" ] && die "Missing version number"
+
+for i in "$APK" ; do
 	[ -f "$i" ] && process "$i"
 done
