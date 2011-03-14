@@ -13,6 +13,7 @@ import com.alfray.mandelbrot2.tests.TestActivity;
 import com.alfray.mandelbrot2.tiles.TileContext.ImageGenerator;
 import com.alfray.mandelbrot2.util.AboutActivity;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -21,16 +22,22 @@ import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.drawable.ColorDrawable;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
@@ -90,6 +97,18 @@ public class TileActivity extends Activity {
         mActivity = this;
 
         TextView textView = (TextView) findViewById(R.id.text);
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            textView = (TextView) getLayoutInflater().inflate(R.layout.infotext, null);
+            ActionBar bar = getActionBar();
+            android.app.ActionBar.LayoutParams lp = new ActionBar.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            lp.gravity = Gravity.CENTER;
+            bar.setCustomView(textView, lp);
+            bar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM);
+            Resources r = getResources();
+            bar.setBackgroundDrawable(new ColorDrawable(r.getColor(R.color.dark_blue)));
+        }
+
 
         TileView tileView = (TileView) findViewById(R.id.tile_view);
         tileView.requestFocus();
