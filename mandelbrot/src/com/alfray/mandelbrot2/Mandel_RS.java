@@ -49,8 +49,8 @@ public class Mandel_RS {
     // ------------------------------------------------------------------------
 
     public static void mandelbrot2_RS(
-            float x_start, float x_step,
-            float y_start, float y_step,
+            double x_start, double x_step,
+            double y_start, double y_step,
             int sx, int sy,
             int max_iter,
             int size, int[] result) {

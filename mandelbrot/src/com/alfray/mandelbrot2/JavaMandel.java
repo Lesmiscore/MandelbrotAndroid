@@ -51,17 +51,17 @@ public class JavaMandel {
     // ------------------------------------------------------------------------
 
     /**
-     * Native or java rendering using a classic float algorithm with no fancy optim tricks.
+     * Native or java rendering using a classic double algorithm with no fancy optim tricks.
      * <p/>
      * Version 2: computes a block using x_start+x_step / y_start+y_step.
      * maxIter is an int, returns SX*SY int ranging [1..maxIter].
-     * Uses the "classic" float version, no fancy optims.
+     * Uses the "classic" double version, no fancy optims.
      * <p/>
      * Aborts if maxIter or sx or sy <= 0.
      */
     public static void mandelbrot2(
-            float x_start, float x_step,
-            float y_start, float y_step,
+            double x_start, double x_step,
+            double y_start, double y_step,
             int sx, int sy,
             int max_iter,
             int size, int[] result) {
@@ -73,24 +73,24 @@ public class JavaMandel {
     }
 
     protected static void mandelbrot2_java(
-            float x_start, float x_step,
-            float y_start, float y_step,
+            double x_start, double x_step,
+            double y_start, double y_step,
             int sx, int sy,
             int max_iter,
             int size, int[] result) {
         if (max_iter <= 0) return;
-        float x_begin = x_start;
+        double x_begin = x_start;
         for(int j = 0, k = 0; j < sy; ++j, y_start += y_step) {
             x_start = x_begin;
             for(int i = 0; i < sx; ++i, ++k, x_start += x_step) {
                 // the "naive" mandelbrot computation. nothing fancy.
-                float x = x_start;
-                float y = y_start;
-                float x2 = x * x;
-                float y2 = y * y;
+                double x = x_start;
+                double y = y_start;
+                double x2 = x * x;
+                double y2 = y * y;
                 int iter = 0;
                 while (x2 + y2 < 4 && iter < max_iter) {
-                  float xt = x2 - y2 + x_start;
+                    double xt = x2 - y2 + x_start;
                   y = 2 * x * y + y_start;
                   x = xt;
                   x2 = xt * xt;
@@ -117,8 +117,8 @@ public class JavaMandel {
      * if maxter is -128 (which represents 0 here).
      */
     public static boolean mandelbrot3(
-            float x_start, float x_step,
-            float y_start, float y_step,
+            double x_start, double x_step,
+            double y_start, double y_step,
             int sx, int sy,
             byte max_iter,
             int size, byte[] result) {
@@ -126,8 +126,8 @@ public class JavaMandel {
     }
 
     protected static boolean mandelbrot3_java(
-            final float x_start, final float x_step,
-            final float y_start, final float y_step,
+            final double x_start, final double x_step,
+            final double y_start, final double y_step,
             final int sx, final int sy,
             final byte max_iter,
             final int size, byte[] result) {
@@ -176,8 +176,8 @@ public class JavaMandel {
      * if maxter is -128 (which represents 0 here).
      */
     public static boolean mandelbrot4(
-            float x_start, float x_step,
-            float y_start, float y_step,
+            double x_start, double x_step,
+            double y_start, double y_step,
             int sx, int sy,
             byte max_iter,
             int size, byte[] result) {
@@ -185,8 +185,8 @@ public class JavaMandel {
     }
 
     protected static boolean mandelbrot4_java(
-            final float x_start, final float x_step,
-            final float y_start, final float y_step,
+            final double x_start, final double x_step,
+            final double y_start, final double y_step,
             final int sx, final int sy,
             final byte max_iter,
             final int size, byte[] result) {
