@@ -3,6 +3,17 @@
 20091107 Finish boundary fill routine (java first)
 20091024 Use NDK
 
+---- Done Version 0.13 ----
+
+20110313 Switch dalvik + RS script from float to double
+20110313 Use Honeycomb ActionBar (via the v4.compat lib), requires minSdkVersion to 4
+
+
+---- Done Version 0.12 ----
+
+20110310 Use RenderScript (if available)
+
+
 ---- Done Version 0.11 ----
 
 20091106 Adjust fly mode for benchmark demo
