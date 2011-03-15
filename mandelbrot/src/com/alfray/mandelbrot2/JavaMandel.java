@@ -65,6 +65,7 @@ public class JavaMandel {
             int sx, int sy,
             int max_iter,
             int size, int[] result) {
+
         if (mHasRs && mUseRs) {
             Mandel_RS.mandelbrot2_RS(x_start, x_step, y_start, y_step, sx, sy, max_iter, size, result);
         } else {

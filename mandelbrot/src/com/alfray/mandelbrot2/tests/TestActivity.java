@@ -89,7 +89,8 @@ public class TestActivity extends Activity {
     /** Utility wrapper to access the protected internal methods of JavaMandel. */
     public class AccessWrapper extends JavaMandel {
 
-        private static final int SIZE = 128;
+        private static final int MAX_ITER = 100;
+        private static final int SIZE = 256;
 
         private static final float FULL_STEP = 1.0f / SIZE;
         private static final float FULL_X_START = -1f;
@@ -127,22 +128,22 @@ public class TestActivity extends Activity {
         public void runIteration() {
             switch(mState) {
             case 1:
-                test_full_java2(20);
+                test_full_java2(MAX_ITER);
                 break;
             case 2:
-                test_full_java3(20);
+                test_full_java3(MAX_ITER);
                 break;
             case 3:
-                test_full_java4(20);
+                test_full_java4(MAX_ITER);
                 break;
             case 4:
-                test_black_java2(20);
+                test_black_java2(MAX_ITER);
                 break;
             case 5:
-                test_full_rs2(20);
+                test_full_rs2(MAX_ITER);
                 break;
             case 6:
-                test_black_rs2(20);
+                test_black_rs2(MAX_ITER);
                 break;
             default:
                 mState = 0; // loop

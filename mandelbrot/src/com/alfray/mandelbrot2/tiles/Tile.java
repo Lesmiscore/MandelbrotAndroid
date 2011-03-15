@@ -229,10 +229,10 @@ public class Tile {
             Bitmap bmp = Bitmap.createBitmap(SIZE, SIZE, BMP_CONFIG);
 
             int zoomFp8 = getZoomFp8(mZoomLevel);
-            float inv_zoom = (float)FP8_1 / zoomFp8;
-            float x = (float)mI * inv_zoom;
-            float y = (float)mJ * inv_zoom;
-            float step = inv_zoom / SIZE;
+            double inv_zoom = (double)FP8_1 / zoomFp8;
+            double x = mI * inv_zoom;
+            double y = mJ * inv_zoom;
+            double step = inv_zoom / SIZE;
 
 
             // Note: currently runs only the single TileThread
@@ -245,7 +245,7 @@ public class Tile {
 
             boolean done = false;
 
-            if (mMaxIter < 256) {
+            if (!JavaMandel.useRs() && mMaxIter < 256) {
                 done = JavaMandel.mandelbrot3(
                         x, step,
                         y, step,
