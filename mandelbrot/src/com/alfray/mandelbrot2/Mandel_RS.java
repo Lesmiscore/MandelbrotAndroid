@@ -18,7 +18,8 @@ public class Mandel_RS {
     private static final boolean DEBUG = true;
 
     private static RenderScript mRs;
-    private static ScriptC_mandel mScript;
+    private static ScriptC_mandel_foreach mScriptForEach;
+    private static ScriptC_mandel_root mScriptRoot;
     private static Allocation mAlloc;
     private static Allocation mAlloc2;
 
@@ -27,7 +28,8 @@ public class Mandel_RS {
         try {
             if (mRs == null) {
                 mRs = RenderScript.create(context);
-                mScript = new ScriptC_mandel(mRs, context.getResources(), R.raw.mandel);
+                mScriptForEach = new ScriptC_mandel_foreach(mRs, context.getResources(), R.raw.mandel_foreach);
+                mScriptRoot = new ScriptC_mandel_root(mRs, context.getResources(), R.raw.mandel_root);
             }
             return true;
         } catch (Throwable t) {
@@ -41,7 +43,8 @@ public class Mandel_RS {
             mRs.destroy();
             mRs = null;
             mAlloc = null;
-            mScript = null;
+            mScriptForEach = null;
+            mScriptRoot = null;
         }
     }
 
@@ -66,12 +69,12 @@ public class Mandel_RS {
             if (DEBUG) Log.d(TAG,
                 String.format("Create alloc of size %d", mAlloc.getType().getCount()));
 
-            mScript.set_gScript(mScript);
-            mScript.set_gResult(mAlloc);
-            mScript.set_gIn(mAlloc2);
+            mScriptForEach.set_gScriptRoot(mScriptRoot);
+            mScriptForEach.set_gResult(mAlloc);
+            mScriptForEach.set_gIn(mAlloc2);
         }
 
-        mScript.invoke_mandel2(x_start, x_step, y_start, y_step, max_iter);
+        mScriptForEach.invoke_mandel2(x_start, x_step, y_start, y_step, max_iter);
         mAlloc.copyTo(result);
     }
 

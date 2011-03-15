@@ -6,13 +6,7 @@ rs_allocation gIn;
 rs_allocation gResult;
 rs_script gScript;
 
-typedef struct Params {
-    double x_start;
-    double x_step;
-    double y_start;
-    double y_step;
-    int max_iter;
-} Params_t;
+#include "mandel_params.rsh"
 
 void root(const void *in, int *out, const Params_t *usrData, uint32_t x, uint32_t y) {
 
@@ -34,19 +28,4 @@ void root(const void *in, int *out, const Params_t *usrData, uint32_t x, uint32_
     }
 
     *out = iter;
-}
-
-void mandel2(
-    double x_start, double x_step,
-    double y_start, double y_step,
-    int max_iter) {
-
-    Params_t p;
-    p.x_start = x_start;
-    p.x_step = x_step;
-    p.y_start = y_start;
-    p.y_step = y_step;
-    p.max_iter = max_iter;
-
-    rsForEach(gScript, gIn /*null*/, gResult, &p);
 }

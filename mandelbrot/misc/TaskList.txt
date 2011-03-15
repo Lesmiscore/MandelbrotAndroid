@@ -3,6 +3,12 @@
 20091107 Finish boundary fill routine (java first)
 20091024 Use NDK
 
+
+---- Done Version 0.13 ----
+
+20110314 Optimize RenderScript version, using rsForEach
+
+
 ---- Done Version 0.13 ----
 
 20110313 Switch dalvik + RS script from float to double
