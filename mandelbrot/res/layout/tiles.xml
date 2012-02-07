@@ -8,7 +8,11 @@
     android:layout_height="fill_parent"
     >
 
-<include layout="@layout/infotext" />
+<include layout="@layout/infotext"
+    android:layout_alignParentTop="true" 
+    android:layout_alignParentRight="true" 
+    android:layout_alignParentLeft="true" 
+    />
     
 <com.alfray.mandelbrot2.tiles.TileView
     android:id="@+id/tile_view" 

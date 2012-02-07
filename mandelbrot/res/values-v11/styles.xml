@@ -4,5 +4,4 @@
     <style name="ThemeMandelWindow" parent="android:Theme">
         <item name="android:windowActionBar">true</item>
     </style>
-
 </resources>
